@@ -101,91 +101,59 @@ df3 <- answers.sort %>% filter(word != "ARMAND", # Item = Armband
                                word != "GOLDFISH", # Item =Goldfisch
                                word != "GLBACKSPACEOLDSBACKSPACEFISCH", # Item = Goldfisch)
                                word != "FISCH", # Item = Goldfisch
-                               "GONEBACKSPACEDLE", GONDEL
-                               "HOCHHAUSEBACKSPACE", HOCHHAUS
-                               "HPCKER", HOCKER
-                               "KAFFEMASCHINE", KAFFEEMASCHINE
-                               "KAFFEMBACKSPACEEMASCHINE", KAFFEEMASCHINE	
-                               "TEEKANNE", KANNE
-                               "KAPUZEPULLI", KAPUZENPULLI	
-                               "KATBACKSPACEROTTE", KAROTTE
-                               "KAROTEBACKSPACETE", KAROTTE
-                               "KARTOFFELL", KARTOFFEL
-                               "SUPPENKELLE", KELLE
-                               "BÜRLOKLAMEMR", KLAMMER
-                               "BÜROKLAMMER", KLAMMER
-                               "SCHRANK", KLEIDERSCHRANK	
-                               "KBACKSPACEZTORTE", KUCHEN
-                               "TOPRTE", KUCHEN
-                               "KUTZSBACKSPACEBACKSPACESCHE", KUTSCHE
-                               "LINRBACKSPACEEAL", LINEAL
-                               "LÖGFFEL", LÖFFEL
-                               "LÖSEBACKSPACEBACKSPACEWE", LÖWE
-                               "MIRKOWELLE", MIKROWELLE
-                               "MIKBACKSPACERBACKSPACEKROWELLE", MIKROWELLE	
-                               "MIGBACKSPACERBACKSPACEKROWELLE", MIKROWELLE 
-
-
-89
-MOTORRAD
-MPOTORRAD
-
-
-92
-ORCHIDEE
-BLUME
-93
-PANTHER
-PUMA
-95
-PAPRIKA
-PAPRIKE
-96
-PAPRIKA
-PARPIKA
-97
-PAPRIKA
-PARPIKA
-98
-PELZMANTEL	
-MANTEL
-99
-PELZMANTEL	PERBACKSPACELZMANTEL
-100
-RADIERGUMMI	RADIERHUMMEBACKSPACEI
-101
-REGAL
-REABACKSPACEGAL
-103
-ROCHEN
-ROCHENENTERENTERENTERENTERENTERENTERENTERENTERENTERENTERENTER
-104
-ROSE
-BLUME
-105
-SAFE
-SAEBACKSPACEFE
-106
-SAKKO
-SAKKO7BACKSPACE
-107
-SCHACHTEL
-KISTE
-108
-SCHAUFEL
-SPATEN
-Showing 1 to 13 of 130 entries, 2 total columns
-                               
+                               word != "GONEBACKSPACEDLE", # Item =GONDEL
+                               word != "HOCHHAUSEBACKSPACE", # Item =HOCHHAUS
+                               word != "HPCKER", # Item =HOCKER
+                               word != "KAFFEMASCHINE", # Item =KAFFEEMASCHINE
+                               word != "KAFFEMBACKSPACEEMASCHINE", # Item = KAFFEEMASCHINE	
+                               word != "TEEKANNE",# Item = KANNE
+                               word != "KAPUZEPULLI",# Item = KAPUZENPULLI	
+                               word != "KATBACKSPACEROTTE",# Item = KAROTTE
+                               word != "KAROTEBACKSPACETE",# Item = KAROTTE
+                               word != "KARTOFFELL",# Item = KARTOFFEL
+                               word != "SUPPENKELLE",# Item = KELLE
+                               word != "BÜRLOKLAMEMR",# Item = KLAMMER
+                               word != "BÜROKLAMMER",# Item = KLAMMER
+                               word != "SCHRANK",# Item = KLEIDERSCHRANK	
+                               word != "KBACKSPACEZTORTE",# Item = KUCHEN
+                               word != "TOPRTE",# Item = KUCHEN
+                               word != "KUTZSBACKSPACEBACKSPACESCHE",# Item = KUTSCHE
+                               word != "LINRBACKSPACEEAL",# Item = LINEAL
+                               word != "LÖGFFEL",# Item = LÖFFEL
+                               word != "LÖSEBACKSPACEBACKSPACEWE",# Item = LÖWE
+                               word != "MIRKOWELLE",# Item = MIKROWELLE
+                               word != "MIKBACKSPACERBACKSPACEKROWELLE",# Item = MIKROWELLE	
+                               word != "MIGBACKSPACERBACKSPACEKROWELLE",# Item = MIKROWELLE 
+                               word != "MPOTORRAD",# Item = MOTORRAD
+                               word != "PAPRIKE",# Item = PAPRIKA
+                               word != "PARPIKA", # Item = PAPRIKA
+                               word != "MANTEL",# Item = PELZMANTEL
+                               word != "PERBACKSPACELZMANTEL",# Item = PELZMANTEL	
+                               word != "RADIERHUMMEBACKSPACEI",# Item = RADIERGUMMI	
+                               word != "REABACKSPACEGAL",# Item = REGAL
+                              word !=  "ROCHENENTERENTERENTERENTERENTERENTERENTERENTERENTERENTERENTER",# Item = ROCHEN
+                               word != "SAEBACKSPACEFE",# Item = SAFE
+                               word != "SAKKO7BACKSPACE",# Item = SAKKO
+                               word != "KISTE",# Item = SCHACHTEL
+                              word !=  "SPATEN",# Item = SCHAUFEL
+                              word != "SCHOLOLADE",# Item =  SCHOKOLADE
+                             word !=  "SCHOKOLOBACKSPACEASDBACKSPACEBACKSPACEDE", # Item = SCHOKOLADE
+                              word != "SCHRAUVENZIEHER", # Item = SCHRAUBENZIEHER
+                              word != "SEGELSSCBACKSPACEBACKSPACECHIFF", # Item = SEGELSCHIFF	
+                              word != "SCHIFF", # Item = SEGELSCHIFF	
+                              word != "SEGELBOOT", # Item = SEGELSCHIFF	
+                              word != "SESSEÖ", # Item = SESSEL
+                              word != "SONNENBLIME", # Item = SONNENBLUME	
+                              word != "KAFFEETASSE", # Item = TASSE
+                              word != "TAIBACKSPACEUBE", # Item = TAUBE
+                              word != "TEPEL", # Item = TEMPEL
+                              word != "TRAUBE", # Item = TRAUBEN
+                              word != "TRAUEBNBACKSPACEBACKSPACEBACKSPACEBEN", # Item = TRAUBEN 
+                              word != "TUPBACKSPACELPE", # Item = TULPE
+                              word != "USHIFTBOOT", # Item = U-BOOT
+                              word != "U-SHIFTBOOT", # Item = U-BOOT
+                              word != "BOOT", # Item = YACHT
 )
-
-
-
-
-
-
-
-
-	
 
 ```
 

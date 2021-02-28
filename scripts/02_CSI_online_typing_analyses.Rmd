@@ -1,0 +1,241 @@
+---
+title: "02_CSI_online_typing_analyses"
+author: "Kirsten Stark"
+date: "2/26/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load packages
+```{r}
+library(dplyr)
+library(tidyr)
+```
+
+
+## Load and preprocess data
+
+```{r}
+options( "encoding" = "UTF-8" )
+pretest <- read_delim(here::here("data", "pretest_complete.csv"), 
+    ";", escape_double = FALSE, na = "", 
+    trim_ws = TRUE)
+```
+
+Check attention checks: 
+```{r}
+## Item vs. non-item
+# CH01_01 (Taube), CH01_02 (Apfel), CH02_01 (Luftballon) and CH02_02 (Biene) are items and 2 should be selected, 
+# CH02_03 (Radio), CH02_04 (Sparschwein), CH02_03 (Laptop) and CH02_04 (Wattestäbchen) are non-items and 1 should be selected
+## Did participants cheat
+# CH03 = 1 - yes, I worked through it till the end, 
+# CH03 = 2 - no, I stopped or cheated midway
+# CH03 = -9 - no answer
+pretest <- pretest %>% mutate(attcheck = 
+                  ifelse(CH01_01 == 2 & CH01_02 == 2 & CH02_01 == 2 & CH02_02 == 2 &
+                  CH01_03 == 1 & CH01_04 == 1 & CH02_03 == 1 & CH02_04 == 1, 1, 0)) %>%
+                   mutate(cheat = ifelse(CH03 == 1,1,ifelse(CH03 == 2,2,0)))
+table(pretest$attcheck)
+table(pretest$cheat)
+
+# get prolific IDs of participants who failed the attention check
+#pretest %>% subset(attcheck == 0 & cheat == 2 ) %>% 
+#  pull(SD24_01) # SD24_01 is prolific ID
+
+# subset to participants who passed only 
+valid <- pretest %>% filter(attcheck == 1 & cheat != 2)
+
+# add subject id
+valid <- valid %>% mutate(subject = row_number())
+
+```
+
+## Convert to long format
+First convert all variables that have values for each trial
+```{r}
+### MAIN LETTERS
+# letters of first 1-80 trials of the main experiment
+df1 <- valid %>%  select('subject', starts_with(c("XT"))) %>% 
+                  pivot_longer(
+                    cols = -subject,
+                     names_to = c("trial", ".value"), 
+                    names_pattern = "([^_]+)_(.*)",
+                    values_to = "timing") %>%
+                    group_by(subject) %>%
+                    mutate(trial = seq(1,80, by = 1)) %>%
+                   setNames(paste0('letters.', names(.))) 
+# letters of last 81-160 trials of the main experiment
+df2 <- valid %>%  select('subject', starts_with(c("XU"))) %>% 
+                  pivot_longer(
+                    cols = -subject,
+                     names_to = c("trial", ".value"), 
+                    names_pattern = "([^_]+)_(.*)",
+                    values_to = "timing") %>%
+                    group_by(subject) %>%
+                    mutate(trial = seq(81,160, by = 1)) %>%
+                   setNames(paste0('letters.', names(.)))
+# bind first 80 and last 80 trials together
+df_letters <- bind_rows(df1, df2) %>%
+        rename(subject = letters.subject,
+               trial = letters.trial) %>%
+        arrange(subject, trial)
+# delete letter columns from wide data frame
+valid_red <- valid %>% select(!starts_with(c("XT", "XU")))
+
+#### MAIN LETTER TIMING
+# letter timing of first 1-80 trials of the main experiment
+df1 <- valid %>% 
+          select('subject', starts_with("TI") & !starts_with("TIME")) %>% 
+                  pivot_longer(
+                    cols = -subject,
+                     names_to = c("trial", ".value"), 
+                    names_pattern = "([^_]+)_(.*)",
+                    values_to = "timing") %>%
+                    group_by(subject) %>%
+                    mutate(trial = seq(1,80, by = 1)) %>%
+                   setNames(paste0('timing.', names(.))) 
+# letter timing of last 81-160 trials of the main experiment
+df2 <- valid %>%  select('subject', starts_with(c("TJ"))) %>% 
+                  pivot_longer(
+                    cols = -subject,
+                     names_to = c("trial", ".value"), 
+                    names_pattern = "([^_]+)_(.*)",
+                    values_to = "timing") %>%
+                    group_by(subject) %>%
+                    mutate(trial = seq(81,160, by = 1)) %>%
+                   setNames(paste0('timing.', names(.)))
+# bind first 80 and last 80 trials together
+df_timing <- bind_rows(df1, df2) %>%
+        rename(subject = timing.subject,
+               trial = timing.trial) %>%
+        arrange(subject, trial)
+# delete timing columns from wide data frame
+valid_red <- valid_red %>% 
+  select(!(starts_with(c("TI", "TJ")) & !starts_with("TIME")))
+                
+### MAIN WORDS
+# typed words of first 1-80 trials of the main experiment
+df1 <- valid %>% 
+          select('subject', starts_with("AW")) %>% 
+                  pivot_longer(
+                    cols = -subject,
+                     names_to = c("trial"), 
+                    values_to = "word") %>%
+                    group_by(subject) %>%
+                    mutate(trial = seq(1,80, by = 1)) 
+# typed words of last 1-80 trials of the main experiment
+df2 <- valid %>% 
+          select('subject', starts_with("AV")) %>% 
+                  pivot_longer(
+                    cols = -subject,
+                     names_to = c("trial"), 
+                    values_to = "word") %>%
+                    group_by(subject) %>%
+                    mutate(trial = seq(81,160, by = 1))
+# bind first 80 and last 80 trials together
+df_words <- bind_rows(df1, df2) %>%
+        arrange(subject, trial)
+# delete word columns from wide data frame
+valid_red <- valid_red %>% 
+  select(!starts_with(c("AW", "AV")))
+
+
+### FAMILIARIZATION WORDS 
+### (only to control that ppt payed attention to the task)
+# typed words of first 1-80 trials of the familiarization
+df1 <- valid %>% 
+          select('subject', starts_with("FA03")) %>% 
+                  pivot_longer(
+                    cols = -subject,
+                     names_to = c("trial"), 
+                    values_to = "fam_typed") %>%
+                    group_by(subject) %>%
+                    mutate(trial = seq(1,80, by = 1)) 
+# typed words of last 1-80 trials of the main experiment
+df2 <- valid %>% 
+          select('subject', starts_with("FA04")) %>% 
+                  pivot_longer(
+                    cols = -subject,
+                     names_to = c("trial"), 
+                    values_to = "fam_typed") %>%
+                    group_by(subject) %>%
+                    mutate(trial = seq(81,160, by = 1))
+# bind first 80 and last 80 trials together
+df_fam <- bind_rows(df1, df2) %>%
+        arrange(subject, trial)
+# delete word columns from wide data frame
+valid_red <- valid_red %>% 
+  select(!starts_with(c("FA03", "FA04")))
+
+### Bind the four trial-wise dataframes together
+df_main <- merge(df_fam, df_words, by = c("subject", "trial"))
+df_main <- merge(df_main, df_letters, by= c("subject", "trial") )
+df_main <- merge(df_main, df_timing, by= c("subject", "trial") ) %>%
+  arrange(subject, trial)
+```
+
+Adapt wide dataframe with only info that is assessed only once
+```{r}
+# delete columns that contain only NAs
+valid_red <- valid_red %>% select_if(~sum(!is.na(.)) > 0)
+
+# delete columns with info we don't need
+valid_red %>% select(-c(CASE, QUESTIONNR, MODE, STARTED, SD22_PRV,
+                        SD22_BID, SD22_ScW, SD22_ScH, SD22_QnW,  ))
+
+# give columns more recognizable names
+valid_red %>% rename(array_no = OR01_01, gender = SD01, age = SD02_01,
+                     language.test = SD20, language = SD21, 
+                     os_system = SD22_0S, browser = SD22_BNM,
+                     system_format  = SD22_FmF, prolificid = SD24_01,
+                     fingers_l = SD25, fingers_r = 26, )
+  
+  
+   "SD27"     "SD28_01"  "SD29_01"  "CH01"    
+ [25] "CH01_01"  "CH01_02"  "CH01_03"  "CH01_04"  "CH02"     "CH02_01" 
+ [31] "CH02_02"  "CH02_03"  "CH02_04"  "CH03"     "KB01"     "KB02_01" 
+ [37] "KB03_01"  "KB03_02"  "KB03_03"  "AY01_01"  "TT01_01"  "TT04_01" 
+ [43] "TT07_01"  "TT02_01"  "TT02_02"  "TT05_01"  "TT05_02"  "TT08_01" 
+ [49] "TT08_02"  "TT03_01"  "TT03_02"  "TT03_03"  "TT03_04"  "TT03_05" 
+ [55] "TT03_06"  "TT03_07"  "TT03_08"  "TT03_09"  "TT03_10"  "TT03_11" 
+ [61] "TT03_12"  "TT03_13"  "TT03_14"  "TT03_15"  "TT03_16"  "TT03_17" 
+ [67] "TT03_18"  "TT03_19"  "TT03_20"  "TT03_21"  "TT03_22"  "TT03_23" 
+ [73] "TT06_01"  "TT06_02"  "TT06_03"  "TT06_04"  "TT06_05"  "TT06_06" 
+ [79] "TT06_07"  "TT06_08"  "TT06_09"  "TT06_10"  "TT06_11"  "TT06_12" 
+ [85] "TT06_13"  "TT06_14"  "TT06_15"  "TT06_16"  "TT06_17"  "TT06_18" 
+ [91] "TT06_19"  "TT06_20"  "TT06_21"  "TT06_22"  "TT06_23"  "TT09_01" 
+ [97] "TT09_02"  "TT09_03"  "TT09_04"  "TT09_05"  "TT09_06"  "TT09_07" 
+[103] "TT09_08"  "TT09_09"  "TT09_10"  "TT09_11"  "TT09_12"  "TT09_13" 
+[109] "TT09_14"  "TT09_15"  "TT09_16"  "TT09_17"  "TT09_18"  "TT09_19" 
+[115] "TT09_20"  "TT09_21"  "TT09_22"  "TT09_23"  "FA02_01"  "PT01"    
+[121] "PT02"     "PT03"     "PT04"     "IM01_01"  "TIME002"  "TIME003" 
+[127] "TIME005"  "TIME007"  "TIME008"  "TIME010"  "TIME011"  "TIME012" 
+[133] "TIME014"  "TIME015"  "TIME016"  "TIME018"  "TIME019"  "TIME021" 
+[139] "TIME022"  "TIME023"  "TIME024"  "TIME025"  "TIME026"  "TIME027" 
+[145] "TIME028"  "TIME029"  "TIME030"  "TIME_SUM" "LASTDATA" "FINISHED"
+[151] "Q_VIEWER" "LASTPAGE" "MAXPAGE"  "MISSING"  "MISSREL"  "DEG_TIME"
+[157] "attcheck" "cheat"    "subject" )
+
+```
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

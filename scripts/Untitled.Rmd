@@ -1,0 +1,86 @@
+---
+title: "02_CSI_online_typing_preprocessing"
+author: "Kirsten Stark"
+date: "2/26/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load packages
+```{r}
+library(dplyr)
+library(tidyr)
+```
+
+
+## Load and preprocess data
+
+```{r}
+options( "encoding" = "UTF-8" )
+pretest <- read_delim(here::here("data", "pretest_complete.csv"), 
+    ";", escape_double = FALSE, na = "NA", 
+    trim_ws = TRUE)
+```
+
+Check attention checks: 
+```{r}
+## Item vs. non-item
+# CH01_01 (Taube), CH01_02 (Apfel), CH02_01 (Luftballon) and CH02_02 (Biene) are items and 2 should be selected, 
+# CH02_03 (Radio), CH02_04 (Sparschwein), CH02_03 (Laptop) and CH02_04 (Wattestäbchen) are non-items and 1 should be selected
+## Did participants cheat
+# CH03 = 1 - yes, I worked through it till the end, 
+# CH03 = 2 - no, I stopped or cheated midway
+# CH03 = -9 - no answer
+pretest <- pretest %>% mutate(attcheck = 
+                  ifelse(CH01_01 == 2 & CH01_02 == 2 & CH02_01 == 2 & CH02_02 == 2 &
+                  CH01_03 == 1 & CH01_04 == 1 & CH02_03 == 1 & CH02_04 == 1, 1, 0)) %>%
+                   mutate(cheat = ifelse(CH03 == 1,1,ifelse(CH03 == 2,2,0)))
+table(pretest$attcheck)
+table(pretest$cheat)
+
+# get prolific IDs of participants who failed the attention check
+#pretest %>% subset(attcheck == 0 & cheat == 2 ) %>% 
+#  pull(SD24_01) # SD24_01 is prolific ID
+
+# subset to participants who passed only 
+valid <- pretest %>% filter(attcheck == 1 & cheat != 2)
+
+```
+
+## Convert to wide format
+```{r}
+str(valid)
+df <- valid %>% select(c(CASE, starts_with(c("TY", "TP")))) %>% pivot_longer(!CASE, names_to = "Item", values_to = "RT_letter")
+df <- valid %>%  select(c(CASE, starts_with(c("TI")))) %>% pivot_longer(
+   cols = starts_with("TI") & ends_with("01"),
+   names_to = "trial",
+   #names_prefix = "",
+   values_to = "timing"#,
+   #values_drop_na = TRUE
+ )
+
+```
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

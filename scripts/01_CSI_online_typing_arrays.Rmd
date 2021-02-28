@@ -1,0 +1,37 @@
+---
+title: "Script01_preparation_arrays"
+author: "Kirsten Stark"
+date: "2/26/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load packages
+```{r load packages}
+summary(cars)
+```
+
+## Load arrays
+```{r load data}
+options( "encoding" = "UTF-8" )
+arrays <- read_delim(here::here("data", "arrays.csv"), 
+    ";", escape_double = FALSE, na = "NA", 
+    trim_ws = TRUE)
+# delete empty lines
+arrays %>% filter()
+
+```
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

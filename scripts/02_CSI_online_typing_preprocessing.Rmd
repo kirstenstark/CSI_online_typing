@@ -1,5 +1,5 @@
 ---
-title: "02_CSI_online_typing_analyses"
+title: "02_CSI_online_typing_preprocessing"
 author: "Kirsten Stark"
 date: "2/26/2021"
 output: html_document

@@ -1,0 +1,271 @@
+---
+title: "03_CSI_online_typing_analysis"
+author: "Kirsten Stark"
+date: "2/28/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load packages
+```{r}
+library(dplyr)
+library(lme4)
+library(lmerTest)
+library(Rmisc)
+library(Cairo)
+library(strengejacke)
+library(ggplot2)
+
+options(scipen=999)
+
+rm(list = ls())
+```
+
+
+## Load and preprocess data
+
+```{r}
+options( "encoding" = "UTF-8" )
+df <- read.csv(here::here("data", "pretest_long.csv"))
+#pretest <- read_delim(here::here("data", "pretest_complete.csv"), 
+#    ";", escape_double = FALSE, na = "", 
+#    trim_ws = TRUE)
+```
+
+Check amount of participants and trials and exclude fillers
+```{r}
+# no. of participants: 
+length(unique(df$subject))
+
+# no. of trials is 160 per participant? 
+nrow(df) == 160 * length(unique(df$subject))
+
+# exclude rows with filler trials
+df <- df %>% filter(category != "Filler")
+nrow(df)/length(unique(df$subject)) # 120 Trials per participant
+```
+
+## Check participants answer behavior
+```{r}
+answers <- data.frame(df$item, df$word) %>% 
+  rename(item = df.item, word = df.word) %>%
+  mutate(item =  toupper(item)) %>% 
+  mutate(word = toupper(word))
+
+# when item and word are exactly identical, the answer is correct
+answers <- answers %>% filter(item != word)
+
+# if entry was submitted by enter key, delete 'Enter'
+answers <- answers %>% mutate(word = case_when(
+    endsWith(word, "ENTER") ~ stringr::str_sub(word, end = -6),
+    !endsWith(word, "ENTER") ~ word))
+answers <- answers %>% filter(item != word)
+
+# if entry was submitted by space bar, delete 'space'
+answers <- answers %>% mutate(word = case_when(
+    endsWith(word, " ") ~ stringr::str_sub(word, end = -2),
+    !endsWith(word, " ") ~ word))
+answers <- answers %>% filter(item != word)
+
+# answers that we still consider as correct: 
+# 1) synonymes
+# 2) typos or corrections that should not affect first letter timing
+answers.sort <- with(answers,  answers[order(item) , ])
+df3 <- answers.sort %>% filter(word != "ARMAND", # Item = Armband
+                               word != "ARZTKIZEBACKSPACEBACKSPACETTEL", # Item = Arztkittel
+                               word != "AUTP", # Item = Auto
+                               word != "ACCBACKSPACEBACKSPACEXT", # Item = Axt
+                               word != "BABANBACKSPACEBACKSPACEBACKSPACENANE", # Item = Banane
+                               word != "BANANAEBACKSPACEBACKSPACEE", # Item = Banane
+                               word != "BAKBACKSPACENK", # Item = Bank
+                               word != "BANLBACKSPACEK+", # Item = Bank
+                               word != "BÖRBACKSPACEBACKSPACEÄR", # Item = Bär
+                               word != "BOHRER", # Item = Bohrmaschine
+                               word != "BONOBON", # Item = Bonbon
+                               word != "BRKBACKSPACEOKKOLI", # Item = Brokkoli
+                               word != "BROCHBACKSPACEBACKSPACESCHE", # Item = Brosche, 
+                               word != "BURH", # Item = BURG
+                               word != "SOFA", # Item = COUCH
+                               word != "SOBACKSPACEBACKSPACEBACKSPACECOBACKSPACEBACKSPACEBACKSPACECOUCH", # Item = Couch
+                               word != "DAUENBACKSPACENENWESTE", # Item = DAUNENWESTE
+                               word != "WESTE", # Item = DAUNENWESTE
+                               word != "WEBACKSPACEBACKSPACESHIFTDAUNENWESTE", # Item = DAUNENWESTE
+                               word != "FEIEBACKSPACELE", # Item = FEILE
+                               word != "FUSSBACKSPACES", # Item = Fuss
+                               word != "GEABEBACKSPACEBACKSPACEBACKSPACEBACKSPACEABEL", # Item = Gabel
+                               word != "SPÜLMASCHINE", # Item = GESCHIRRSPÜLER	
+                               word != "GESCHRIBACKSPACEBACKSPACEIRRSPÜLER", # Item = Geschirrspüler
+                               word != "GOLDFISH", # Item =Goldfisch
+                               word != "GLBACKSPACEOLDSBACKSPACEFISCH", # Item = Goldfisch)
+                               word != "FISCH", # Item = Goldfisch
+                               "GONEBACKSPACEDLE", GONDEL
+                               "HOCHHAUSEBACKSPACE", HOCHHAUS
+                               "HPCKER", HOCKER
+                               "KAFFEMASCHINE", KAFFEEMASCHINE
+                               "KAFFEMBACKSPACEEMASCHINE", KAFFEEMASCHINE	
+                               "TEEKANNE", KANNE
+                               "KAPUZEPULLI", KAPUZENPULLI	
+                               "KATBACKSPACEROTTE", KAROTTE
+                               "KAROTEBACKSPACETE", KAROTTE
+                               "KARTOFFELL", KARTOFFEL
+                               "SUPPENKELLE", KELLE
+                               "BÜRLOKLAMEMR", KLAMMER
+                               "BÜROKLAMMER", KLAMMER
+                               "SCHRANK", KLEIDERSCHRANK	
+                               "KBACKSPACEZTORTE", KUCHEN
+                               "TOPRTE", KUCHEN
+                               "KUTZSBACKSPACEBACKSPACESCHE", KUTSCHE
+                               "LINRBACKSPACEEAL", LINEAL
+                               "LÖGFFEL", LÖFFEL
+                               "LÖSEBACKSPACEBACKSPACEWE", LÖWE
+                               "MIRKOWELLE", MIKROWELLE
+                               "MIKBACKSPACERBACKSPACEKROWELLE", MIKROWELLE	
+                               "MIGBACKSPACERBACKSPACEKROWELLE", MIKROWELLE 
+
+
+89
+MOTORRAD
+MPOTORRAD
+
+
+92
+ORCHIDEE
+BLUME
+93
+PANTHER
+PUMA
+95
+PAPRIKA
+PAPRIKE
+96
+PAPRIKA
+PARPIKA
+97
+PAPRIKA
+PARPIKA
+98
+PELZMANTEL	
+MANTEL
+99
+PELZMANTEL	PERBACKSPACELZMANTEL
+100
+RADIERGUMMI	RADIERHUMMEBACKSPACEI
+101
+REGAL
+REABACKSPACEGAL
+103
+ROCHEN
+ROCHENENTERENTERENTERENTERENTERENTERENTERENTERENTERENTERENTER
+104
+ROSE
+BLUME
+105
+SAFE
+SAEBACKSPACEFE
+106
+SAKKO
+SAKKO7BACKSPACE
+107
+SCHACHTEL
+KISTE
+108
+SCHAUFEL
+SPATEN
+Showing 1 to 13 of 130 entries, 2 total columns
+                               
+)
+
+
+
+
+
+
+
+
+	
+
+```
+
+
+### Plot RTs by OrPos
+
+```{r}
+is.numeric(df$timing.01)
+df$PosOr <- as.factor(df$PosOr)
+df$subject <- as.factor(df$subject)
+# descriptives 
+means <- Rmisc::summarySEwithin(df,"timing.01",idvar = "subject",withinvars = "PosOr", na.rm = T)
+```
+
+
+Make plots suitable for APA format, font sizes can be adjusted
+```{r}
+apatheme <- theme_bw()+
+  theme(plot.title=element_text(family="Arial",size=22,hjust = .5),
+        panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+        panel.border=element_blank(),axis.line=element_line(),
+        text=element_text(family="Arial",size=16))
+```
+
+
+```{r}
+(plot <- ggplot(data=df, aes(x=PosOr, y=timing.01)) +
+  stat_summary(fun=mean,  geom="point", size = 2)+
+  stat_summary(fun=mean,  geom="line", size = 1) +
+  apatheme+
+  labs(x="Ordinal Position ",y ="RT ms")+
+  annotate(geom="text", x=2, y=1200, label="n = 4", color="black", size = 8))
+
+
+ggsave(plot = plot, file = "figures/RT_across_conditions.pdf", device = cairo_pdf, dpi = 300)
+embedFonts(file = "figures/RT_across_conditions_CSI_online_typing.pdf")
+```
+  
+Plot by subcategory
+```{r}
+
+(plot_by_cat <- ggplot(data=df, aes(x=PosOr, y=timing.01)) +
+  stat_summary(fun=mean,  geom="point", size = 2)+
+  stat_summary(fun=mean,  geom="line", size = 1) +
+  facet_wrap(~category) +
+  apatheme+
+  labs(x="Ordinal Position ",y ="RT ms"))
+#ggsave(plot = plot30_facet, file = "Plots/CSI_subcats.pdf", device = cairo_pdf,dpi = 300)
+#embedFonts(file = "Plots/CSI_online30_subcats.pdf")
+
+```
+
+Plot by subject: 
+```{r}
+
+(plot_by_cat <- ggplot(data=df, aes(x=PosOr, y=timing.01)) +
+  stat_summary(fun=mean,  geom="point", size = 2)+
+  stat_summary(fun=mean,  geom="line", size = 1) +
+  facet_wrap(~subject) +
+  apatheme+
+  labs(x="Ordinal Position ",y ="RT ms"))
+#ggsave(plot = plot30_facet, file = "Plots/CSI_subcats.pdf", device = cairo_pdf,dpi = 300)
+#embedFonts(file = "Plots/CSI_online30_subcats.pdf")
+
+```
+
+# lmms --------------------------------------------------------------------
+
+hist(df$VOT)
+
+contrasts(df$Pos) <- contr.poly(5)
+
+m1 <- glmer(VOT ~ Pos + (Pos|VP) +(Pos|subcat) , 
+             data =df_correct, family =Gamma(link ="identity"), control=glmerControl(optimizer = "bobyqa"))
+
+summary(m1)
+tab_model(m1,transform = NULL,show.re.var = F, file = "Plots/glmm_CSI_online.html")
+
+
+m1_30 <- glmer(VOT ~ Pos + (Pos|VP) +(Pos|subcat) , 
+            data =df_correct30, family =Gamma(link ="identity"), control=glmerControl(optimizer = "bobyqa"))
+
+summary(m1_30)

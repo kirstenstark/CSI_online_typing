@@ -245,7 +245,7 @@ df <-  df %>%
 Add array for each participant
 ```{r}
 # load arrays
-arrays <- read.csv(here::here("data", "arrays.csv"), 
+arrays <- read.csv(here::here("data", "arrays_umlaut.csv"), 
     sep = ";", na = "NA")
 # delete empty lines
 arrays %>% filter()

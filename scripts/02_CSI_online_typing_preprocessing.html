@@ -647,7 +647,7 @@ df &lt;-  df %&gt;%
                     contains(&quot;letters&quot;))), as.numeric)</code></pre>
 <p>Add array for each participant</p>
 <pre class="r"><code># load arrays
-arrays &lt;- read.csv(here::here(&quot;data&quot;, &quot;arrays.csv&quot;), 
+arrays &lt;- read.csv(here::here(&quot;data&quot;, &quot;arrays_umlaut.csv&quot;), 
     sep = &quot;;&quot;, na = &quot;NA&quot;)
 # delete empty lines
 arrays %&gt;% filter()</code></pre>
@@ -656,15 +656,15 @@ arrays %&gt;% filter()</code></pre>
 ## 2         steckdose           regal       spaghetti          rochen
 ## 3            delfin       goldfisch             hai            safe
 ## 4               bus            auto             bus        motorrad
-## 5              safe      kopfhoerer        mikrofon          delfin
+## 5              safe       kopfhörer        mikrofon          delfin
 ## 6          kassette  kleiderschrank           regal           regal
 ## 7         goldfisch             lkw         kutsche         kutsche
 ## 8             waage         schwamm             aal             hai
 ## 9          fernglas       schachtel            safe  kleiderschrank
-## 10          kutsche      muelleimer          pinsel            auto
+## 10          kutsche       mülleimer          pinsel            auto
 ## 11           rochen          delfin        motorrad           kerze
 ## 12      streichholz             bus  kleiderschrank       schublade
-## 13             auto     lippenstift          delfin         wuerfel
+## 13             auto     lippenstift          delfin          würfel
 ## 14   kleiderschrank             hai             lkw          pinsel
 ## 15              aal         kutsche       schublade       schachtel
 ## 16              lkw       schublade          rochen       goldfisch
@@ -672,7 +672,7 @@ arrays %&gt;% filter()</code></pre>
 ## 18              hai        motorrad       schachtel      luftballon
 ## 19         motorrad            safe       goldfisch             aal
 ## 20        schublade          rochen           ampel         fenster
-## 21            saege       kartoffel           tafel           sakko
+## 21             säge       kartoffel           tafel           sakko
 ## 22          karotte           sense           kerze             axt
 ## 23      daunenweste     daunenweste        schaufel         paprika
 ## 24           glocke        brokkoli       kartoffel    kapuzenpulli
@@ -680,56 +680,56 @@ arrays %&gt;% filter()</code></pre>
 ## 26       pelzmantel           sakko          kamera           gurke
 ## 27         schaufel          pfeife           gurke      arztkittel
 ## 28            gurke         karotte     daunenweste        schaufel
-## 29           kaefig      pelzmantel           waage       kartoffel
+## 29            käfig      pelzmantel           waage       kartoffel
 ## 30            besen     schornstein        brokkoli          kamera
-## 31        kartoffel           saege           besen      briefmarke
-## 32     kapuzenpulli          kaefig      arztkittel           saege
+## 31        kartoffel            säge           besen      briefmarke
+## 32     kapuzenpulli           käfig      arztkittel            säge
 ## 33            kerze           gurke         karotte         karotte
-## 34          paprika           besen           saege         faecher
+## 34          paprika           besen            säge          fächer
 ## 35            sense      arztkittel    kapuzenpulli       steckdose
 ## 36            sakko          parfum         paprika     daunenweste
 ## 37           pinsel             axt           sense        brokkoli
 ## 38              axt         paprika      kopfkissen           besen
 ## 39       arztkittel    kapuzenpulli           sakko      pelzmantel
-## 40           pfeife           waage             axt      muelleimer
+## 40           pfeife           waage             axt       mülleimer
 ## 41              reh           tulpe           tulpe             kuh
 ## 42        zigarette           pferd         fenster     streichholz
-## 43          buerste           harfe         buerste      schlagzeug
+## 43           bürste           harfe          bürste      schlagzeug
 ## 44            kamel         schwert             reh     lippenstift
-## 45             rose           kamel        orchidee      kopfhoerer
-## 46          gitarre         klavier      schluessel             reh
-## 47            pferd      loewenzahn           geige           ampel
+## 45             rose           kamel        orchidee       kopfhörer
+## 46          gitarre         klavier       schlüssel             reh
+## 47            pferd       löwenzahn           geige           ampel
 ## 48      sonnenblume           kerze           kamel            rose
 ## 49            geige           geige     briefkasten         klavier
 ## 50          schwert            rose          parfum           kamel
 ## 51              kuh           schaf         gitarre        orchidee
 ## 52            ampel        mikrofon           pferd           harfe
-## 53            harfe      schlagzeug      loewenzahn        mikrofon
-## 54            tulpe         buerste           harfe      loewenzahn
+## 53            harfe      schlagzeug       löwenzahn        mikrofon
+## 54            tulpe          bürste           harfe       löwenzahn
 ## 55            puppe             kuh             kuh           geige
 ## 56       schlagzeug     sonnenblume            rose           schaf
-## 57       loewenzahn         gitarre         klavier           tulpe
+## 57        löwenzahn         gitarre         klavier           tulpe
 ## 58            schaf             reh           schaf         gitarre
 ## 59          klavier        orchidee     sonnenblume           pferd
 ## 60         orchidee      luftballon      schlagzeug     sonnenblume
 ## 61       mikrowelle            kanu          glocke           puppe
-## 62      segelschiff         faecher geschirrspueler          schere
+## 62      segelschiff          fächer  geschirrspüler          schere
 ## 63         mikrofon            herd          pfeife  kaffeemaschine
 ## 64        bleistift          u-boot          schere            kanu
-## 65           u-boot       bleistift    kuehlschrank           tafel
-## 66           brille    kuehlschrank          gondel          lineal
+## 65           u-boot       bleistift     kühlschrank           tafel
+## 66           brille     kühlschrank          gondel          lineal
 ## 67      radiergummi          gondel       bleistift          u-boot
-## 68             kanu         klammer      mikrowelle    kuehlschrank
-## 69  geschirrspueler  kaffeemaschine           yacht      schluessel
+## 68             kanu         klammer      mikrowelle     kühlschrank
+## 69   geschirrspüler  kaffeemaschine           yacht       schlüssel
 ## 70      schornstein           yacht           puppe           yacht
-## 71           lineal         wuerfel  kaffeemaschine geschirrspueler
-## 72     kuehlschrank          schere       badewanne         klammer
+## 71           lineal          würfel  kaffeemaschine  geschirrspüler
+## 72      kühlschrank          schere       badewanne         klammer
 ## 73             baby      mikrowelle            kanu     segelschiff
 ## 74           schere       steckdose         klammer     schornstein
 ## 75   kaffeemaschine     segelschiff      ventilator     radiergummi
 ## 76           gondel     radiergummi          u-boot      mikrowelle
 ## 77       briefmarke     briefkasten     radiergummi            ball
-## 78             herd geschirrspueler            herd       bleistift
+## 78             herd  geschirrspüler            herd       bleistift
 ## 79            yacht          lineal     segelschiff            herd
 ## 80          klammer      briefmarke          lineal          gondel
 ## 81           becher        fernglas           kanne     briefkasten
@@ -737,23 +737,23 @@ arrays %&gt;% filter()</code></pre>
 ## 83            tafel           biene          ameise          ameise
 ## 84            apfel        kassette          banane           birne
 ## 85           fliege          becher         flasche            glas
-## 86          teppich          fliege           biene         buerste
+## 86          teppich          fliege           biene          bürste
 ## 87            birne      kopfkissen           apfel           apfel
 ## 88            tasse           tasse       zigarette          fliege
 ## 89           spinne          ameise          spinne           kanne
 ## 90          trauben         trauben         kirsche         trauben
-## 91       kopfhoerer         flasche       steckdose              cd
+## 91        kopfhörer         flasche       steckdose              cd
 ## 92       luftballon          spinne            glas           biene
-## 93     marienkaefer           apfel          fliege          banane
+## 93      marienkäfer           apfel          fliege          banane
 ## 94            kanne           kanne          brille            baby
-## 95           banane    marienkaefer           tasse          becher
-## 96          faecher          banane     schornstein          spinne
+## 95           banane     marienkäfer           tasse          becher
+## 96           fächer          banane     schornstein          spinne
 ## 97          flasche            ball         trauben         kirsche
 ## 98          kirsche            glas          becher           tasse
-## 99            biene         kirsche    marienkaefer    marienkaefer
+## 99            biene         kirsche     marienkäfer     marienkäfer
 ## 100            glas       badewanne           birne      kopfkissen
 ## 101      schokolade    bohrmaschine            baby            hand
-## 102           feile      schluessel schraubenzieher schraubenzieher
+## 102           feile       schlüssel schraubenzieher schraubenzieher
 ## 103             ohr          bonbon          bonbon          brille
 ## 104           kekse          glocke            bein             arm
 ## 105           zange schraubenzieher      luftballon          hammer
@@ -762,10 +762,10 @@ arrays %&gt;% filter()</code></pre>
 ## 108          hammer          kuchen           kekse           feile
 ## 109     lippenstift            hand    bohrmaschine             eis
 ## 110            bein          hammer            hand             ohr
-## 111    bohrmaschine           kekse      kopfhoerer        fernglas
-## 112      schluessel             arm      schokolade          kaefig
+## 111    bohrmaschine           kekse       kopfhörer        fernglas
+## 112       schlüssel             arm      schokolade           käfig
 ## 113            hand       zigarette            fuss      schokolade
-## 114 schraubenzieher      ventilator         wuerfel            bein
+## 114 schraubenzieher      ventilator          würfel            bein
 ## 115          kuchen           feile             eis           zange
 ## 116     briefkasten             ohr           feile           kekse
 ## 117              cd      schokolade             arm            fuss
@@ -783,49 +783,49 @@ arrays %&gt;% filter()</code></pre>
 ## 129          tempel          hocker          kirche         teppich
 ## 130          sessel            eule           couch         schwamm
 ## 131           taube            burg            ente           couch
-## 132      muelleimer            bank        kassette      ventilator
+## 132       mülleimer            bank        kassette      ventilator
 ## 133          kirche            ente            bank          schwan
 ## 134            bank         schloss          schwan          hocker
 ## 135         schwamm           tafel          tempel        hochhaus
 ## 136            burg         teppich              cd            ente
 ## 137            ente           stuhl          sessel         schwert
-## 138         wuerfel          pinsel            burg          tempel
-## 139         schloss         strauss      muelleimer          parfum
+## 138          würfel          pinsel            burg          tempel
+## 139         schloss         strauss       mülleimer          parfum
 ## 140          hocker          sessel          hocker         strauss
-## 141           gabel           kelle         panther           loewe
-## 142           tiger          kamera         loeffel         loeffel
-## 143            ring           loewe         brosche        kassette
+## 141           gabel           kelle         panther            löwe
+## 142           tiger          kamera          löffel          löffel
+## 143            ring            löwe         brosche        kassette
 ## 144     schneebesen           ampel           tiger          pfeife
 ## 145         leopard         brosche          messer         panther
 ## 146         armband          messer      briefmarke         ohrring
 ## 147           kelle            baby         armband           gabel
-## 148          kamera         armband     schneebesen            baer
-## 149           loewe         leopard          kaefig            ring
-## 150           kette           puppe           loewe       badewanne
+## 148          kamera         armband     schneebesen             bär
+## 149            löwe         leopard           käfig            ring
+## 150           kette           puppe            löwe       badewanne
 ## 151       spaghetti         fenster            ring     schneebesen
-## 152         panther            ring         faecher           kette
-## 153          messer           gabel            baer          glocke
+## 152         panther            ring          fächer           kette
+## 153          messer           gabel             bär          glocke
 ## 154            ball           tiger         ohrring          messer
 ## 155         brosche         ohrring        fernglas         armband
-## 156         loeffel     schneebesen         schwamm         leopard
+## 156          löffel     schneebesen         schwamm         leopard
 ## 157          parfum         panther           kelle           kelle
 ## 158         ohrring           kette           kette         brosche
-## 159            baer         loeffel         leopard           tiger
-## 160      ventilator            baer           gabel       zigarette
+## 159             bär          löffel         leopard           tiger
+## 160      ventilator             bär           gabel       zigarette
 ##              array5          array6          array7          array8
 ## 1              safe           regal      pelzmantel           sense
 ## 2         steckdose            ball         paprika      briefmarke
 ## 3               hai             lkw        schaufel         paprika
 ## 4          motorrad             aal           sakko      pelzmantel
 ## 5          kassette      luftballon       kartoffel        schaufel
-## 6               aal       schublade           besen          kaefig
+## 6               aal       schublade           besen           käfig
 ## 7         schublade          rochen       steckdose     daunenweste
-## 8              auto        motorrad    kapuzenpulli           saege
-## 9         goldfisch            baby           saege            ball
+## 8              auto        motorrad    kapuzenpulli            säge
+## 9         goldfisch            baby            säge            ball
 ## 10        schachtel       goldfisch         karotte      ventilator
 ## 11              lkw            safe          kamera       kartoffel
 ## 12           rochen            auto             axt           besen
-## 13      schornstein         faecher     daunenweste           sakko
+## 13      schornstein          fächer     daunenweste           sakko
 ## 14              bus  kleiderschrank        brokkoli         karotte
 ## 15           delfin             bus           sense        fernglas
 ## 16      briefkasten          delfin           tafel    kapuzenpulli
@@ -833,97 +833,97 @@ arrays %&gt;% filter()</code></pre>
 ## 18          kutsche         kutsche      arztkittel             axt
 ## 19        spaghetti             hai           gurke      arztkittel
 ## 20   kleiderschrank     streichholz     streichholz        brokkoli
-## 21           parfum        schaufel           geige      loewenzahn
-## 22         brokkoli    kapuzenpulli      muelleimer          pfeife
-## 23       muelleimer        brokkoli        orchidee           schaf
+## 21           parfum        schaufel           geige       löwenzahn
+## 22         brokkoli    kapuzenpulli       mülleimer          pfeife
+## 23        mülleimer        brokkoli        orchidee           schaf
 ## 24       briefmarke           sense             kuh           geige
-## 25          karotte           tafel         gitarre         buerste
-## 26       pelzmantel         karotte      loewenzahn         schwert
-## 27            saege     daunenweste           pferd     sonnenblume
-## 28        zigarette      schluessel           harfe         klavier
+## 25          karotte           tafel         gitarre          bürste
+## 26       pelzmantel         karotte       löwenzahn         schwert
+## 27             säge     daunenweste           pferd     sonnenblume
+## 28        zigarette       schlüssel           harfe         klavier
 ## 29            tafel           gurke           tulpe           pferd
 ## 30              axt           sakko           kamel     briefkasten
 ## 31            sakko              cd           ampel           harfe
 ## 32            gurke           besen     sonnenblume             reh
-## 33            besen         paprika      schluessel           tulpe
-## 34     kapuzenpulli      kopfhoerer         klavier         gitarre
+## 33            besen         paprika       schlüssel           tulpe
+## 34     kapuzenpulli       kopfhörer         klavier         gitarre
 ## 35        kartoffel      pelzmantel        kassette           tafel
 ## 36         schaufel             axt          pfeife            rose
 ## 37      daunenweste       kartoffel           schaf             kuh
 ## 38          paprika      arztkittel      schlagzeug      schlagzeug
-## 39            sense           saege            rose        orchidee
+## 39            sense            säge            rose        orchidee
 ## 40       arztkittel        fernglas             reh           kamel
-## 41       schlagzeug            rose         wuerfel         loeffel
+## 41       schlagzeug            rose          würfel          löffel
 ## 42          schwamm       badewanne           kette       spaghetti
 ## 43            tulpe           pferd          messer         armband
-## 44            schaf        orchidee         leopard           loewe
+## 44            schaf        orchidee         leopard            löwe
 ## 45            ampel           geige         armband           gabel
-## 46          wuerfel           kamel           kelle           kette
-## 47            pferd      loewenzahn        mikrofon            baer
+## 46           würfel           kamel           kelle           kette
+## 47            pferd       löwenzahn        mikrofon             bär
 ## 48            geige         klavier            ring     schneebesen
-## 49           pfeife             kuh         loeffel            ring
-## 50             rose           tulpe            baer         fenster
-## 51            harfe      muelleimer         brosche        kassette
+## 49           pfeife             kuh          löffel            ring
+## 50             rose           tulpe             bär         fenster
+## 51            harfe       mülleimer         brosche        kassette
 ## 52              kuh      schlagzeug     schneebesen           kelle
 ## 53      sonnenblume             reh           tiger         brosche
 ## 54             ball     briefkasten          pinsel         panther
-## 55          gitarre         gitarre     schornstein         wuerfel
+## 55          gitarre         gitarre     schornstein          würfel
 ## 56              reh       spaghetti         panther         ohrring
-## 57       loewenzahn     sonnenblume         ohrring         leopard
+## 57        löwenzahn     sonnenblume         ohrring         leopard
 ## 58          klavier           harfe         fenster          messer
-## 59            kamel           kerze           loewe              cd
+## 59            kamel           kerze            löwe              cd
 ## 60         orchidee           schaf           gabel           tiger
-## 61       kopfhoerer          gondel            auto      kopfkissen
+## 61        kopfhörer          gondel            auto      kopfkissen
 ## 62             herd      mikrowelle           regal            safe
 ## 63          teppich         klammer          brille           puppe
 ## 64           lineal          u-boot         kutsche         kutsche
 ## 65       mikrowelle     schornstein           waage          kamera
-## 66             kanu geschirrspueler             hai      luftballon
+## 66             kanu  geschirrspüler             hai      luftballon
 ## 67           schere       bleistift             lkw             hai
-## 68       schluessel          kaefig              cd  kleiderschrank
+## 68        schlüssel           käfig              cd  kleiderschrank
 ## 69      segelschiff            herd             aal            auto
 ## 70      radiergummi     radiergummi       schachtel          delfin
-## 71  geschirrspueler            kanu             bus          pinsel
-## 72      streichholz    kuehlschrank           puppe             lkw
+## 71   geschirrspüler            kanu             bus          pinsel
+## 72      streichholz     kühlschrank           puppe             lkw
 ## 73            yacht           puppe          delfin       schublade
 ## 74   kaffeemaschine          brille       schublade             aal
-## 75            waage          lineal         faecher             bus
+## 75            waage          lineal          fächer             bus
 ## 76           u-boot           yacht          rochen           regal
 ## 77        bleistift  kaffeemaschine            safe          rochen
-## 78     kuehlschrank          schere        motorrad        motorrad
+## 78      kühlschrank          schere        motorrad        motorrad
 ## 79           gondel     segelschiff       goldfisch       schachtel
 ## 80          klammer          pfeife  kleiderschrank       goldfisch
-## 81            biene          becher          schere    kuehlschrank
+## 81            biene          becher          schere     kühlschrank
 ## 82           banane          spinne  kaffeemaschine       bleistift
 ## 83          schwert         kirsche          gondel         schwamm
-## 84           spinne         wuerfel       bleistift            herd
-## 85          buerste      briefmarke            herd          schere
+## 84           spinne          würfel       bleistift            herd
+## 85           bürste      briefmarke            herd          schere
 ## 86            apfel           birne       spaghetti     segelschiff
-## 87           ameise           kanne      kopfhoerer geschirrspueler
+## 87           ameise           kanne       kopfhörer  geschirrspüler
 ## 88            tasse         schwamm          u-boot       steckdose
-## 89          kirsche          banane geschirrspueler          u-boot
+## 89          kirsche          banane  geschirrspüler          u-boot
 ## 90           kamera         flasche          lineal  kaffeemaschine
 ## 91             glas           biene           yacht        mikrofon
 ## 92           fliege           apfel      mikrowelle          gondel
 ## 93             baby           waage        fernglas     radiergummi
-## 94          flasche    marienkaefer            kanu      mikrowelle
-## 95     marienkaefer            glas         klammer           yacht
+## 94          flasche     marienkäfer            kanu      mikrowelle
+## 95      marienkäfer            glas         klammer           yacht
 ## 96          trauben         trauben     briefkasten          lineal
 ## 97           becher          ameise     segelschiff          glocke
-## 98         mikrofon           tasse    kuehlschrank            kanu
-## 99            birne         buerste       badewanne         teppich
+## 98         mikrofon           tasse     kühlschrank            kanu
+## 99            birne          bürste       badewanne         teppich
 ## 100           kanne          fliege     radiergummi         klammer
 ## 101             eis            hand       zigarette           tasse
 ## 102             arm           kekse         flasche          banane
 ## 103     lippenstift          hammer           birne           kerze
 ## 104          bonbon            bein          parfum         flasche
 ## 105           feile             eis         schwert         kirsche
-## 106          brille          parfum          banane         faecher
-## 107      schokolade          kamera    marienkaefer           biene
-## 108         faecher           zange          kaefig           kanne
+## 106          brille          parfum          banane          fächer
+## 107      schokolade          kamera     marienkäfer           biene
+## 108          fächer           zange           käfig           kanne
 ## 109            hand         fenster           kanne           birne
-## 110          hammer            fuss          fliege    marienkaefer
-## 111       badewanne           feile          glocke      kopfhoerer
+## 110          hammer            fuss          fliege     marienkäfer
+## 111       badewanne           feile          glocke       kopfhörer
 ## 112            fuss          pinsel           apfel           apfel
 ## 113           zange             ohr           biene          ameise
 ## 114      ventilator          bonbon          becher          becher
@@ -932,12 +932,12 @@ arrays %&gt;% filter()</code></pre>
 ## 117    bohrmaschine          kuchen            glas            glas
 ## 118             ohr             arm         trauben         trauben
 ## 119           kekse    bohrmaschine          ameise          fliege
-## 120 schraubenzieher      schokolade           tasse      muelleimer
+## 120 schraubenzieher      schokolade           tasse       mülleimer
 ## 121           couch          glocke      schokolade             eis
 ## 122           puppe            ente            bein     schornstein
 ## 123            eule           stuhl    bohrmaschine            bein
-## 124          tempel          tempel         buerste          kuchen
-## 125          kaefig           ampel            hand      schluessel
+## 124          tempel          tempel          bürste          kuchen
+## 125           käfig           ampel            hand       schlüssel
 ## 126          pinsel     lippenstift           feile            hand
 ## 127            ente          sessel            ball    bohrmaschine
 ## 128            burg           taube      luftballon      schokolade
@@ -953,7 +953,7 @@ arrays %&gt;% filter()</code></pre>
 ## 138              cd            bank          hammer          bonbon
 ## 139           stuhl          kirche          kuchen     streichholz
 ## 140        hochhaus            eule             arm           zange
-## 141         loeffel           loewe        hochhaus     lippenstift
+## 141          löffel            löwe        hochhaus     lippenstift
 ## 142        fernglas           gabel     lippenstift           couch
 ## 143         ohrring         armband            bank        hochhaus
 ## 144           tiger         leopard            ente            baby
@@ -962,78 +962,78 @@ arrays %&gt;% filter()</code></pre>
 ## 147         panther         panther         teppich         schloss
 ## 148         brosche           kelle         strauss          sessel
 ## 149     schneebesen           kette            baby         strauss
-## 150            baer           tiger          tempel          kirche
-## 151         fenster         loeffel            eule          hocker
+## 150             bär           tiger          tempel          kirche
+## 151         fenster          löffel            eule          hocker
 ## 152            ring         ohrring           stuhl            ente
 ## 153         leopard         schwert         schloss       badewanne
 ## 154           kerze      kopfkissen           taube            burg
 ## 155      kopfkissen         brosche          sessel            eule
 ## 156         armband     schneebesen      briefmarke            bank
 ## 157           kelle         teppich            burg          tempel
-## 158           loewe            ring         schwamm           taube
-## 159           kette            baer          schwan           stuhl
+## 158            löwe            ring         schwamm           taube
+## 159           kette             bär          schwan           stuhl
 ## 160           gabel      ventilator          hocker           waage
 ##              array9         array10         array11         array12
 ## 1             sakko     daunenweste        brokkoli        schaufel
-## 2          brokkoli           besen      arztkittel      muelleimer
+## 2          brokkoli           besen      arztkittel       mülleimer
 ## 3              baby           tafel     streichholz         paprika
-## 4             sense       kartoffel           saege    kapuzenpulli
+## 4             sense       kartoffel            säge    kapuzenpulli
 ## 5            parfum           sakko         schwert           waage
-## 6        pelzmantel              cd              cd           saege
-## 7           faecher         karotte           besen     daunenweste
+## 6        pelzmantel              cd              cd            säge
+## 7            fächer         karotte           besen     daunenweste
 ## 8          schaufel           sense          brille     streichholz
 ## 9        arztkittel          pfeife           gurke        brokkoli
 ## 10            gurke    kapuzenpulli             axt           sense
 ## 11      briefkasten        schaufel     daunenweste      briefmarke
-## 12      daunenweste      schluessel         karotte       kartoffel
+## 12      daunenweste       schlüssel         karotte       kartoffel
 ## 13          paprika        brokkoli        fernglas      pelzmantel
-## 14              axt           saege           sakko       steckdose
-## 15        badewanne         wuerfel         paprika           besen
+## 14              axt            säge           sakko       steckdose
+## 15        badewanne          würfel         paprika           besen
 ## 16          karotte      pelzmantel           sense           sakko
 ## 17            besen         paprika      pelzmantel         karotte
 ## 18     kapuzenpulli             axt       kartoffel             axt
 ## 19        kartoffel      arztkittel        schaufel      arztkittel
-## 20            saege           gurke    kapuzenpulli           gurke
+## 20             säge           gurke    kapuzenpulli           gurke
 ## 21            schaf         gitarre             reh           geige
 ## 22             rose      luftballon           tulpe             kuh
-## 23          klavier      muelleimer           kerze              cd
-## 24            pferd      loewenzahn           harfe      schlagzeug
+## 23          klavier       mülleimer           kerze              cd
+## 24            pferd       löwenzahn           harfe      schlagzeug
 ## 25            kerze           geige        orchidee        orchidee
-## 26          gitarre             kuh      muelleimer         schwamm
+## 26          gitarre             kuh       mülleimer         schwamm
 ## 27           pfeife            rose      schlagzeug     lippenstift
 ## 28         orchidee         klavier           kamel           tulpe
 ## 29              kuh             reh      ventilator           schaf
-## 30            puppe        orchidee     sonnenblume         buerste
+## 30            puppe        orchidee     sonnenblume          bürste
 ## 31            tulpe         schwamm           schaf           harfe
-## 32            harfe         faecher           geige           kamel
+## 32            harfe          fächer           geige           kamel
 ## 33            kamel           pferd            rose        mikrofon
 ## 34      sonnenblume           tulpe       spaghetti            rose
 ## 35            geige      schlagzeug         klavier           pferd
 ## 36          fenster           schaf             kuh         klavier
-## 37              reh     sonnenblume      loewenzahn      loewenzahn
+## 37              reh     sonnenblume       löwenzahn       löwenzahn
 ## 38       schlagzeug           harfe         gitarre             reh
 ## 39       luftballon           kamel           pferd         gitarre
-## 40       loewenzahn         teppich           ampel     sonnenblume
-## 41      schneebesen       spaghetti            baby           loewe
-## 42          panther         ohrring           loewe          messer
+## 40        löwenzahn         teppich           ampel     sonnenblume
+## 41      schneebesen       spaghetti            baby            löwe
+## 42          panther         ohrring            löwe          messer
 ## 43         mikrofon          messer           kette         ohrring
-## 44            kelle            baer          pfeife     schornstein
-## 45            loewe           kette         panther           tiger
-## 46          ohrring         loeffel          parfum           kette
+## 44            kelle             bär          pfeife     schornstein
+## 45             löwe           kette         panther           tiger
+## 46          ohrring          löffel          parfum           kette
 ## 47           messer         panther           gabel         schwert
 ## 48            tiger            ring         ohrring           kelle
 ## 49          brosche     schneebesen       zigarette         armband
-## 50          wuerfel       badewanne         loeffel         leopard
-## 51             baer         armband         brosche      kopfhoerer
-## 52       kopfhoerer         leopard         leopard            ring
+## 50           würfel       badewanne          löffel         leopard
+## 51              bär         armband         brosche       kopfhörer
+## 52        kopfhörer         leopard         leopard            ring
 ## 53          armband           gabel     schneebesen     schneebesen
-## 54          leopard          parfum         armband            baer
-## 55          loeffel           loewe          kaefig         brosche
-## 56            kette           kelle           tiger         loeffel
+## 54          leopard          parfum         armband             bär
+## 55           löffel            löwe           käfig         brosche
+## 56            kette           kelle           tiger          löffel
 ## 57        zigarette           kerze           kelle          glocke
 ## 58            gabel           tiger            ring         panther
-## 59             ring         brosche            baer           gabel
-## 60               cd       steckdose          messer      schluessel
+## 59             ring         brosche             bär           gabel
+## 60               cd       steckdose          messer       schlüssel
 ## 61             auto         kutsche             lkw             lkw
 ## 62        schublade     streichholz           regal       goldfisch
 ## 63              aal     briefkasten          rochen         teppich
@@ -1048,19 +1048,19 @@ arrays %&gt;% filter()</code></pre>
 ## 72           glocke          pinsel            safe       schublade
 ## 73         kassette          delfin         teppich        motorrad
 ## 74             safe            safe       goldfisch          rochen
-## 75           kaefig             lkw  kleiderschrank          parfum
+## 75            käfig             lkw  kleiderschrank          parfum
 ## 76           delfin          rochen          kamera         kutsche
 ## 77              bus           regal          delfin       schachtel
-## 78            ampel             bus       schublade         wuerfel
+## 78            ampel             bus       schublade          würfel
 ## 79           rochen        fernglas             bus            auto
 ## 80         motorrad       schachtel       badewanne  kleiderschrank
 ## 81             kanu            kanu            kanu           yacht
 ## 82      radiergummi           waage         klammer       bleistift
-## 83      streichholz      mikrowelle      schluessel      ventilator
-## 84      segelschiff       zigarette geschirrspueler         faecher
-## 85           schere          gondel       bleistift geschirrspueler
-## 86     kuehlschrank geschirrspueler          u-boot       zigarette
-## 87           u-boot         klammer    kuehlschrank     radiergummi
+## 83      streichholz      mikrowelle       schlüssel      ventilator
+## 84      segelschiff       zigarette  geschirrspüler          fächer
+## 85           schere          gondel       bleistift  geschirrspüler
+## 86      kühlschrank  geschirrspüler          u-boot       zigarette
+## 87           u-boot         klammer     kühlschrank     radiergummi
 ## 88           lineal          u-boot      briefmarke      mikrowelle
 ## 89   kaffeemaschine            herd          gondel       spaghetti
 ## 90            yacht          lineal  kaffeemaschine          gondel
@@ -1070,30 +1070,30 @@ arrays %&gt;% filter()</code></pre>
 ## 94       kopfkissen  kaffeemaschine      mikrowelle  kaffeemaschine
 ## 95        bleistift           yacht     radiergummi         klammer
 ## 96       mikrowelle     radiergummi           waage          u-boot
-## 97           gondel    kuehlschrank            herd           kerze
+## 97           gondel     kühlschrank            herd           kerze
 ## 98          klammer     segelschiff          schere          schere
-## 99  geschirrspueler          schere           tafel            kanu
-## 100           tafel     lippenstift     segelschiff    kuehlschrank
+## 99   geschirrspüler          schere           tafel            kanu
+## 100           tafel     lippenstift     segelschiff     kühlschrank
 ## 101      ventilator          spinne            glas           apfel
 ## 102         trauben           tasse           birne          spinne
-## 103          ameise         kirsche      kopfhoerer      luftballon
-## 104      schluessel           biene           tasse          banane
+## 103          ameise         kirsche       kopfhörer      luftballon
+## 104       schlüssel           biene           tasse          banane
 ## 105      briefmarke         flasche          fliege          becher
 ## 106           kanne          banane         kirsche           biene
-## 107          banane    marienkaefer       steckdose         kirsche
-## 108    marienkaefer          becher           biene            glas
+## 107          banane     marienkäfer       steckdose         kirsche
+## 108     marienkäfer          becher           biene            glas
 ## 109           tasse         trauben          banane           puppe
-## 110           birne         buerste     briefkasten         trauben
+## 110           birne          bürste     briefkasten         trauben
 ## 111          fliege      kopfkissen          spinne           tasse
-## 112         flasche           apfel        kassette          kaefig
+## 112         flasche           apfel        kassette           käfig
 ## 113     lippenstift           kanne         flasche          fliege
 ## 114       spaghetti        kassette          ameise          brille
 ## 115           biene          ameise           apfel           kanne
-## 116          becher            glas           kanne    marienkaefer
+## 116          becher            glas           kanne     marienkäfer
 ## 117           apfel         fenster          pinsel          pinsel
 ## 118          spinne          fliege         trauben           birne
 ## 119            glas           birne          becher          ameise
-## 120         kirsche            baby    marienkaefer         flasche
+## 120         kirsche            baby     marienkäfer         flasche
 ## 121         teppich             arm schraubenzieher          hammer
 ## 122           zange          glocke             ohr            bein
 ## 123             ohr    bohrmaschine             eis      schokolade
@@ -1111,22 +1111,22 @@ arrays %&gt;% filter()</code></pre>
 ## 135     schornstein           feile           kekse             ohr
 ## 136             arm             eis    bohrmaschine schraubenzieher
 ## 137          bonbon            hand            fuss          kuchen
-## 138         buerste           zange          kuchen            fuss
+## 138          bürste           zange          kuchen            fuss
 ## 139    bohrmaschine          bonbon           zange           feile
 ## 140            bein      ventilator            bein         fenster
 ## 141            burg            eule        hochhaus       badewanne
 ## 142          schwan           puppe          sessel           couch
 ## 143           stuhl            bank        mikrofon          kirche
-## 144          pinsel          schwan         buerste     briefkasten
+## 144          pinsel          schwan          bürste     briefkasten
 ## 145           taube        hochhaus           stuhl           ampel
 ## 146        hochhaus          sessel          schwan         strauss
-## 147          hocker      kopfhoerer         wuerfel            ball
+## 147          hocker       kopfhörer          würfel            ball
 ## 148            eule         schloss          hocker        fernglas
 ## 149          kirche            ente         strauss          schwan
 ## 150            ball           stuhl          tempel          hocker
-## 151          sessel          kaefig           couch            burg
-## 152         schloss          kirche         faecher            eule
-## 153      muelleimer          hocker           taube           stuhl
+## 151          sessel           käfig           couch            burg
+## 152         schloss          kirche          fächer            eule
+## 153       mülleimer          hocker           taube           stuhl
 ## 154            bank     schornstein          kirche          tempel
 ## 155         strauss         strauss          glocke           taube
 ## 156        fernglas          brille            eule            bank
@@ -1139,29 +1139,29 @@ arrays %&gt;% filter()</code></pre>
 ## 2             birne           tasse     schornstein          spinne
 ## 3          mikrofon     streichholz            glas         flasche
 ## 4            spinne          spinne           birne           apfel
-## 5            banane           kanne          ameise    marienkaefer
+## 5            banane           kanne          ameise     marienkäfer
 ## 6           schwamm           apfel          becher         fenster
 ## 7             biene            ball          banane         kirsche
-## 8             apfel    marienkaefer          spinne          fliege
+## 8             apfel     marienkäfer          spinne          fliege
 ## 9           flasche          banane           tasse           kanne
 ## 10           fliege            glas      ventilator           birne
-## 11       schluessel          fliege      muelleimer          ameise
+## 11        schlüssel          fliege       mülleimer          ameise
 ## 12             glas       badewanne         kirsche       zigarette
-## 13     marienkaefer         kirsche           kanne          banane
-## 14             baby          ameise    marienkaefer          becher
+## 13      marienkäfer         kirsche           kanne          banane
+## 14             baby          ameise     marienkäfer          becher
 ## 15            kanne           ampel           apfel           kerze
-## 16           kamera         wuerfel         flasche           biene
+## 16           kamera          würfel         flasche           biene
 ## 17          kirsche         flasche          fliege           tasse
 ## 18           becher           biene         trauben         schwert
 ## 19           ameise         trauben      luftballon      ventilator
 ## 20          trauben          becher           biene            glas
 ## 21         brokkoli        kassette         paprika      arztkittel
 ## 22     kapuzenpulli      pelzmantel      pelzmantel         paprika
-## 23         kassette           gurke           saege        schaufel
-## 24         schaufel           saege       kartoffel          kaefig
-## 25           pfeife          kaefig          parfum      briefmarke
+## 23         kassette           gurke            säge        schaufel
+## 24         schaufel            säge       kartoffel           käfig
+## 25           pfeife           käfig          parfum      briefmarke
 ## 26          paprika        brokkoli             axt           gurke
-## 27            saege    kapuzenpulli         karotte         schwamm
+## 27             säge    kapuzenpulli         karotte         schwamm
 ## 28       arztkittel        mikrofon     daunenweste           puppe
 ## 29            gurke           besen         teppich    kapuzenpulli
 ## 30            besen          pinsel           sense           sense
@@ -1173,13 +1173,13 @@ arrays %&gt;% filter()</code></pre>
 ## 36       pelzmantel           sense           sakko           besen
 ## 37              axt          pfeife        schaufel      pelzmantel
 ## 38          karotte     daunenweste           kerze         karotte
-## 39            sakko        schaufel    kapuzenpulli           saege
+## 39            sakko        schaufel    kapuzenpulli            säge
 ## 40          teppich         paprika     briefkasten     daunenweste
 ## 41       ventilator           stuhl           stuhl       steckdose
-## 42       kopfhoerer          parfum          schwan            burg
-## 43          strauss            ente         faecher         strauss
+## 42        kopfhörer          parfum          schwan            burg
+## 43          strauss            ente          fächer         strauss
 ## 44            couch      luftballon      briefmarke            bank
-## 45          faecher      ventilator          tempel        hochhaus
+## 45           fächer      ventilator          tempel        hochhaus
 ## 46             burg          kirche     streichholz            ente
 ## 47           hocker         strauss            ente           stuhl
 ## 48             eule     briefkasten          hocker          tempel
@@ -1187,45 +1187,45 @@ arrays %&gt;% filter()</code></pre>
 ## 50           sessel          schwan            eule          parfum
 ## 51        spaghetti            burg            ball          kirche
 ## 52             ente          sessel           couch           couch
-## 53             bank         buerste         schloss           taube
+## 53             bank          bürste         schloss           taube
 ## 54           kirche         schloss         schwert      kopfkissen
 ## 55           schwan           taube         strauss          sessel
 ## 56            stuhl           couch            bank         schloss
-## 57         hochhaus        hochhaus        hochhaus      kopfhoerer
+## 57         hochhaus        hochhaus        hochhaus       kopfhörer
 ## 58            taube            eule           taube          hocker
 ## 59        badewanne          hocker          sessel        kassette
 ## 60          schloss          tempel            burg            eule
 ## 61          panther         leopard       zigarette            ring
-## 62            kelle            ring         brosche           loewe
+## 62            kelle            ring         brosche            löwe
 ## 63          ohrring           gabel         leopard          glocke
 ## 64           glocke         panther     schneebesen           kette
-## 65             baer         teppich         ohrring          messer
+## 65              bär         teppich         ohrring          messer
 ## 66          armband     schneebesen         panther       badewanne
-## 67           kaefig         brosche           gabel         brosche
-## 68          leopard           loewe           tafel     schneebesen
+## 67            käfig         brosche           gabel         brosche
+## 68          leopard            löwe           tafel     schneebesen
 ## 69            kette          messer           tiger           tiger
-## 70           messer         ohrring          messer         faecher
-## 71      streichholz            baer           ampel         loeffel
-## 72          brosche         loeffel            ring         panther
-## 73          loeffel         schwamm         loeffel     briefkasten
-## 74            tiger           tafel      schluessel           kelle
+## 70           messer         ohrring          messer          fächer
+## 71      streichholz             bär           ampel          löffel
+## 72          brosche          löffel            ring         panther
+## 73           löffel         schwamm          löffel     briefkasten
+## 74            tiger           tafel       schlüssel           kelle
 ## 75            kerze           kelle      kopfkissen         leopard
-## 76            gabel          glocke           loewe         armband
-## 77            loewe           kette           kette         wuerfel
-## 78             ring           tiger           kelle            baer
-## 79      schneebesen          brille            baer           gabel
+## 76            gabel          glocke            löwe         armband
+## 77             löwe           kette           kette          würfel
+## 78             ring           tiger           kelle             bär
+## 79      schneebesen          brille             bär           gabel
 ## 80       luftballon         armband         armband         ohrring
 ## 81          kutsche       goldfisch          rochen          delfin
 ## 82             safe        motorrad  kleiderschrank         kutsche
 ## 83              hai       schachtel            auto           regal
 ## 84              bus          rochen          delfin       goldfisch
 ## 85   kleiderschrank             bus       schublade            ball
-## 86        goldfisch      schluessel        mikrofon  kleiderschrank
+## 86        goldfisch       schlüssel        mikrofon  kleiderschrank
 ## 87            tafel             hai         kutsche            auto
 ## 88        schachtel       schublade             aal          rochen
 ## 89              aal              cd        fernglas       schublade
 ## 90              lkw         kutsche        motorrad          kamera
-## 91       muelleimer            safe             hai             aal
+## 91        mülleimer            safe             hai             aal
 ## 92            regal     lippenstift         schwamm        motorrad
 ## 93           delfin            auto       schachtel        mikrofon
 ## 94         motorrad             aal       goldfisch     streichholz
@@ -1238,10 +1238,10 @@ arrays %&gt;% filter()</code></pre>
 ## 101            bein    bohrmaschine            bein          pfeife
 ## 102      schokolade          kuchen           zange           zange
 ## 103          hammer            bein           kekse             ohr
-## 104       steckdose         faecher             ohr             eis
+## 104       steckdose          fächer             ohr             eis
 ## 105           kekse          bonbon          hammer           feile
 ## 106           zange             ohr          bonbon            hand
-## 107         buerste            baby            fuss           kekse
+## 107          bürste            baby            fuss           kekse
 ## 108             ohr      schokolade    bohrmaschine           waage
 ## 109    bohrmaschine          hammer      schokolade schraubenzieher
 ## 110          bonbon             arm           waage          bonbon
@@ -1249,93 +1249,93 @@ arrays %&gt;% filter()</code></pre>
 ## 112     lippenstift schraubenzieher            hand             arm
 ## 113           ampel             eis            baby          kuchen
 ## 114 schraubenzieher           kerze           feile          hammer
-## 115            fuss           zange      kopfhoerer            bein
+## 115            fuss           zange       kopfhörer            bein
 ## 116             eis            fuss             eis      schokolade
-## 117           feile        fernglas             arm      muelleimer
+## 117           feile        fernglas             arm       mülleimer
 ## 118             arm           feile           puppe    bohrmaschine
 ## 119          kuchen            hand          kuchen     schornstein
 ## 120          brille           kekse         fenster            fuss
 ## 121           geige       zigarette       steckdose      luftballon
-## 122           waage         gitarre      loewenzahn           pferd
+## 122           waage         gitarre       löwenzahn           pferd
 ## 123             reh            rose          pfeife      schlagzeug
-## 124         gitarre           kamel          brille      loewenzahn
+## 124         gitarre           kamel          brille       löwenzahn
 ## 125      kopfkissen         klavier           geige             kuh
 ## 126        fernglas           tulpe            rose           harfe
 ## 127           kamel           pferd             kuh           tulpe
-## 128           tulpe           harfe           harfe         buerste
+## 128           tulpe           harfe           harfe          bürste
 ## 129       zigarette       steckdose        orchidee             reh
 ## 130             kuh      briefmarke           pferd     sonnenblume
 ## 131        orchidee             kuh         gitarre           geige
-## 132      schlagzeug      loewenzahn          glocke           schaf
+## 132      schlagzeug       löwenzahn          glocke           schaf
 ## 133           pferd           geige           schaf          pinsel
-## 134            rose      kopfhoerer         klavier            rose
+## 134            rose       kopfhörer         klavier            rose
 ## 135         klavier     sonnenblume           tulpe         gitarre
 ## 136         fenster           schaf           kamel              cd
 ## 137     sonnenblume      schlagzeug      schlagzeug           kamel
 ## 138           harfe        orchidee     sonnenblume        orchidee
-## 139           schaf             reh             reh      schluessel
-## 140      loewenzahn         schwert     lippenstift         klavier
-## 141            herd geschirrspueler      mikrowelle          gondel
+## 139           schaf             reh             reh       schlüssel
+## 140       löwenzahn         schwert     lippenstift         klavier
+## 141            herd  geschirrspüler      mikrowelle          gondel
 ## 142            kanu       bleistift       bleistift     radiergummi
-## 143         schwert           puppe         wuerfel  kaffeemaschine
-## 144         klammer  kaffeemaschine    kuehlschrank          u-boot
+## 143         schwert           puppe          würfel  kaffeemaschine
+## 144         klammer  kaffeemaschine     kühlschrank          u-boot
 ## 145          gondel     radiergummi         klammer          schere
-## 146    kuehlschrank            kanu     segelschiff            baby
-## 147       bleistift      muelleimer          kamera    kuehlschrank
+## 146     kühlschrank            kanu     segelschiff            baby
+## 147       bleistift       mülleimer          kamera     kühlschrank
 ## 148           yacht          lineal     radiergummi         klammer
-## 149 geschirrspueler     segelschiff           yacht     lippenstift
+## 149  geschirrspüler     segelschiff           yacht     lippenstift
 ## 150            ball      mikrowelle          pinsel            kanu
-## 151         wuerfel         klammer            herd      mikrowelle
-## 152          u-boot          u-boot          kaefig       spaghetti
+## 151          würfel         klammer            herd      mikrowelle
+## 152          u-boot          u-boot           käfig       spaghetti
 ## 153          schere           waage            kanu        fernglas
 ## 154          pinsel          schere  kaffeemaschine            herd
 ## 155      mikrowelle       spaghetti          schere           yacht
-## 156          lineal           yacht         buerste       bleistift
-## 157     segelschiff            herd          gondel geschirrspueler
-## 158  kaffeemaschine     schornstein geschirrspueler     segelschiff
+## 156          lineal           yacht          bürste       bleistift
+## 157     segelschiff            herd          gondel  geschirrspüler
+## 158  kaffeemaschine     schornstein  geschirrspüler     segelschiff
 ## 159          parfum          gondel          lineal          lineal
-## 160     radiergummi    kuehlschrank          u-boot         teppich
+## 160     radiergummi     kühlschrank          u-boot         teppich
 ##             array17         array18         array19         array20
 ## 1             apfel           kanne           gurke     daunenweste
 ## 2            glocke          banane      kopfkissen     schornstein
-## 3      marienkaefer          fliege      arztkittel           saege
+## 3       marienkäfer          fliege      arztkittel            säge
 ## 4              glas           tasse           sense           sakko
-## 5            banane      kopfhoerer     lippenstift       kartoffel
+## 5            banane       kopfhörer     lippenstift       kartoffel
 ## 6            ameise          spinne    kapuzenpulli           sense
-## 7            becher           birne           saege           ampel
-## 8        muelleimer      briefmarke         paprika          parfum
-## 9            spinne    marienkaefer     daunenweste        schaufel
+## 7            becher           birne            säge           ampel
+## 8         mülleimer      briefmarke         paprika          parfum
+## 9            spinne     marienkäfer     daunenweste        schaufel
 ## 10            birne           apfel             axt        brokkoli
 ## 11           brille           puppe        kassette          pfeife
 ## 12            biene          ameise      pelzmantel      pelzmantel
 ## 13            tasse          becher       kartoffel           besen
-## 14       kopfkissen         wuerfel         schwert         paprika
+## 14       kopfkissen          würfel         schwert         paprika
 ## 15          trauben         trauben           sakko      arztkittel
-## 16           fliege         flasche        brokkoli      kopfhoerer
+## 16           fliege         flasche        brokkoli       kopfhörer
 ## 17          flasche           biene        schaufel         karotte
 ## 18          kirsche         kirsche          pinsel    kapuzenpulli
-## 19          faecher       zigarette         karotte             axt
+## 19           fächer       zigarette         karotte             axt
 ## 20            kanne            glas           besen           gurke
 ## 21            gurke      pelzmantel             aal            safe
 ## 22       arztkittel           besen      luftballon       steckdose
 ## 23               cd           tafel  kleiderschrank          rochen
 ## 24          karotte        brokkoli       goldfisch       schublade
-## 25            saege          kaefig            auto        motorrad
+## 25             säge           käfig            auto        motorrad
 ## 26       pelzmantel      arztkittel       schachtel            baby
-## 27        kartoffel       kartoffel      muelleimer          delfin
+## 27        kartoffel       kartoffel       mülleimer          delfin
 ## 28            besen             axt        motorrad             lkw
-## 29      schornstein      schluessel           regal           regal
+## 29      schornstein       schlüssel           regal           regal
 ## 30            sakko         karotte          delfin            ball
 ## 31            sense           sakko             bus       goldfisch
-## 32       kopfhoerer         teppich            safe       schachtel
+## 32        kopfhörer         teppich            safe       schachtel
 ## 33          paprika           gurke       zigarette          brille
 ## 34         schaufel        schaufel         kutsche         kutsche
 ## 35           pinsel    kapuzenpulli          rochen  kleiderschrank
-## 36      daunenweste            ball         wuerfel             hai
+## 36      daunenweste            ball          würfel             hai
 ## 37         brokkoli           sense             lkw             bus
 ## 38              axt     daunenweste       schublade       spaghetti
 ## 39     kapuzenpulli         paprika           tafel             aal
-## 40           kamera           saege             hai            auto
+## 40           kamera            säge             hai            auto
 ## 41           kirche         schloss      ventilator             ohr
 ## 42             ball           couch             arm           kekse
 ## 43      briefkasten          glocke          kamera           feile
@@ -1350,7 +1350,7 @@ arrays %&gt;% filter()</code></pre>
 ## 52            taube          hocker    bohrmaschine          kuchen
 ## 53            stuhl          tempel          kuchen    bohrmaschine
 ## 54         hochhaus          schwan            bein       zigarette
-## 55         mikrofon           stuhl      kopfhoerer             eis
+## 55         mikrofon           stuhl       kopfhörer             eis
 ## 56             bank         schwamm          hammer            hand
 ## 57             eule         strauss             ohr     lippenstift
 ## 58           tempel        hochhaus      schokolade        mikrofon
@@ -1358,38 +1358,38 @@ arrays %&gt;% filter()</code></pre>
 ## 60           schwan           taube            hand     streichholz
 ## 61          leopard        fernglas         trauben      briefmarke
 ## 62       luftballon           tiger           tasse       badewanne
-## 63           messer         ohrring         faecher          ameise
+## 63           messer         ohrring          fächer          ameise
 ## 64            tiger            baby          ameise            glas
-## 65          ohrring           loewe            glas      kopfkissen
+## 65          ohrring            löwe            glas      kopfkissen
 ## 66            gabel           kelle            baby          banane
-## 67          panther            ring         kirsche    marienkaefer
-## 68            kette            baer          fliege          kamera
+## 67          panther            ring         kirsche     marienkäfer
+## 68            kette             bär          fliege          kamera
 ## 69            kelle          messer     streichholz           birne
-## 70            loewe         schwert           birne           kanne
-## 71            kerze           kette    marienkaefer      schluessel
-## 72          armband         loeffel          becher           biene
-## 73       schluessel     briefkasten          banane         trauben
+## 70             löwe         schwert           birne           kanne
+## 71            kerze           kette     marienkäfer       schlüssel
+## 72          armband          löffel          becher           biene
+## 73        schlüssel     briefkasten          banane         trauben
 ## 74            waage         panther          spinne           tasse
 ## 75             ring         brosche         flasche          spinne
-## 76          loeffel           gabel           apfel           apfel
-## 77             baer      kopfkissen           ampel          becher
+## 76           löffel           gabel           apfel           apfel
+## 77              bär      kopfkissen           ampel          becher
 ## 78          brosche         armband           biene          fliege
 ## 79        badewanne     schneebesen           kanne         kirsche
-## 80      schneebesen         leopard          kaefig         flasche
-## 81         motorrad        motorrad    kuehlschrank          lineal
+## 80      schneebesen         leopard           käfig         flasche
+## 81         motorrad        motorrad     kühlschrank          lineal
 ## 82          schwamm             hai          gondel            herd
 ## 83   kleiderschrank       schachtel          lineal        fernglas
 ## 84          kutsche      ventilator  kaffeemaschine         klammer
-## 85             baby            auto            kanu geschirrspueler
-## 86           delfin            safe         klammer         buerste
+## 85             baby            auto            kanu  geschirrspüler
+## 86           delfin            safe         klammer          bürste
 ## 87             auto          rochen       spaghetti     segelschiff
-## 88            regal         kutsche     segelschiff    kuehlschrank
+## 88            regal         kutsche     segelschiff     kühlschrank
 ## 89              hai           regal     radiergummi      ventilator
-## 90          fenster          delfin geschirrspueler          gondel
+## 90          fenster          delfin  geschirrspüler          gondel
 ## 91              bus           waage          u-boot  kaffeemaschine
-## 92        goldfisch       schublade          schere      muelleimer
+## 92        goldfisch       schublade          schere       mülleimer
 ## 93             safe             aal          parfum       bleistift
-## 94            tafel         faecher            ball           yacht
+## 94            tafel          fächer            ball           yacht
 ## 95              lkw             bus            herd      mikrowelle
 ## 96              aal  kleiderschrank         fenster     radiergummi
 ## 97        schachtel       goldfisch           yacht            kanu
@@ -1403,109 +1403,109 @@ arrays %&gt;% filter()</code></pre>
 ## 105             eis          pinsel        orchidee           kamel
 ## 106             ohr           kekse          brille        orchidee
 ## 107 schraubenzieher    bohrmaschine           pferd      schlagzeug
-## 108          kaefig             arm            rose           schaf
-## 109      schokolade          kuchen      schluessel              cd
+## 108           käfig             arm            rose           schaf
+## 109      schokolade          kuchen       schlüssel              cd
 ## 110           feile        kassette           harfe           harfe
-## 111      ventilator           zange     sonnenblume          kaefig
+## 111      ventilator           zange     sonnenblume           käfig
 ## 112            hand             eis             kuh           tulpe
 ## 113          hammer            hand      briefmarke             kuh
 ## 114           ampel           feile         klavier         gitarre
 ## 115          bonbon      schokolade           schaf     sonnenblume
-## 116             arm            bein      loewenzahn         fenster
+## 116             arm            bein       löwenzahn         fenster
 ## 117    bohrmaschine schraubenzieher           geige         klavier
-## 118           kekse          bonbon             reh      loewenzahn
+## 118           kekse          bonbon             reh       löwenzahn
 ## 119            fuss         fenster       steckdose             reh
 ## 120       steckdose            fuss      schlagzeug           waage
-## 121      schlagzeug             reh         loeffel      luftballon
+## 121      schlagzeug             reh          löffel      luftballon
 ## 122     streichholz        orchidee           kette            ring
-## 123      loewenzahn         gitarre            baer     schneebesen
+## 123       löwenzahn         gitarre             bär     schneebesen
 ## 124           pferd           kamel           kelle         panther
 ## 125           puppe     lippenstift            ring         brosche
-## 126         buerste           geige         leopard           kelle
-## 127           geige           schaf          messer            baer
+## 126          bürste           geige         leopard           kelle
+## 127           geige           schaf          messer             bär
 ## 128            rose           kerze           waage        kassette
 ## 129           schaf         klavier         panther           gabel
 ## 130           harfe             kuh     schornstein         leopard
-## 131        kassette      loewenzahn           gabel           puppe
-## 132             kuh          brille         armband         faecher
+## 131        kassette       löwenzahn           gabel           puppe
+## 132             kuh          brille         armband          fächer
 ## 133        orchidee           pferd          glocke           tiger
 ## 134      briefmarke           tulpe     schneebesen         ohrring
-## 135             reh           harfe           loewe     briefkasten
-## 136     sonnenblume       steckdose         ohrring         loeffel
+## 135             reh           harfe            löwe     briefkasten
+## 136     sonnenblume       steckdose         ohrring          löffel
 ## 137         gitarre            rose           puppe           kette
-## 138           kamel      schlagzeug     briefkasten           loewe
-## 139           tulpe      muelleimer           tiger          messer
+## 138           kamel      schlagzeug     briefkasten            löwe
+## 139           tulpe       mülleimer           tiger          messer
 ## 140         klavier     sonnenblume         brosche         armband
 ## 141          gondel          lineal           couch         strauss
 ## 142     radiergummi     schornstein          tempel           stuhl
-## 143          pfeife    kuehlschrank        mikrofon          pinsel
+## 143          pfeife     kühlschrank        mikrofon          pinsel
 ## 144           yacht          gondel           stuhl        hochhaus
 ## 145          schere       bleistift            ente          sessel
 ## 146       spaghetti              cd           kerze         schwamm
 ## 147     segelschiff     segelschiff            bank          tempel
-## 148      mikrowelle geschirrspueler         strauss           couch
+## 148      mikrowelle  geschirrspüler         strauss           couch
 ## 149       bleistift         klammer            burg           taube
 ## 150       zigarette           yacht          hocker           tafel
-## 151            herd         buerste           taube         schloss
-## 152         wuerfel      mikrowelle        fernglas            ente
+## 151            herd          bürste           taube         schloss
+## 152          würfel      mikrowelle        fernglas            ente
 ## 153          lineal          u-boot        hochhaus          hocker
-## 154 geschirrspueler       spaghetti          schwan         schwert
+## 154  geschirrspüler       spaghetti          schwan         schwert
 ## 155         teppich            herd         schwamm          schwan
 ## 156          u-boot          schere          kirche            bank
 ## 157  kaffeemaschine        mikrofon            eule          kirche
-## 158         klammer  kaffeemaschine         buerste            eule
-## 159            kanu     radiergummi          sessel         wuerfel
-## 160    kuehlschrank            kanu         schloss            burg
+## 158         klammer  kaffeemaschine          bürste            eule
+## 159            kanu     radiergummi          sessel          würfel
+## 160     kühlschrank            kanu         schloss            burg
 ##             array21         array22         array23         array24
-## 1             sakko           sakko           saege      arztkittel
+## 1             sakko           sakko            säge      arztkittel
 ## 2             besen           sense      luftballon           gurke
-## 3        muelleimer           ampel         paprika             axt
+## 3         mülleimer           ampel         paprika             axt
 ## 4       streichholz      arztkittel           sakko    kapuzenpulli
-## 5               axt       kartoffel      muelleimer       kartoffel
+## 5               axt       kartoffel       mülleimer       kartoffel
 ## 6             gurke             axt           gurke            ball
 ## 7           fenster    kapuzenpulli      arztkittel           sakko
-## 8        pelzmantel         karotte           besen           saege
+## 8        pelzmantel         karotte           besen            säge
 ## 9          brokkoli        schaufel        brokkoli        mikrofon
-## 10            saege      muelleimer       spaghetti     daunenweste
+## 10             säge       mülleimer       spaghetti     daunenweste
 ## 11       arztkittel         paprika     lippenstift           sense
 ## 12          karotte        fernglas           sense        brokkoli
-## 13          wuerfel           saege      pelzmantel      pelzmantel
+## 13           würfel            säge      pelzmantel      pelzmantel
 ## 14         schaufel      pelzmantel       kartoffel           besen
 ## 15          paprika     streichholz        schaufel           tafel
 ## 16      lippenstift        brokkoli     daunenweste         karotte
 ## 17      daunenweste     daunenweste         karotte        schaufel
 ## 18        kartoffel          pfeife            ball     schornstein
-## 19            sense           gurke             axt          kaefig
+## 19            sense           gurke             axt           käfig
 ## 20     kapuzenpulli           besen    kapuzenpulli         paprika
 ## 21              aal             aal             bus       schublade
 ## 22          kutsche             bus           regal             hai
-## 23            tafel            baby          kaefig              cd
+## 23            tafel            baby           käfig              cd
 ## 24           delfin       schachtel        motorrad             bus
 ## 25              bus         kutsche  kleiderschrank             aal
-## 26        schachtel         wuerfel         fenster  kleiderschrank
+## 26        schachtel          würfel         fenster  kleiderschrank
 ## 27        goldfisch       schublade          rochen         kutsche
 ## 28         motorrad        motorrad       schublade          delfin
 ## 29            regal          rochen          pfeife       zigarette
 ## 30      briefkasten            safe       goldfisch        motorrad
 ## 31              lkw              cd       schachtel           regal
-## 32           rochen         faecher           waage           puppe
+## 32           rochen          fächer           waage           puppe
 ## 33             safe          delfin             lkw             lkw
 ## 34       briefmarke             lkw             aal            baby
-## 35              hai           regal         faecher       schachtel
+## 35              hai           regal          fächer       schachtel
 ## 36        schublade             hai            auto            auto
 ## 37             auto            auto          delfin       goldfisch
-## 38          schwamm          kaefig            safe      luftballon
+## 38          schwamm           käfig            safe      luftballon
 ## 39       kopfkissen       goldfisch         kutsche            safe
 ## 40   kleiderschrank  kleiderschrank             hai          rochen
-## 41             baby             arm     briefkasten         buerste
+## 41             baby             arm     briefkasten          bürste
 ## 42  schraubenzieher      schokolade schraubenzieher          bonbon
 ## 43       schokolade schraubenzieher             eis            hand
 ## 44             bein      kopfkissen            bein     briefkasten
 ## 45     bohrmaschine          bonbon    bohrmaschine          kuchen
 ## 46           kuchen          hammer      schokolade           feile
-## 47       kopfhoerer            bein            fuss             ohr
+## 47        kopfhörer            bein            fuss             ohr
 ## 48             fuss          kuchen           feile           kekse
-## 49           kaefig           zange          bonbon schraubenzieher
+## 49            käfig           zange          bonbon schraubenzieher
 ## 50            kekse           kerze           ampel           kerze
 ## 51            feile             ohr             arm            fuss
 ## 52            ampel           feile       badewanne           zange
@@ -1517,86 +1517,86 @@ arrays %&gt;% filter()</code></pre>
 ## 58           bonbon      luftballon           zange             eis
 ## 59              arm           kekse         schwamm            bein
 ## 60           hammer            hand           kekse          hammer
-## 61             ball    marienkaefer         flasche          ameise
+## 61             ball     marienkäfer         flasche          ameise
 ## 62           becher           tasse          fliege           birne
-## 63           ameise     lippenstift           birne      muelleimer
-## 64            birne          fliege      kopfhoerer          fliege
+## 63           ameise     lippenstift           birne       mülleimer
+## 64            birne          fliege       kopfhörer          fliege
 ## 65            kanne          banane           kanne         kirsche
 ## 66           spinne            glas         trauben           tasse
 ## 67          trauben           tafel           puppe           biene
 ## 68            tasse           apfel            glas         trauben
-## 69           fliege          becher           tafel      schluessel
-## 70            kerze           puppe           apfel    marienkaefer
+## 69           fliege          becher           tafel       schlüssel
+## 70            kerze           puppe           apfel     marienkäfer
 ## 71            apfel           biene          spinne           kanne
 ## 72            biene     briefkasten           tasse      kopfkissen
 ## 73          flasche           birne         kirsche          spinne
 ## 74           banane          spinne           biene          becher
 ## 75      schornstein         flasche         teppich           apfel
 ## 76         kassette         trauben          becher     streichholz
-## 77          kirsche          ameise    marienkaefer         flasche
-## 78     marienkaefer           kanne         schwert     lippenstift
+## 77          kirsche          ameise     marienkäfer         flasche
+## 78      marienkäfer           kanne         schwert     lippenstift
 ## 79             glas         kirsche          banane          banane
 ## 80           kamera         fenster          ameise            glas
 ## 81           u-boot       zigarette       steckdose         klammer
 ## 82      radiergummi            kanu          parfum  kaffeemaschine
-## 83       schluessel      schluessel      mikrowelle     segelschiff
-## 84             kanu    kuehlschrank        kassette           ampel
+## 83        schlüssel       schlüssel      mikrowelle     segelschiff
+## 84             kanu     kühlschrank        kassette           ampel
 ## 85          klammer          schere          gondel      mikrowelle
 ## 86        steckdose        mikrofon          lineal     radiergummi
-## 87       mikrowelle          gondel    kuehlschrank           yacht
-## 88           lineal     radiergummi           yacht geschirrspueler
+## 87       mikrowelle          gondel     kühlschrank           yacht
+## 88           lineal     radiergummi           yacht  geschirrspüler
 ## 89      segelschiff     schornstein         klammer          pfeife
-## 90  geschirrspueler         teppich        fernglas            kanu
-## 91           pinsel            herd          u-boot         wuerfel
+## 90   geschirrspüler         teppich        fernglas            kanu
+## 91           pinsel            herd          u-boot          würfel
 ## 92        spaghetti          u-boot          schere       badewanne
-## 93     kuehlschrank          lineal  kaffeemaschine          u-boot
+## 93      kühlschrank          lineal  kaffeemaschine          u-boot
 ## 94           gondel      mikrowelle            kanu          schere
 ## 95          teppich     segelschiff     radiergummi            herd
 ## 96             herd       bleistift            herd          gondel
 ## 97           schere  kaffeemaschine     segelschiff       bleistift
-## 98            yacht           yacht           kerze    kuehlschrank
-## 99   kaffeemaschine         klammer geschirrspueler       steckdose
-## 100       bleistift geschirrspueler       bleistift          lineal
+## 98            yacht           yacht           kerze     kühlschrank
+## 99   kaffeemaschine         klammer  geschirrspüler       steckdose
+## 100       bleistift  geschirrspüler       bleistift          lineal
 ## 101             kuh      schlagzeug         klavier        fernglas
 ## 102         klavier        kassette           kamel         gitarre
-## 103     sonnenblume           schaf      schluessel           kamel
-## 104             reh         gitarre      loewenzahn     sonnenblume
-## 105         buerste      kopfhoerer         gitarre           harfe
+## 103     sonnenblume           schaf       schlüssel           kamel
+## 104             reh         gitarre       löwenzahn     sonnenblume
+## 105          bürste       kopfhörer         gitarre           harfe
 ## 106           puppe             reh          brille             reh
-## 107           pferd           tulpe             kuh      loewenzahn
+## 107           pferd           tulpe             kuh       löwenzahn
 ## 108        orchidee       spaghetti           geige           geige
-## 109         faecher             kuh         wuerfel           schaf
-## 110      schlagzeug     sonnenblume     sonnenblume      kopfhoerer
-## 111      loewenzahn           harfe      schlagzeug          brille
+## 109          fächer             kuh          würfel           schaf
+## 110      schlagzeug     sonnenblume     sonnenblume       kopfhörer
+## 111       löwenzahn           harfe      schlagzeug          brille
 ## 112           schaf           kamel           schaf             kuh
 ## 113         gitarre       badewanne            rose           tulpe
-## 114              cd      loewenzahn           harfe         teppich
+## 114              cd       löwenzahn           harfe         teppich
 ## 115            rose           pferd             reh      schlagzeug
 ## 116          parfum           geige           tulpe            rose
 ## 117           harfe        orchidee          glocke           pferd
 ## 118           tulpe      ventilator           pferd         klavier
 ## 119           kamel         klavier        orchidee        orchidee
 ## 120           geige            rose     streichholz         schwamm
-## 121      ventilator         loeffel          messer         leopard
+## 121      ventilator          löffel          messer         leopard
 ## 122          messer         ohrring         leopard           kette
 ## 123      luftballon         panther         armband     schneebesen
-## 124         panther     schneebesen         loeffel           tiger
+## 124         panther     schneebesen          löffel           tiger
 ## 125           kette       steckdose           tiger            ring
 ## 126           gabel         armband            baby          kamera
-## 127          brille            baer           gabel       spaghetti
-## 128         brosche           gabel           loewe         brosche
+## 127          brille             bär           gabel       spaghetti
+## 128         brosche           gabel            löwe         brosche
 ## 129         leopard           kette      kopfkissen          messer
-## 130       badewanne           tiger           kelle         faecher
-## 131         armband          messer         ohrring            baer
-## 132           tiger            ring         buerste           gabel
+## 130       badewanne           tiger           kelle          fächer
+## 131         armband          messer         ohrring             bär
+## 132           tiger            ring          bürste           gabel
 ## 133           kelle         schwamm     schneebesen         ohrring
 ## 134         ohrring          glocke           kette        kassette
-## 135            baer           kelle         panther           kelle
-## 136       zigarette           loewe          kamera           loewe
-## 137         loeffel          parfum            ring         fenster
-## 138            ring         brosche            baer         loeffel
-## 139           loewe         leopard     schornstein         armband
-## 140     schneebesen         buerste         brosche         panther
+## 135             bär           kelle         panther           kelle
+## 136       zigarette            löwe          kamera            löwe
+## 137          löffel          parfum            ring         fenster
+## 138            ring         brosche             bär          löffel
+## 139            löwe         leopard     schornstein         armband
+## 140     schneebesen          bürste         brosche         panther
 ## 141           stuhl         schwert          sessel         strauss
 ## 142          schwan            burg            burg        hochhaus
 ## 143           waage            bank            ente      briefmarke
@@ -1618,22 +1618,22 @@ arrays %&gt;% filter()</code></pre>
 ## 159            bank          hocker          hocker            bank
 ## 160           taube        hochhaus          tempel         schwert
 ##             array25         array26         array27         array28
-## 1             pferd             reh          kaefig        orchidee
+## 1             pferd             reh           käfig        orchidee
 ## 2             geige         teppich           tulpe         klavier
-## 3              rose      muelleimer           kamel              cd
-## 4        muelleimer           pferd           harfe           kamel
+## 3              rose       mülleimer           kamel              cd
+## 4         mülleimer           pferd           harfe           kamel
 ## 5             harfe            rose     sonnenblume           harfe
 ## 6             kamel           harfe     lippenstift       badewanne
 ## 7       sonnenblume             kuh      schlagzeug           schaf
 ## 8             waage           tulpe           schaf     sonnenblume
 ## 9           gitarre         gitarre          glocke      ventilator
-## 10           kamera      schluessel         gitarre             reh
-## 11      streichholz           tafel             reh      loewenzahn
-## 12       loewenzahn           geige     briefkasten          parfum
+## 10           kamera       schlüssel         gitarre             reh
+## 11      streichholz           tafel             reh       löwenzahn
+## 12        löwenzahn           geige     briefkasten          parfum
 ## 13          klavier     sonnenblume         klavier     lippenstift
-## 14              reh           kamel      loewenzahn           geige
+## 14              reh           kamel       löwenzahn           geige
 ## 15         orchidee         klavier           pferd           tulpe
-## 16       schlagzeug      loewenzahn           geige             kuh
+## 16       schlagzeug       löwenzahn           geige             kuh
 ## 17            schaf           schaf        orchidee         gitarre
 ## 18            tulpe        kassette             kuh            rose
 ## 19          fenster        orchidee              cd           pferd
@@ -1644,7 +1644,7 @@ arrays %&gt;% filter()</code></pre>
 ## 24           kuchen     briefkasten             eis           feile
 ## 25             bein            fuss           feile           kekse
 ## 26  schraubenzieher           feile            bein            hand
-## 27           kaefig          pfeife          kuchen    bohrmaschine
+## 27            käfig          pfeife          kuchen    bohrmaschine
 ## 28              ohr           kekse schraubenzieher      schokolade
 ## 29            feile             arm             arm            fuss
 ## 30         mikrofon schraubenzieher          bonbon          hammer
@@ -1656,7 +1656,7 @@ arrays %&gt;% filter()</code></pre>
 ## 36       schokolade          kuchen      luftballon          brille
 ## 37     bohrmaschine          hammer          hammer          bonbon
 ## 38             hand          kamera            hand            bein
-## 39        zigarette      schokolade      muelleimer schraubenzieher
+## 39        zigarette      schokolade       mülleimer schraubenzieher
 ## 40           bonbon           zange      schokolade         schwert
 ## 41           sessel        hochhaus        mikrofon          sessel
 ## 42       kopfkissen          hocker           ampel          kirche
@@ -1667,9 +1667,9 @@ arrays %&gt;% filter()</code></pre>
 ## 47           glocke          kirche         strauss            bank
 ## 48             eule       spaghetti         schloss            burg
 ## 49        spaghetti         schwamm      briefmarke          schwan
-## 50          wuerfel            burg           couch           couch
+## 50           würfel            burg           couch           couch
 ## 51          schloss          parfum            baby         schloss
-## 52             bank            ente          tempel         wuerfel
+## 52             bank            ente          tempel          würfel
 ## 53          strauss           couch          schwan            eule
 ## 54             burg           puppe            bank          tempel
 ## 55            couch            eule        hochhaus            baby
@@ -1681,26 +1681,26 @@ arrays %&gt;% filter()</code></pre>
 ## 61          karotte      kopfkissen           besen        brokkoli
 ## 62      lippenstift         paprika        fernglas        kassette
 ## 63         schaufel         fenster         paprika        schaufel
-## 64       luftballon      kopfhoerer      arztkittel         paprika
-## 65            sakko           sakko           saege          kaefig
+## 64       luftballon       kopfhörer      arztkittel         paprika
+## 65            sakko           sakko            säge           käfig
 ## 66              axt       kartoffel           gurke    kapuzenpulli
 ## 67        kartoffel           besen           sakko             axt
-## 68     kapuzenpulli      arztkittel            ball         buerste
+## 68     kapuzenpulli      arztkittel            ball          bürste
 ## 69            sense       badewanne        brokkoli      arztkittel
 ## 70            gurke           sense    kapuzenpulli           besen
 ## 71           pinsel    kapuzenpulli          brille         karotte
 ## 72       arztkittel         karotte           sense           sakko
 ## 73             ball        schaufel     daunenweste     streichholz
 ## 74            besen     daunenweste         fenster           gurke
-## 75       pelzmantel        brokkoli       kartoffel           saege
+## 75       pelzmantel        brokkoli       kartoffel            säge
 ## 76          paprika             axt           waage     daunenweste
 ## 77             baby      pelzmantel             axt       kartoffel
-## 78            saege           kerze         karotte           sense
+## 78             säge           kerze         karotte           sense
 ## 79         brokkoli           gurke      pelzmantel      pelzmantel
-## 80      daunenweste           saege        schaufel          kamera
-## 81           delfin         faecher         schwamm       schublade
+## 80      daunenweste            säge        schaufel          kamera
+## 81           delfin          fächer         schwamm       schublade
 ## 82      briefkasten             aal         kutsche           waage
-## 83          schwert           regal         faecher      luftballon
+## 83          schwert           regal          fächer      luftballon
 ## 84        schublade            auto  kleiderschrank             lkw
 ## 85          teppich          rochen             bus       spaghetti
 ## 86         fernglas            safe             hai             aal
@@ -1721,224 +1721,224 @@ arrays %&gt;% filter()</code></pre>
 ## 101          schere      mikrowelle      mikrowelle          schere
 ## 102  kaffeemaschine       bleistift          schere     segelschiff
 ## 103           yacht          gondel          kamera  kaffeemaschine
-## 104     radiergummi geschirrspueler    kuehlschrank     radiergummi
+## 104     radiergummi  geschirrspüler     kühlschrank     radiergummi
 ## 105            herd         klammer       bleistift           yacht
-## 106         faecher          u-boot           kerze            herd
-## 107       bleistift    kuehlschrank     segelschiff         klammer
-## 108      schluessel     lippenstift     radiergummi            kanu
-## 109 geschirrspueler            kanu            herd      mikrowelle
+## 106          fächer          u-boot           kerze            herd
+## 107       bleistift     kühlschrank     segelschiff         klammer
+## 108       schlüssel     lippenstift     radiergummi            kanu
+## 109  geschirrspüler            kanu            herd      mikrowelle
 ## 110     segelschiff  kaffeemaschine          gondel       bleistift
 ## 111           ampel       steckdose         klammer          pfeife
-## 112          lineal     segelschiff      schluessel    kuehlschrank
+## 112          lineal     segelschiff       schlüssel     kühlschrank
 ## 113          gondel            herd           yacht          gondel
 ## 114      ventilator     radiergummi          lineal          lineal
 ## 115           tafel      briefmarke       spaghetti           puppe
-## 116          u-boot         wuerfel  kaffeemaschine      briefmarke
-## 117    kuehlschrank          schere          u-boot geschirrspueler
+## 116          u-boot          würfel  kaffeemaschine      briefmarke
+## 117     kühlschrank          schere          u-boot  geschirrspüler
 ## 118         klammer           yacht       steckdose       steckdose
-## 119            kanu            baby geschirrspueler      muelleimer
+## 119            kanu            baby  geschirrspüler       mülleimer
 ## 120      mikrowelle          lineal            kanu          u-boot
 ## 121           kerze          becher           birne           kanne
-## 122          brille         kirsche         wuerfel      schluessel
-## 123          banane          spinne    marienkaefer           biene
+## 122          brille         kirsche          würfel       schlüssel
+## 123          banane          spinne     marienkäfer           biene
 ## 124           kanne        mikrofon            glas           tasse
 ## 125          fliege         trauben          pinsel         trauben
 ## 126     schornstein          fliege          fliege          pinsel
 ## 127          becher           waage           kanne          spinne
-## 128    marienkaefer           apfel           tafel         kirsche
+## 128     marienkäfer           apfel           tafel         kirsche
 ## 129      briefmarke          ameise          ameise            glas
-## 130           birne           tasse         kirsche    marienkaefer
-## 131         buerste           birne        kassette           birne
+## 130           birne           tasse         kirsche     marienkäfer
+## 131          bürste           birne        kassette           birne
 ## 132           biene        fernglas          becher           ampel
 ## 133         kirsche         flasche           apfel          becher
 ## 134         flasche          banane      ventilator          banane
-## 135          spinne    marienkaefer          spinne         teppich
+## 135          spinne     marienkäfer          spinne         teppich
 ## 136         trauben     schornstein          banane          fliege
 ## 137            glas           kanne           tasse           apfel
 ## 138          ameise           biene           biene         flasche
-## 139           apfel         buerste         trauben       zigarette
+## 139           apfel          bürste         trauben       zigarette
 ## 140           tasse            glas         flasche          ameise
-## 141           tiger            baer           gabel         ohrring
-## 142     schneebesen         loeffel         ohrring          messer
+## 141           tiger             bär           gabel         ohrring
+## 142     schneebesen          löffel         ohrring          messer
 ## 143          parfum         ohrring     streichholz         leopard
-## 144      kopfhoerer          kaefig           kelle         armband
-## 145         armband          messer           loewe           gabel
+## 144       kopfhörer           käfig           kelle         armband
+## 145         armband          messer            löwe           gabel
 ## 146       steckdose           kette      kopfkissen         panther
 ## 147         leopard          brille          messer         brosche
-## 148         brosche     schneebesen      kopfhoerer           kelle
-## 149           kelle           loewe         buerste        fernglas
-## 150            baer     streichholz            baer           kette
-## 151           kette            ring         armband            baer
-## 152           gabel         leopard           puppe         faecher
+## 148         brosche     schneebesen       kopfhörer           kelle
+## 149           kelle            löwe          bürste        fernglas
+## 150             bär     streichholz             bär           kette
+## 151           kette            ring         armband             bär
+## 152           gabel         leopard           puppe          fächer
 ## 153       badewanne          glocke         leopard            ring
 ## 154            ring           gabel           kette     schneebesen
-## 155           loewe         armband         loeffel           loewe
-## 156         loeffel         panther         panther            ball
-## 157         ohrring           ampel            ring         loeffel
+## 155            löwe         armband          löffel            löwe
+## 156          löffel         panther         panther            ball
+## 157         ohrring           ampel            ring          löffel
 ## 158         schwamm         brosche     schneebesen           tiger
 ## 159          messer           tiger           tiger      kopfkissen
-## 160         panther           kelle         brosche      kopfhoerer
-##             array29         array30            item     categorie
-## 1       lippenstift             reh             hai        Fische
-## 2        loewenzahn          parfum             aal        Fische
-## 3               kuh      loewenzahn          rochen        Fische
-## 4            pinsel         klavier       goldfisch        Fische
-## 5           klavier      kopfkissen          delfin        Fische
-## 6             tulpe     briefkasten            auto       Strasse
-## 7         badewanne            rose             bus       Strasse
-## 8             harfe           pferd             lkw       Strasse
-## 9             pferd         wuerfel        motorrad       Strasse
-## 10             baby      schlagzeug         kutsche       Strasse
-## 11            geige           kamel       schublade  Aufbewahrung
-## 12            kamel        orchidee           regal  Aufbewahrung
-## 13             rose           geige  kleiderschrank  Aufbewahrung
-## 14       schlagzeug       zigarette            safe  Aufbewahrung
-## 15            schaf           schaf       schachtel  Aufbewahrung
-## 16      sonnenblume           tulpe           sakko        Jacken
-## 17          gitarre           harfe      pelzmantel        Jacken
-## 18              reh             kuh    kapuzenpulli        Jacken
-## 19      streichholz     sonnenblume      arztkittel        Jacken
-## 20         orchidee         gitarre     daunenweste        Jacken
-## 21           hammer           zange       kartoffel       Gemuese
-## 22          faecher          bonbon         paprika       Gemuese
-## 23           bonbon              cd           gurke       Gemuese
-## 24            feile             arm        brokkoli       Gemuese
-## 25              arm    bohrmaschine         karotte       Gemuese
-## 26              eis           kekse           sense     Bauernhof
-## 27            zange            hand             axt     Bauernhof
-## 28             fuss schraubenzieher        schaufel     Bauernhof
-## 29            kekse          kuchen           besen     Bauernhof
-## 30           pfeife         schwert           saege     Bauernhof
-## 31               cd           feile           pferd      Huftiere
-## 32       schokolade            fuss             kuh      Huftiere
-## 33  schraubenzieher     lippenstift             reh      Huftiere
-## 34             hand          hammer           schaf      Huftiere
-## 35         mikrofon             ohr           kamel      Huftiere
-## 36           kuchen         fenster         gitarre   Instrumente
-## 37              ohr             eis         klavier   Instrumente
-## 38     bohrmaschine            bein      schlagzeug   Instrumente
-## 39       ventilator          pfeife           geige   Instrumente
-## 40             bein      schokolade           harfe   Instrumente
-## 41             burg         schloss            rose        Blumen
-## 42       luftballon            eule      loewenzahn        Blumen
-## 43            taube            bank     sonnenblume        Blumen
-## 44         hochhaus        hochhaus        orchidee        Blumen
-## 45            couch          schwan           tulpe        Blumen
-## 46          strauss           stuhl          schere         Buero
-## 47             ball          kirche       bleistift         Buero
-## 48           sessel      luftballon         klammer         Buero
-## 49           schwan          hocker          lineal         Buero
-## 50           kirche      briefmarke     radiergummi         Buero
-## 51          teppich         strauss          u-boot        Wasser
-## 52             ente           couch          gondel        Wasser
-## 53           hocker      muelleimer     segelschiff        Wasser
-## 54        zigarette            ente            kanu        Wasser
-## 55       muelleimer        fernglas           yacht        Wasser
-## 56            stuhl          tempel    kuehlschrank        Kueche
-## 57           tempel           taube            herd        Kueche
-## 58             eule         buerste      mikrowelle        Kueche
-## 59             bank            burg  kaffeemaschine        Kueche
-## 60          schloss          sessel geschirrspueler        Kueche
-## 61            sakko           sense          fliege      Insekten
-## 62         brokkoli       kartoffel           biene      Insekten
-## 63            tafel      arztkittel          spinne      Insekten
-## 64            sense           waage    marienkaefer      Insekten
-## 65      schornstein             axt          ameise      Insekten
-## 66       briefmarke      pelzmantel           apfel          Obst
-## 67       pelzmantel           ampel         trauben          Obst
-## 68       schluessel         karotte           birne          Obst
-## 69            puppe           sakko          banane          Obst
-## 70            besen           besen         kirsche          Obst
-## 71            gurke           gurke            glas Trinkgefaesse
-## 72      daunenweste       badewanne         flasche Trinkgefaesse
-## 73              axt     daunenweste           tasse Trinkgefaesse
-## 74        kartoffel           saege          becher Trinkgefaesse
-## 75     kapuzenpulli          glocke           kanne Trinkgefaesse
-## 76         schaufel        mikrofon             eis Suessigkeiten
-## 77          karotte        brokkoli          kuchen Suessigkeiten
-## 78       arztkittel        schaufel      schokolade Suessigkeiten
-## 79            saege    kapuzenpulli           kekse Suessigkeiten
-## 80          paprika         paprika          bonbon Suessigkeiten
-## 81          kutsche         kutsche          hammer    Heimwerker
-## 82          schwamm           regal schraubenzieher    Heimwerker
-## 83            regal       goldfisch    bohrmaschine    Heimwerker
-## 84           rochen            auto           feile    Heimwerker
-## 85              bus  kleiderschrank           zange    Heimwerker
-## 86        schachtel          rochen            hand  Koerperteile
-## 87           delfin             lkw             arm  Koerperteile
-## 88             auto           tafel            bein  Koerperteile
-## 89             safe          delfin            fuss  Koerperteile
-## 90              aal             bus             ohr  Koerperteile
-## 91          buerste            safe          schwan        Voegel
-## 92        steckdose             hai            ente        Voegel
-## 93        goldfisch        motorrad           taube        Voegel
-## 94              lkw       schachtel            eule        Voegel
-## 95        schublade     streichholz         strauss        Voegel
-## 96         fernglas             aal            bank        Sitzen
-## 97         motorrad            ball           stuhl        Sitzen
-## 98   kleiderschrank      schluessel           couch        Sitzen
-## 99              hai       schublade          sessel        Sitzen
-## 100      kopfhoerer         teppich          hocker        Sitzen
-## 101            herd  kaffeemaschine          kirche      Gebaeude
-## 102          schere     radiergummi         schloss      Gebaeude
-## 103     briefkasten      kopfhoerer            burg      Gebaeude
-## 104          u-boot     segelschiff          tempel      Gebaeude
-## 105         klammer            herd        hochhaus      Gebaeude
-## 106 geschirrspueler          schere           tiger     Raubtiere
-## 107           yacht          gondel            baer     Raubtiere
-## 108     radiergummi      mikrowelle           loewe     Raubtiere
-## 109          kamera          lineal         panther     Raubtiere
-## 110            kanu            kanu         leopard     Raubtiere
-## 111       bleistift geschirrspueler            ring       Schmuck
-## 112  kaffeemaschine       steckdose           kette       Schmuck
-## 113     segelschiff          u-boot         armband       Schmuck
-## 114          glocke         schwamm         ohrring       Schmuck
-## 115    kuehlschrank         klammer         brosche       Schmuck
-## 116         wuerfel    kuehlschrank          messer        Kochen
-## 117          lineal      ventilator         loeffel        Kochen
-## 118      mikrowelle       bleistift           gabel        Kochen
-## 119           kerze           yacht           kelle        Kochen
-## 120          gondel          kaefig     schneebesen        Kochen
-## 121         kirsche    marienkaefer            baby        Filler
-## 122           biene         kirsche           waage        Filler
-## 123          becher          becher       zigarette        Filler
-## 124          banane          kamera      kopfhoerer        Filler
-## 125    marienkaefer           apfel            ball        Filler
-## 126           tasse          spinne           tafel        Filler
-## 127       spaghetti            glas           ampel        Filler
-## 128          ameise          banane           kerze        Filler
-## 129         flasche           puppe           puppe        Filler
-## 130           birne          fliege          kamera        Filler
-## 131          fliege           birne          brille        Filler
-## 132           kanne        kassette          glocke        Filler
-## 133         fenster           tasse          kaefig        Filler
-## 134          spinne          ameise          pinsel        Filler
-## 135      kopfkissen            baby          parfum        Filler
-## 136           apfel         flasche          pfeife        Filler
-## 137         schwert         trauben         fenster        Filler
-## 138            glas           biene         teppich        Filler
-## 139          brille           kerze         faecher        Filler
-## 140         trauben           kanne         schwert        Filler
-## 141            baer         brosche         wuerfel        Filler
-## 142          parfum          messer         buerste        Filler
-## 143         loeffel         leopard        mikrofon        Filler
-## 144           loewe            ring        fernglas        Filler
-## 145         ohrring           kelle        kassette        Filler
-## 146           gabel           loewe       badewanne        Filler
-## 147         panther       spaghetti       steckdose        Filler
-## 148         armband         loeffel       spaghetti        Filler
-## 149        kassette          brille      schluessel        Filler
-## 150          messer         armband      muelleimer        Filler
-## 151           waage         faecher      briefmarke        Filler
-## 152         brosche            baer      kopfkissen        Filler
-## 153     schneebesen           kette      luftballon        Filler
-## 154           tiger          pinsel      ventilator        Filler
-## 155            ring         panther     briefkasten        Filler
-## 156           kelle           gabel     schornstein        Filler
-## 157           ampel         ohrring     lippenstift        Filler
-## 158          kaefig           tiger     streichholz        Filler
-## 159         leopard     schneebesen              cd        Filler
-## 160           kette     schornstein         schwamm        Filler
+## 160         panther           kelle         brosche       kopfhörer
+##             array29         array30            item    categorie
+## 1       lippenstift             reh             hai       Fische
+## 2         löwenzahn          parfum             aal       Fische
+## 3               kuh       löwenzahn          rochen       Fische
+## 4            pinsel         klavier       goldfisch       Fische
+## 5           klavier      kopfkissen          delfin       Fische
+## 6             tulpe     briefkasten            auto      Strasse
+## 7         badewanne            rose             bus      Strasse
+## 8             harfe           pferd             lkw      Strasse
+## 9             pferd          würfel        motorrad      Strasse
+## 10             baby      schlagzeug         kutsche      Strasse
+## 11            geige           kamel       schublade Aufbewahrung
+## 12            kamel        orchidee           regal Aufbewahrung
+## 13             rose           geige  kleiderschrank Aufbewahrung
+## 14       schlagzeug       zigarette            safe Aufbewahrung
+## 15            schaf           schaf       schachtel Aufbewahrung
+## 16      sonnenblume           tulpe           sakko       Jacken
+## 17          gitarre           harfe      pelzmantel       Jacken
+## 18              reh             kuh    kapuzenpulli       Jacken
+## 19      streichholz     sonnenblume      arztkittel       Jacken
+## 20         orchidee         gitarre     daunenweste       Jacken
+## 21           hammer           zange       kartoffel       Gemüse
+## 22           fächer          bonbon         paprika       Gemüse
+## 23           bonbon              cd           gurke       Gemüse
+## 24            feile             arm        brokkoli       Gemüse
+## 25              arm    bohrmaschine         karotte       Gemüse
+## 26              eis           kekse           sense     Baürnhof
+## 27            zange            hand             axt     Baürnhof
+## 28             fuss schraubenzieher        schaufel     Baürnhof
+## 29            kekse          kuchen           besen     Baürnhof
+## 30           pfeife         schwert            säge     Baürnhof
+## 31               cd           feile           pferd     Huftiere
+## 32       schokolade            fuss             kuh     Huftiere
+## 33  schraubenzieher     lippenstift             reh     Huftiere
+## 34             hand          hammer           schaf     Huftiere
+## 35         mikrofon             ohr           kamel     Huftiere
+## 36           kuchen         fenster         gitarre  Instrumente
+## 37              ohr             eis         klavier  Instrumente
+## 38     bohrmaschine            bein      schlagzeug  Instrumente
+## 39       ventilator          pfeife           geige  Instrumente
+## 40             bein      schokolade           harfe  Instrumente
+## 41             burg         schloss            rose       Blumen
+## 42       luftballon            eule       löwenzahn       Blumen
+## 43            taube            bank     sonnenblume       Blumen
+## 44         hochhaus        hochhaus        orchidee       Blumen
+## 45            couch          schwan           tulpe       Blumen
+## 46          strauss           stuhl          schere         Büro
+## 47             ball          kirche       bleistift         Büro
+## 48           sessel      luftballon         klammer         Büro
+## 49           schwan          hocker          lineal         Büro
+## 50           kirche      briefmarke     radiergummi         Büro
+## 51          teppich         strauss          u-boot       Wasser
+## 52             ente           couch          gondel       Wasser
+## 53           hocker       mülleimer     segelschiff       Wasser
+## 54        zigarette            ente            kanu       Wasser
+## 55        mülleimer        fernglas           yacht       Wasser
+## 56            stuhl          tempel     kühlschrank        Küche
+## 57           tempel           taube            herd        Küche
+## 58             eule          bürste      mikrowelle        Küche
+## 59             bank            burg  kaffeemaschine        Küche
+## 60          schloss          sessel  geschirrspüler        Küche
+## 61            sakko           sense          fliege     Insekten
+## 62         brokkoli       kartoffel           biene     Insekten
+## 63            tafel      arztkittel          spinne     Insekten
+## 64            sense           waage     marienkäfer     Insekten
+## 65      schornstein             axt          ameise     Insekten
+## 66       briefmarke      pelzmantel           apfel         Obst
+## 67       pelzmantel           ampel         trauben         Obst
+## 68        schlüssel         karotte           birne         Obst
+## 69            puppe           sakko          banane         Obst
+## 70            besen           besen         kirsche         Obst
+## 71            gurke           gurke            glas Trinkgefässe
+## 72      daunenweste       badewanne         flasche Trinkgefässe
+## 73              axt     daunenweste           tasse Trinkgefässe
+## 74        kartoffel            säge          becher Trinkgefässe
+## 75     kapuzenpulli          glocke           kanne Trinkgefässe
+## 76         schaufel        mikrofon             eis Süssigkeiten
+## 77          karotte        brokkoli          kuchen Süssigkeiten
+## 78       arztkittel        schaufel      schokolade Süssigkeiten
+## 79             säge    kapuzenpulli           kekse Süssigkeiten
+## 80          paprika         paprika          bonbon Süssigkeiten
+## 81          kutsche         kutsche          hammer   Heimwerker
+## 82          schwamm           regal schraubenzieher   Heimwerker
+## 83            regal       goldfisch    bohrmaschine   Heimwerker
+## 84           rochen            auto           feile   Heimwerker
+## 85              bus  kleiderschrank           zange   Heimwerker
+## 86        schachtel          rochen            hand  Körperteile
+## 87           delfin             lkw             arm  Körperteile
+## 88             auto           tafel            bein  Körperteile
+## 89             safe          delfin            fuss  Körperteile
+## 90              aal             bus             ohr  Körperteile
+## 91           bürste            safe          schwan        Vögel
+## 92        steckdose             hai            ente        Vögel
+## 93        goldfisch        motorrad           taube        Vögel
+## 94              lkw       schachtel            eule        Vögel
+## 95        schublade     streichholz         strauss        Vögel
+## 96         fernglas             aal            bank       Sitzen
+## 97         motorrad            ball           stuhl       Sitzen
+## 98   kleiderschrank       schlüssel           couch       Sitzen
+## 99              hai       schublade          sessel       Sitzen
+## 100       kopfhörer         teppich          hocker       Sitzen
+## 101            herd  kaffeemaschine          kirche      Gebäude
+## 102          schere     radiergummi         schloss      Gebäude
+## 103     briefkasten       kopfhörer            burg      Gebäude
+## 104          u-boot     segelschiff          tempel      Gebäude
+## 105         klammer            herd        hochhaus      Gebäude
+## 106  geschirrspüler          schere           tiger    Raubtiere
+## 107           yacht          gondel             bär    Raubtiere
+## 108     radiergummi      mikrowelle            löwe    Raubtiere
+## 109          kamera          lineal         panther    Raubtiere
+## 110            kanu            kanu         leopard    Raubtiere
+## 111       bleistift  geschirrspüler            ring      Schmuck
+## 112  kaffeemaschine       steckdose           kette      Schmuck
+## 113     segelschiff          u-boot         armband      Schmuck
+## 114          glocke         schwamm         ohrring      Schmuck
+## 115     kühlschrank         klammer         brosche      Schmuck
+## 116          würfel     kühlschrank          messer       Kochen
+## 117          lineal      ventilator          löffel       Kochen
+## 118      mikrowelle       bleistift           gabel       Kochen
+## 119           kerze           yacht           kelle       Kochen
+## 120          gondel           käfig     schneebesen       Kochen
+## 121         kirsche     marienkäfer            baby       Filler
+## 122           biene         kirsche           waage       Filler
+## 123          becher          becher       zigarette       Filler
+## 124          banane          kamera       kopfhörer       Filler
+## 125     marienkäfer           apfel            ball       Filler
+## 126           tasse          spinne           tafel       Filler
+## 127       spaghetti            glas           ampel       Filler
+## 128          ameise          banane           kerze       Filler
+## 129         flasche           puppe           puppe       Filler
+## 130           birne          fliege          kamera       Filler
+## 131          fliege           birne          brille       Filler
+## 132           kanne        kassette          glocke       Filler
+## 133         fenster           tasse           käfig       Filler
+## 134          spinne          ameise          pinsel       Filler
+## 135      kopfkissen            baby          parfum       Filler
+## 136           apfel         flasche          pfeife       Filler
+## 137         schwert         trauben         fenster       Filler
+## 138            glas           biene         teppich       Filler
+## 139          brille           kerze          fächer       Filler
+## 140         trauben           kanne         schwert       Filler
+## 141             bär         brosche          würfel       Filler
+## 142          parfum          messer          bürste       Filler
+## 143          löffel         leopard        mikrofon       Filler
+## 144            löwe            ring        fernglas       Filler
+## 145         ohrring           kelle        kassette       Filler
+## 146           gabel            löwe       badewanne       Filler
+## 147         panther       spaghetti       steckdose       Filler
+## 148         armband          löffel       spaghetti       Filler
+## 149        kassette          brille       schlüssel       Filler
+## 150          messer         armband       mülleimer       Filler
+## 151           waage          fächer      briefmarke       Filler
+## 152         brosche             bär      kopfkissen       Filler
+## 153     schneebesen           kette      luftballon       Filler
+## 154           tiger          pinsel      ventilator       Filler
+## 155            ring         panther     briefkasten       Filler
+## 156           kelle           gabel     schornstein       Filler
+## 157           ampel         ohrring     lippenstift       Filler
+## 158           käfig           tiger     streichholz       Filler
+## 159         leopard     schneebesen              cd       Filler
+## 160           kette     schornstein         schwamm       Filler
 ##          supercategorie
 ## 1                 Tiere
 ## 2                 Tiere
@@ -1950,11 +1950,11 @@ arrays %&gt;% filter()</code></pre>
 ## 8   Fortbewegungsmittel
 ## 9   Fortbewegungsmittel
 ## 10  Fortbewegungsmittel
-## 11               Moebel
-## 12               Moebel
-## 13               Moebel
-## 14               Moebel
-## 15               Moebel
+## 11                Möbel
+## 12                Möbel
+## 13                Möbel
+## 14                Möbel
+## 15                Möbel
 ## 16             Kleidung
 ## 17             Kleidung
 ## 18             Kleidung
@@ -1995,11 +1995,11 @@ arrays %&gt;% filter()</code></pre>
 ## 53  Fortbewegungsmittel
 ## 54  Fortbewegungsmittel
 ## 55  Fortbewegungsmittel
-## 56               Moebel
-## 57               Moebel
-## 58               Moebel
-## 59               Moebel
-## 60               Moebel
+## 56                Möbel
+## 57                Möbel
+## 58                Möbel
+## 59                Möbel
+## 60                Möbel
 ## 61                Tiere
 ## 62                Tiere
 ## 63                Tiere
@@ -2035,11 +2035,11 @@ arrays %&gt;% filter()</code></pre>
 ## 93                Tiere
 ## 94                Tiere
 ## 95                Tiere
-## 96               Moebel
-## 97               Moebel
-## 98               Moebel
-## 99               Moebel
-## 100              Moebel
+## 96                Möbel
+## 97                Möbel
+## 98                Möbel
+## 99                Möbel
+## 100               Möbel
 ## 101             Misc II
 ## 102             Misc II
 ## 103             Misc II
@@ -2123,7 +2123,7 @@ df &lt;- df %&gt;% group_by(subject, category) %&gt;%
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 2: subject = 1, category = &quot;Bauernhof&quot;.</code></pre>
+## ℹ The error occurred in group 2: subject = 1, category = &quot;Baürnhof&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
@@ -2133,7 +2133,7 @@ df &lt;- df %&gt;% group_by(subject, category) %&gt;%
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 4: subject = 1, category = &quot;Buero&quot;.</code></pre>
+## ℹ The error occurred in group 4: subject = 1, category = &quot;Büro&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 40 Elemente: nur erstes wird genutzt
@@ -2148,12 +2148,12 @@ df &lt;- df %&gt;% group_by(subject, category) %&gt;%
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 7: subject = 1, category = &quot;Gebaeude&quot;.</code></pre>
+## ℹ The error occurred in group 7: subject = 1, category = &quot;Gebäude&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 8: subject = 1, category = &quot;Gemuese&quot;.</code></pre>
+## ℹ The error occurred in group 8: subject = 1, category = &quot;Gemüse&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
@@ -2188,12 +2188,12 @@ df &lt;- df %&gt;% group_by(subject, category) %&gt;%
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 15: subject = 1, category = &quot;Koerperteile&quot;.</code></pre>
+## ℹ The error occurred in group 15: subject = 1, category = &quot;Körperteile&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 16: subject = 1, category = &quot;Kueche&quot;.</code></pre>
+## ℹ The error occurred in group 16: subject = 1, category = &quot;Küche&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
@@ -2223,17 +2223,17 @@ df &lt;- df %&gt;% group_by(subject, category) %&gt;%
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 22: subject = 1, category = &quot;Suessigkeiten&quot;.</code></pre>
+## ℹ The error occurred in group 22: subject = 1, category = &quot;Süssigkeiten&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 23: subject = 1, category = &quot;Trinkgefaesse&quot;.</code></pre>
+## ℹ The error occurred in group 23: subject = 1, category = &quot;Trinkgefässe&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 24: subject = 1, category = &quot;Voegel&quot;.</code></pre>
+## ℹ The error occurred in group 24: subject = 1, category = &quot;Vögel&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
@@ -2248,7 +2248,7 @@ df &lt;- df %&gt;% group_by(subject, category) %&gt;%
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 27: subject = 2, category = &quot;Bauernhof&quot;.</code></pre>
+## ℹ The error occurred in group 27: subject = 2, category = &quot;Baürnhof&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
@@ -2258,7 +2258,7 @@ df &lt;- df %&gt;% group_by(subject, category) %&gt;%
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 29: subject = 2, category = &quot;Buero&quot;.</code></pre>
+## ℹ The error occurred in group 29: subject = 2, category = &quot;Büro&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 40 Elemente: nur erstes wird genutzt
@@ -2273,12 +2273,12 @@ df &lt;- df %&gt;% group_by(subject, category) %&gt;%
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 32: subject = 2, category = &quot;Gebaeude&quot;.</code></pre>
+## ℹ The error occurred in group 32: subject = 2, category = &quot;Gebäude&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 33: subject = 2, category = &quot;Gemuese&quot;.</code></pre>
+## ℹ The error occurred in group 33: subject = 2, category = &quot;Gemüse&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
@@ -2313,12 +2313,12 @@ df &lt;- df %&gt;% group_by(subject, category) %&gt;%
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 40: subject = 2, category = &quot;Koerperteile&quot;.</code></pre>
+## ℹ The error occurred in group 40: subject = 2, category = &quot;Körperteile&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 41: subject = 2, category = &quot;Kueche&quot;.</code></pre>
+## ℹ The error occurred in group 41: subject = 2, category = &quot;Küche&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
@@ -2348,17 +2348,17 @@ df &lt;- df %&gt;% group_by(subject, category) %&gt;%
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 47: subject = 2, category = &quot;Suessigkeiten&quot;.</code></pre>
+## ℹ The error occurred in group 47: subject = 2, category = &quot;Süssigkeiten&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 48: subject = 2, category = &quot;Trinkgefaesse&quot;.</code></pre>
+## ℹ The error occurred in group 48: subject = 2, category = &quot;Trinkgefässe&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 49: subject = 2, category = &quot;Voegel&quot;.</code></pre>
+## ℹ The error occurred in group 49: subject = 2, category = &quot;Vögel&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
@@ -2373,7 +2373,7 @@ df &lt;- df %&gt;% group_by(subject, category) %&gt;%
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 52: subject = 3, category = &quot;Bauernhof&quot;.</code></pre>
+## ℹ The error occurred in group 52: subject = 3, category = &quot;Baürnhof&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
@@ -2383,7 +2383,7 @@ df &lt;- df %&gt;% group_by(subject, category) %&gt;%
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 54: subject = 3, category = &quot;Buero&quot;.</code></pre>
+## ℹ The error occurred in group 54: subject = 3, category = &quot;Büro&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 40 Elemente: nur erstes wird genutzt
@@ -2398,12 +2398,12 @@ df &lt;- df %&gt;% group_by(subject, category) %&gt;%
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 57: subject = 3, category = &quot;Gebaeude&quot;.</code></pre>
+## ℹ The error occurred in group 57: subject = 3, category = &quot;Gebäude&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 58: subject = 3, category = &quot;Gemuese&quot;.</code></pre>
+## ℹ The error occurred in group 58: subject = 3, category = &quot;Gemüse&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
@@ -2438,12 +2438,12 @@ df &lt;- df %&gt;% group_by(subject, category) %&gt;%
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 65: subject = 3, category = &quot;Koerperteile&quot;.</code></pre>
+## ℹ The error occurred in group 65: subject = 3, category = &quot;Körperteile&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 66: subject = 3, category = &quot;Kueche&quot;.</code></pre>
+## ℹ The error occurred in group 66: subject = 3, category = &quot;Küche&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
@@ -2473,17 +2473,17 @@ df &lt;- df %&gt;% group_by(subject, category) %&gt;%
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 72: subject = 3, category = &quot;Suessigkeiten&quot;.</code></pre>
+## ℹ The error occurred in group 72: subject = 3, category = &quot;Süssigkeiten&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 73: subject = 3, category = &quot;Trinkgefaesse&quot;.</code></pre>
+## ℹ The error occurred in group 73: subject = 3, category = &quot;Trinkgefässe&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 74: subject = 3, category = &quot;Voegel&quot;.</code></pre>
+## ℹ The error occurred in group 74: subject = 3, category = &quot;Vögel&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
@@ -2498,7 +2498,7 @@ df &lt;- df %&gt;% group_by(subject, category) %&gt;%
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 77: subject = 4, category = &quot;Bauernhof&quot;.</code></pre>
+## ℹ The error occurred in group 77: subject = 4, category = &quot;Baürnhof&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
@@ -2508,7 +2508,7 @@ df &lt;- df %&gt;% group_by(subject, category) %&gt;%
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 79: subject = 4, category = &quot;Buero&quot;.</code></pre>
+## ℹ The error occurred in group 79: subject = 4, category = &quot;Büro&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 40 Elemente: nur erstes wird genutzt
@@ -2523,12 +2523,12 @@ df &lt;- df %&gt;% group_by(subject, category) %&gt;%
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 82: subject = 4, category = &quot;Gebaeude&quot;.</code></pre>
+## ℹ The error occurred in group 82: subject = 4, category = &quot;Gebäude&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 83: subject = 4, category = &quot;Gemuese&quot;.</code></pre>
+## ℹ The error occurred in group 83: subject = 4, category = &quot;Gemüse&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
@@ -2563,12 +2563,12 @@ df &lt;- df %&gt;% group_by(subject, category) %&gt;%
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 90: subject = 4, category = &quot;Koerperteile&quot;.</code></pre>
+## ℹ The error occurred in group 90: subject = 4, category = &quot;Körperteile&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 91: subject = 4, category = &quot;Kueche&quot;.</code></pre>
+## ℹ The error occurred in group 91: subject = 4, category = &quot;Küche&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
@@ -2598,17 +2598,17 @@ df &lt;- df %&gt;% group_by(subject, category) %&gt;%
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 97: subject = 4, category = &quot;Suessigkeiten&quot;.</code></pre>
+## ℹ The error occurred in group 97: subject = 4, category = &quot;Süssigkeiten&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 98: subject = 4, category = &quot;Trinkgefaesse&quot;.</code></pre>
+## ℹ The error occurred in group 98: subject = 4, category = &quot;Trinkgefässe&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt
 ## ℹ Input `PosOr` is `seq(1:n)`.
-## ℹ The error occurred in group 99: subject = 4, category = &quot;Voegel&quot;.</code></pre>
+## ℹ The error occurred in group 99: subject = 4, category = &quot;Vögel&quot;.</code></pre>
 <pre><code>## Warning in 1:n: numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt</code></pre>
 <pre><code>## Warning: Problem with `mutate()` input `PosOr`.
 ## ℹ numerischer Ausdruck hat 5 Elemente: nur erstes wird genutzt

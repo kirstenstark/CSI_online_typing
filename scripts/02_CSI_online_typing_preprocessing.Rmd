@@ -20,9 +20,11 @@ library(tidyr)
 
 ```{r}
 options( "encoding" = "UTF-8" )
-pretest <- read_delim(here::here("data", "pretest_complete.csv"), 
-    ";", escape_double = FALSE, na = "", 
-    trim_ws = TRUE)
+pretest <- read.csv(here::here("data", "pretest_complete.csv"), 
+    sep = ";",  na = "")
+#pretest <- read_delim(here::here("data", "pretest_complete.csv"), 
+#    ";", escape_double = FALSE, na = "", 
+#    trim_ws = TRUE)
 
 # exclude rows of unfinished experiments
 pretest <- pretest %>% filter(FINISHED == "1")
@@ -243,16 +245,15 @@ df <-  df %>%
 Add array for each participant
 ```{r}
 # load arrays
-arrays <- read_delim(here::here("data", "arrays.csv"), 
-    ";", escape_double = FALSE, na = "NA", 
-    trim_ws = TRUE)
+arrays <- read.csv(here::here("data", "arrays.csv"), 
+    sep = ";", na = "NA")
 # delete empty lines
 arrays %>% filter()
 
 # bind arrays to data frame
 array_experiment <- bind_rows(arrays[,unique(df$array_no)])
-array_experiment <- as.data.frame(unlist(lapply( array_exp[ , 
-                        names(array_exp)], as.character) ))
+array_experiment <- as.data.frame(unlist(lapply( array_experiment[ , 
+                        names(array_experiment)], as.character) ))
 df$item <- array_experiment[,1]
 
 # add category columns
@@ -267,7 +268,7 @@ df <- df %>% group_by(subject, category) %>%
 ```
 Export prepared data frame
 ```{r}
-write.csv(df,here::here("data", "data_long"), row.names = FALSE)
+write.csv(df,here::here("data", "pretest_long"), row.names = FALSE)
 ```
 
 

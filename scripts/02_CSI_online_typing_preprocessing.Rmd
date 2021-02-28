@@ -268,7 +268,7 @@ df <- df %>% group_by(subject, category) %>%
 ```
 Export prepared data frame
 ```{r}
-write.csv(df,here::here("data", "pretest_long"), row.names = FALSE)
+write.csv(df, here::here("data", "pretest_long.csv"), row.names = FALSE)
 ```
 
 

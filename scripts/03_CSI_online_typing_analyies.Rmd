@@ -12,11 +12,12 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Load packages
 ```{r}
 library(dplyr)
+library(tidyr)
 library(lme4)
 library(lmerTest)
 library(Rmisc)
 library(Cairo)
-library(strengejacke)
+#library(strengejacke)
 library(ggplot2)
 
 options(scipen=999)
@@ -50,10 +51,11 @@ nrow(df)/length(unique(df$subject)) # 120 Trials per participant
 
 ## Check participants answer behavior
 ```{r}
-answers <- data.frame(df$item, df$word) %>% 
-  rename(item = df.item, word = df.word) %>%
+answers <- data.frame(df$subject, df$item, df$word) %>%
+  dplyr:: rename(item = df.item, word = df.word) %>%
   mutate(item =  toupper(item)) %>% 
   mutate(word = toupper(word))
+sum(is.na(answers$word))
 
 # when item and word are exactly identical, the answer is correct
 answers <- answers %>% filter(item != word)
@@ -74,7 +76,8 @@ answers <- answers %>% filter(item != word)
 # 1) synonymes
 # 2) typos or corrections that should not affect first letter timing
 answers.sort <- with(answers,  answers[order(item) , ])
-df3 <- answers.sort %>% filter(word != "ARMAND", # Item = Armband
+answers <- answers %>% 
+  filter(word != "ARMAND", # Item = Armband
                                word != "ARZTKIZEBACKSPACEBACKSPACETTEL", # Item = Arztkittel
                                word != "AUTP", # Item = Auto
                                word != "ACCBACKSPACEBACKSPACEXT", # Item = Axt
@@ -155,9 +158,20 @@ df3 <- answers.sort %>% filter(word != "ARMAND", # Item = Armband
                               word != "BOOT", # Item = YACHT
 )
 
+# These 41 entries will be considered as incorrect 
+(answers)
+
+# Set incorrect entries to NA in data frame
+sum(is.na(df$word))
+df_red <- df
+for (i in 1:nrow(answers)) {
+  df_red$word[df_red$subject == answers$df.subject[i] & 
+            df_red$item == tolower(answers$item[i])] <- NA
+}
+sum(is.na(df_red$word)) # did it work
 ```
 
-
+# ALL TRIALS
 ### Plot RTs by OrPos
 
 ```{r}
@@ -165,7 +179,7 @@ is.numeric(df$timing.01)
 df$PosOr <- as.factor(df$PosOr)
 df$subject <- as.factor(df$subject)
 # descriptives 
-means <- Rmisc::summarySEwithin(df,"timing.01",idvar = "subject",withinvars = "PosOr", na.rm = T)
+(means <- Rmisc::summarySEwithin(df,"timing.01",idvar = "subject",withinvars = "PosOr", na.rm = T))
 ```
 
 
@@ -188,8 +202,8 @@ apatheme <- theme_bw()+
   annotate(geom="text", x=2, y=1200, label="n = 4", color="black", size = 8))
 
 
-ggsave(plot = plot, file = "figures/RT_across_conditions.pdf", device = cairo_pdf, dpi = 300)
-embedFonts(file = "figures/RT_across_conditions_CSI_online_typing.pdf")
+# ggsave(plot = plot, file = "figures/RT_across_conditions.pdf", device = cairo_pdf, dpi = 300)
+# embedFonts(file = "figures/RT_across_conditions_CSI_online_typing.pdf")
 ```
   
 Plot by subcategory
@@ -220,20 +234,154 @@ Plot by subject:
 
 ```
 
-# lmms --------------------------------------------------------------------
 
-hist(df$VOT)
+# Unvalid trials: Ordinal Position changed 
+```{r}
+# update ordinal position number
+# add position number
+df_red$PosOr_correct <- as.numeric(as.character(df$PosOr))
+for(i in 1:nrow(df_red)) {
+  if(is.na(df_red$word[i])){
+    df_red$PosOr_correct[i] <- df_red$PosOr_correct[i] -1
+  }
+  if(df_red$PosOr_correct[i] == 0) {
+    df_red$PosOr_correct[i] = NA
+    }  }
+table(df_red$PosOr_correct)
 
-contrasts(df$Pos) <- contr.poly(5)
+# convert variables to factors
+is.numeric(df_red$timing.01)
+df_red$PosOr_correct <- as.factor(df_red$PosOr_correct)
+df_red$subject <- as.factor(df_red$subject)
+# descriptives 
+(means_redPosOr <- Rmisc::summarySEwithin(df_red,"timing.01",idvar = "subject",withinvars = "PosOr_correct", na.rm = T))
 
-m1 <- glmer(VOT ~ Pos + (Pos|VP) +(Pos|subcat) , 
-             data =df_correct, family =Gamma(link ="identity"), control=glmerControl(optimizer = "bobyqa"))
+```
+
+### Plot RTs by OrPos
+
+```{r}
+(plot <- ggplot(data=df_red[!is.na(df_red$PosOr_correct),], aes(x=PosOr_correct, y=timing.01)) +
+  stat_summary(fun=mean,  geom="point", size = 2)+
+  stat_summary(fun=mean,  geom="line", size = 1) +
+  apatheme+
+  labs(x="Ordinal Position ",y ="RT ms")+
+  annotate(geom="text", x=2, y=1200, label="n = 4", color="black", size = 8))
+
+
+# ggsave(plot = plot, file = "figures/RT_across_conditions.pdf", device = cairo_pdf, dpi = 300)
+# embedFonts(file = "figures/RT_across_conditions_CSI_online_typing.pdf")
+```
+  
+Plot by subcategory
+```{r}
+
+(plot_by_cat <- ggplot(data=df_red[!is.na(df_red$PosOr_correct),], aes(x=PosOr_correct, y=timing.01)) +
+  stat_summary(fun=mean,  geom="point", size = 2)+
+  stat_summary(fun=mean,  geom="line", size = 1) +
+  facet_wrap(~category) +
+  apatheme+
+  labs(x="Ordinal Position ",y ="RT ms"))
+#ggsave(plot = plot30_facet, file = "Plots/CSI_subcats.pdf", device = cairo_pdf,dpi = 300)
+#embedFonts(file = "Plots/CSI_online30_subcats.pdf")
+
+```
+
+Plot by subject: 
+```{r}
+
+(plot_by_cat <- ggplot(data=df_red[!is.na(df_red$PosOr_correct),], aes(x=PosOr_correct, y=timing.01)) +
+  stat_summary(fun=mean,  geom="point", size = 2)+
+  stat_summary(fun=mean,  geom="line", size = 1) +
+  facet_wrap(~subject) +
+  apatheme+
+  labs(x="Ordinal Position ",y ="RT ms"))
+#ggsave(plot = plot30_facet, file = "Plots/CSI_subcats.pdf", device = cairo_pdf,dpi = 300)
+#embedFonts(file = "Plots/CSI_online30_subcats.pdf")
+
+```
+
+# Unvalid trials: Ordinal Position of unvalid trials set to NA
+```{r}
+# set ordinal position to NA for unvalid trials
+for(i in 1:nrow(df_red)) {
+  if(is.na(df_red$word[i])) {
+    df_red$PosOr[i] <- NA
+  }}
+#sum(is.na(df_red$PosOr))
+
+is.numeric(df_red$timing.01)
+df_red$PosOr <- as.factor(df_red$PosOr)
+df_red$subject <- as.factor(df_red$subject)
+# descriptives 
+means_unvalidtoNA <- Rmisc::summarySEwithin(df_red,"timing.01",idvar = "subject",withinvars = "PosOr", na.rm = T)
+
+```
+
+
+
+### Plot RTs by OrPos
+
+```{r}
+is.numeric(df_red$timing.01)
+df_red$PosOr <- as.factor(df_red$PosOr)
+df_red$subject <- as.factor(df_red$subject)
+# descriptives 
+(means_PosOrNA <- Rmisc::summarySEwithin(df,"timing.01",idvar = "subject",withinvars = "PosOr", na.rm = T))
+```
+
+
+```{r}
+(plot <- ggplot(data=df_red[!is.na(df_red$PosOr),], aes(x=PosOr, y=timing.01)) +
+  stat_summary(fun=mean,  geom="point", size = 2)+
+  stat_summary(fun=mean,  geom="line", size = 1) +
+  apatheme+
+  labs(x="Ordinal Position ",y ="RT ms")+
+  annotate(geom="text", x=2, y=1200, label="n = 4", color="black", size = 8))
+
+
+# ggsave(plot = plot, file = "figures/RT_across_conditions.pdf", device = cairo_pdf, dpi = 300)
+# embedFonts(file = "figures/RT_across_conditions_CSI_online_typing.pdf")
+```
+  
+Plot by subcategory
+```{r}
+
+(plot_by_cat <- ggplot(data=df_red[!is.na(df_red$PosOr),], aes(x=PosOr, y=timing.01)) +
+  stat_summary(fun=mean,  geom="point", size = 2)+
+  stat_summary(fun=mean,  geom="line", size = 1) +
+  facet_wrap(~category) +
+  apatheme+
+  labs(x="Ordinal Position ",y ="RT ms"))
+#ggsave(plot = plot30_facet, file = "Plots/CSI_subcats.pdf", device = cairo_pdf,dpi = 300)
+#embedFonts(file = "Plots/CSI_online30_subcats.pdf")
+
+```
+
+Plot by subject: 
+```{r}
+
+(plot_by_cat <- ggplot(data=df_red[!is.na(df_red$PosOr),], aes(x=PosOr, y=timing.01)) +
+  stat_summary(fun=mean,  geom="point", size = 2)+
+  stat_summary(fun=mean,  geom="line", size = 1) +
+  facet_wrap(~subject) +
+  apatheme+
+  labs(x="Ordinal Position ",y ="RT ms"))
+#ggsave(plot = plot30_facet, file = "Plots/CSI_subcats.pdf", device = cairo_pdf,dpi = 300)
+#embedFonts(file = "Plots/CSI_online30_subcats.pdf")
+
+```
+
+# lmms 
+
+```{r}
+hist(df_red$timing.01)
+
+contrasts(df_red$PosOr) <- contr.poly(5)
+
+m1 <- glmer(timing.01 ~ PosOr + (PosOr|subject) +(PosOr|category) , 
+             data =df_red, family =Gamma(link ="identity"), control=glmerControl(optimizer = "bobyqa"))
 
 summary(m1)
-tab_model(m1,transform = NULL,show.re.var = F, file = "Plots/glmm_CSI_online.html")
-
-
-m1_30 <- glmer(VOT ~ Pos + (Pos|VP) +(Pos|subcat) , 
-            data =df_correct30, family =Gamma(link ="identity"), control=glmerControl(optimizer = "bobyqa"))
-
-summary(m1_30)
+#tab_model(m1,transform = NULL,show.re.var = F, file = #"Plots/glmm_CSI_online.html")
+```

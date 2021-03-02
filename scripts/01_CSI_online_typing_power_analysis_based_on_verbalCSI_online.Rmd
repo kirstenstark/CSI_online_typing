@@ -1,0 +1,483 @@
+---
+title: "Power Analysis for CSI online typing"
+author: "Kirsten Stark"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# load packages
+```{r}
+library(dplyr)
+library(tidyr)
+library(devtools)
+library(MASS)
+library(lme4)
+library(lmerTest)
+library(simr)
+library(pbkrtest)
+library(testthat)
+library(ggplot2)
+
+rm(list = ls())
+```
+
+
+# load data from online verbal CSI experiment
+
+```{r load data online}
+today <- Sys.Date()
+today <- format(today, format="%d%m%y")
+
+# load data
+load(here::here("data_for_power_analysis","df.RData"))
+df_online <- df
+
+# subset the relevant columns
+df_online <- df_online %>% 
+  filter(subcat_code != 100) %>% 
+  filter(correct == "1") %>%
+  filter(VP != "31") %>% 
+  dplyr::select(c(VP, Pos, subcat, VOT)) %>%
+  droplevels() %>%
+  dplyr::rename(RT = VOT)
+
+# factorize columns
+is.numeric(df_online$RT)
+df_online$VP <- as.factor(df_online$VP)
+df_online$Pos <- as.factor(df_online$Pos)
+df_online$category <- as.factor(df_online$subcat)
+```
+
+# load data from lab-based verbal CSI experiment
+
+```{r load data lab}
+# load data 
+load(here::here("data_for_power_analysis","CSI_model_df.RData"))
+df_lab <- model_df
+
+# subset relevant columns
+df_lab <- df_lab %>%
+  filter(Durchgang == 1) %>%
+  filter(CatSize == 101) %>%
+  dplyr::select(VPNr, OrdPos, UCatName, RT) %>%
+  droplevels() %>%
+  dplyr::rename(VP = VPNr, Pos = OrdPos, subcat = UCatName)
+
+# factorize columns
+is.numeric(df_lab$RT)
+df_lab$VP <- as.factor(df_lab$VP)
+df_lab$Pos <- as.factor(df_lab$Pos)
+df_lab$category <- as.factor(df_lab$subcat)
+```
+
+
+# 1) Set up models based on structure of the online CSI experiments
+a) Set polynomial contrasts for Pos (version with factorized predictor), and b) center Pos (version with continuous predictor)
+
+````{r models online CSI - contrasts}
+# set polynomial contrasts
+contrasts(df_online$Pos) <- contr.poly(n = 5)
+fixef_terms <- model.matrix( ~ Pos,df_online) 
+df_online$Pos.L <- fixef_terms[,2]
+
+# center continuous predictor
+df_online$Pos.c <- scale(as.numeric(as.character(df_online$Pos)), center = TRUE, scale = FALSE)
+#df_online$Pos.c <- as.numeric(df_online$Pos)
+```
+
+b) Check distribution of RTs
+
+```{r RT distributions}
+# check distribution of RTs (by eyeballing)
+# 1) density plot of RTs
+qplot(data=df_online, RT, geom="density", na.rm=TRUE)+ theme_bw() 
+# 2) plot data against real normal distribution -> is it way off?
+qqnorm(df_online$RT); qqline(df_online$RT)
+
+# check distribution of logRTs (by eyeballing)
+df_online$lRT <- log(df_online$RT)
+# 1) density plot of logRTs
+qplot(data=df_online, lRT, geom="density", na.rm=TRUE)+ theme_bw() 
+# 2) plot data against real normal distribution -> is it way off?
+qqnorm(df_online$lRT); qqline(df_online$lRT)
+### data kind of normally distributed. Log RTs fit better
+```
+
+c) Set up the models  
+*Model 1: Linear model, categorical predictor, untransformed RT data*
+
+```{r LMM1 online}
+# Model 1: Linear model with untransformed RT data
+# lmm1 <- lmer(RT ~ Pos.L + (Pos.L|VP) +(Pos.L|subcat) ,
+#             data = df_online, REML = FALSE,
+#             control=lmerControl(optimizer = "bobyqa",
+#             optCtrl = list(maxfun = 2*10^5)))
+# isSingular(lmm1)
+lmm1 <- lmer(RT ~ Pos.L + (1|VP) +(Pos.L|subcat) ,
+            data = df_online, REML = FALSE,
+            control=lmerControl(optimizer = "bobyqa",
+            optCtrl = list(maxfun = 2*10^5)))
+isSingular(lmm1)
+summary(lmm1)
+```
+
+*Model 2: Linear model, categorical predictor, log-transformed RT data*
+
+```{r LMM1_log online}
+# Model 2: Linear model with log transformed RT data
+# lmm2_log <- lmer(lRT ~ Pos.L + (Pos.L|VP) +(Pos.L|subcat) ,
+#             data = df_online, REML = FALSE,
+#             control=lmerControl(optimizer = "bobyqa",
+#             optCtrl = list(maxfun = 2*10^5)))
+# isSingular(lmm2_log)
+lmm1_log <- lmer(lRT ~ Pos.L + (1|VP) +(Pos.L|subcat) ,
+            data = df_online, REML = FALSE,
+            control=lmerControl(optimizer = "bobyqa",
+            optCtrl = list(maxfun = 2*10^5)))
+summary(lmm1_log)
+```
+
+*Model 3: GLMM (Gamma distribution), categorical predictor, untransformed RT data*
+
+```{r GLMM1 online}
+# Model 3: Generalized linear model with gamma distribution
+glmm1 <- glmer(RT ~ Pos.L + (Pos.L|VP) +(Pos.L|subcat) ,
+            data = df_online,  family =Gamma(link ="identity"),
+            control=glmerControl(optimizer = "bobyqa"))
+isSingular(glmm1)
+summary(glmm1)
+```
+
+*Model 4: Linear model, continuous predictor, untransformed RT data*
+
+```{r LMM2 online}
+# Model 4: Linear model with untransformed RT data
+# lmm2 <- lmer(RT ~ Pos.c + (Pos.c|VP) +(Pos.c|subcat) ,
+#             data = df_online, REML = FALSE,
+#             control=lmerControl(optimizer = "bobyqa",
+#             optCtrl = list(maxfun = 2*10^5)))
+lmm2 <- lmer(RT ~ Pos.c + (1|VP) +(Pos.c|subcat) ,
+            data = df_online, REML = FALSE, 
+            control=lmerControl(optimizer = "bobyqa",
+                                optCtrl = list(maxfun = 2*10^5)))
+isSingular(lmm2)
+summary(lmm2)
+```
+
+*Model 5: Linear model, continuous predictor, log-transformed RT data*
+
+```{r LMM2_log online}
+# Model 5: Linear model with log- RT data
+# lmm2_log <- lmer(lRT ~ Pos.c + (Pos.c|VP) +(Pos.c|subcat) ,
+#             data = df_online, REML = FALSE,
+#             control=lmerControl(optimizer = "bobyqa",
+#             optCtrl = list(maxfun = 2*10^5)))
+lmm2_log <- lmer(lRT ~ Pos.c + (1|VP) +(Pos.c|subcat) ,
+            data = df_online, REML = FALSE,
+            control=lmerControl(optimizer = "bobyqa",
+            optCtrl = list(maxfun = 2*10^5)))
+isSingular(lmm2_log)
+summary(lmm2_log)
+```
+
+*Model 6: GLMM (Gamma distribution), continuous predictor, untransformed RT data*
+
+```{r GLMM2 online}
+# Model 6: Generalized linear model with gamma distribution
+glmm2 <- glmer(RT ~ Pos.c + (1|VP) +(1|subcat) ,
+            data = df_online,  family =Gamma(link ="identity"),
+            control=glmerControl(optimizer = "bobyqa"))
+isSingular(glmm2)
+summary(glmm2)
+```
+
+#2) Extend dataset
+
+```{r}
+lmm1_2 <- extend(lmm1, along="VP", n=40)
+m2data <- getData(lmm1_2) 
+## ok, data were indeed extended to n subjects ;-)
+str(m2data)
+str(df_online)
+
+lmm1_2_log <- extend(lmm1_log, along="VP", n=40)
+m2data <- getData(lmm1_2_log) 
+## ok, data were indeed extended to n subjects ;-)
+str(m2data)
+str(df_online)
+
+glmm1_2<- extend(glmm1, along="VP", n=40)
+m2data <- getData(glmm1) 
+## ok, data were indeed extended to n subjects ;-)
+str(m2data)
+str(df_online)
+
+lmm2_2 <- extend(lmm2, along="VP", n=40)
+m2data <- getData(lmm2_2) 
+## ok, data were indeed extended to n subjects ;-)
+str(m2data)
+str(df_online)
+
+lmm2_2_log <- extend(lmm2_log, along="VP", n=40)
+m2data <- getData(lmm2_2_log) 
+## ok, data were indeed extended to n subjects ;-)
+str(m2data)
+str(df_online)
+
+glmm2_2<- extend(glmm2, along="VP", n=40)
+m2data <- getData(glmm2_2) 
+## ok, data were indeed extended to n subjects ;-)
+str(m2data)
+str(df_online)
+```
+
+#3) Specify effect sizes
+As shown below, the online effect size is somewhat smaller than the lab-based effect size. Therefore, we use the fixed effect from the verbal online study for each of the models:  
+  
+Set up the same models for the lab-based experiment and compare effect sizes between online and lab experiments
+
+````{r models lab CSI - contrasts}
+# set polynomial contrasts
+contrasts(df_lab$Pos) <- contr.poly(n = 6)
+fixef_terms <- model.matrix( ~ Pos,df_lab) 
+df_lab$Pos.L <- fixef_terms[,2]
+
+# center continuous predictor
+df_lab$Pos.c <- scale(as.numeric(as.character(df_lab$Pos)), center = TRUE, scale = FALSE)
+```
+
+*Model 1: Linear model, categorical predictor, untransformed RT data* 
+
+```{r LMM1}
+# compare fixed effects between lab and online
+fixef(lmm1_2)
+fixef(lmer(RT ~ Pos.L + (1|VP) +(Pos.L|subcat) ,
+            data = df_lab, REML = FALSE,
+            control=lmerControl(optimizer = "bobyqa",
+            optCtrl = list(maxfun = 2*10^5)))) 
+# use the smaller effect from the online study: 47.73269 
+fixef(lmm1_2)["Pos.L"] <- 47.73269 
+```
+
+*Model 2: Linear model, categorical predictor, log-transformed RT data*
+
+```{r fixed effect LMM1_log}
+# compare fixed effects between lab and online
+# add log RTs
+fixef(lmm1_2_log)
+df_lab$lRT <- log(df_lab$RT)
+fixef(lmer(lRT ~ Pos.L + (1|VP) +(Pos.L|subcat) ,
+            data = df_lab, REML = FALSE,
+            control=lmerControl(optimizer = "bobyqa",
+            optCtrl = list(maxfun = 2*10^5))))
+# use the smaller effect from the online study: 0.04606618 
+fixef(lmm1_2_log)["Pos.L"] <- 0.04606618 
+```
+
+*Model 3: GLMM (Gamma distribution), categorical predictor, untransformed RT data*
+
+```{r fixed effect GLMM1}
+# compare fixed effects between lab and online
+fixef(glmm1_2)
+  # reduced GLMM because model with lab-based data failed to converge
+fixef(glmer(RT ~ Pos.L + (1|VP) +(Pos.L|subcat) ,
+            data = df_lab,  family =Gamma(link ="identity"),
+            control=glmerControl(optimizer = "bobyqa")))
+# use the smaller effect from the online study: 50.54676
+fixef(glmm1_2)["Pos.L"] <- 50.54676
+```
+
+*Model 4: Linear model, continuous predictor, untransformed RT data*
+
+```{r fixed effect LMM2}
+# compare fixed effects between lab and online
+fixef(lmm2_2)
+fixef(lmer(RT ~ Pos.c + (1|VP) +(Pos.c|subcat) ,
+            data = df_lab, REML = FALSE,
+            control=lmerControl(optimizer = "bobyqa",
+            optCtrl = list(maxfun = 2*10^5))))
+# use the smaller effect from the online study: 15.0944  
+fixef(lmm2)["Pos.c"] <- 15.0944 
+```
+
+*Model 5: Linear model, continuous predictor, log-transformed RT data*
+
+```{r fixed effect LMM2_log}
+# compare fixed effects between lab and online
+fixef(lmm2_2_log)
+fixef(lmer(lRT ~ Pos.c + (1|VP) +(Pos.c|subcat) ,
+            data = df_lab, REML = FALSE,
+            control=lmerControl(optimizer = "bobyqa",
+            optCtrl = list(maxfun = 2*10^5))))
+# use the smaller effect from the online study: 0.01456741  
+fixef(lmm2_log)["Pos.c"] <- 0.01456741 
+```
+
+*Model 6: GLMM (Gamma distribution), continuous predictor, untransformed RT data*
+
+```{r fixed effect GLMM2}
+# compare fixed effects between lab and online
+fixef(glmm2_2)
+fixef(glmer(RT ~ Pos.c + (Pos.c|VP) +(Pos.L|subcat) ,
+            data = df_lab,  family =Gamma(link ="identity"),
+            control=glmerControl(optimizer = "bobyqa")))
+# use the smaller effect from the online study:  15.98449 
+fixef(glmm2_2)["Pos.c"] <- 14.13881  
+```
+
+#4) Run the power analysis
+
+```{r}
+set.seed(99)
+```
+
+*Model 1: Linear model, categorical predictor, untransformed RT data* 
+
+```{r PowerSim LMM1}
+(PowerLMM1 <- powerSim(lmm1, test=fixed("Pos.L","t"), nsim = 1000)) # increase to nsim > 1000 for real test
+lastResult()$warnings
+lastResult()$errors
+```
+
+*Model 2: Linear model, categorical predictor, log-transformed RT data*
+
+```{r PowerSim LMM1_Log}
+(PowerLMM1_log <-powerSim(lmm1_2_log, test=fixed("Pos.L","t"), nsim = 1000)) # increase to nsim > 1000 for real test
+lastResult()$warnings
+lastResult()$errors
+```
+
+*Model 3: GLMM (Gamma distribution), categorical predictor, untransformed RT data*
+
+```{r PowerSim GLMM1}
+# (PowerGLMM1 <- powerSim(glmm1_2, test=fixed("Pos.L","t"), nsim = 50)) # increase to nsim > 1000 for real test
+# lastResult()$warnings
+# lastResult()$errors
+# all GLMM models lead to errors: PIRLS step-halvings failed to reduce deviance in pwrssUpdate or Downdated VtV is not positive definite
+```
+
+*Model 4: Linear model, continuous predictor, untransformed RT data*
+
+```{r PowerSim LMM2 40 VP}
+(PowerLMM2_40 <- powerSim(lmm2_2, test=fixed("Pos.c","t"), nsim = 1000)) # increase to nsim > 1000 for real test
+lastResult()$warnings
+lastResult()$errors
+```
+
+*Model 5: Linear model, continuous predictor, log-transformed RT data*
+
+```{r PowerSim LMM2_log}
+(PowerLMM2_log_40 <- powerSim(lmm2_2_log, test=fixed("Pos.c","t"), nsim = 1000)) # increase to nsim > 1000 for real test
+
+lastResult()$warnings
+lastResult()$errors
+```
+
+*Model 6: GLMM (Gamma distribution), continuous predictor, untransformed RT data*
+
+```{r PowerSim GLMM2}
+# (PowerGLMM2 <- powerSim(glmm2_2, test=fixed("Pos.c","t"), nsim = 50)) # increase to nsim > 1000 for real test
+# lastResult()$warnings
+# lastResult()$errors
+# all GLMM models lead to errors: PIRLS step-halvings failed to reduce deviance in pwrssUpdate or Downdated VtV is not positive definite
+```
+
+# 5) Power analyses at a range of sample sizes
+High achieved power for all these sample sizes. Try out different sample sizes the two most plausible models lmm1_log (factorized predictor) and lmm2_log (continuous predictor)
+
+*Model 2: Linear model, categorical predictor, log-transformed RT data*
+30 VP
+
+```{r PowerSim LMM1_log 30 VP}
+# extend data set
+lmm1_30_log <- extend(lmm1_log, along="VP", n=30)
+
+# set fixed effect
+fixef(lmm1_30_log)["Pos.L"] <- 0.04606618  
+
+# Power analysis
+(PowerLMM1_log_30 <- powerSim(lmm1_30_log, test=fixed("Pos.L","t"), nsim = 1000)) # increase to nsim > 1000 for real test
+lastResult()$warnings
+lastResult()$errors
+```
+
+
+*Model 5: Linear model, continuous predictor, log-transformed RT data*
+30 VP
+
+```{r PowerSim LMM2_log 30 VP}
+# extend data set
+lmm2_30_log <- extend(lmm2_log, along="VP", n=30)
+
+# set fixed effect
+fixef(lmm2_30_log)["Pos.c"] <- 0.01456741 
+
+# Power analysis
+(PowerLMM2_log_30 <- powerSim(lmm2_30_log, test=fixed("Pos.c","t"), nsim = 1000)) # increase to nsim > 1000 for real test
+lastResult()$warnings
+lastResult()$errors
+```
+
+Several sample sizes 
+
+```{r PowerCurve LMM2_log}
+(pc_lmm2_log <- powerCurve(lmm2_30_log, along = "VP", 
+                          breaks = c(20, 24, 30), nsim = 50))
+plot(pc_lmm2_log)
+```
+
+
+# 5) Power analyses at a smaller effect size
+
+*Model 2: Linear model, categorical predictor, log-transformed RT data*
+30 VP
+
+```{r PowerSim LMM1_log eff 0.04}
+
+# set fixed effect
+fixef(lmm1_30_log)["Pos.L"] <- 0.04 
+
+# Power analysis
+(PowerLMM1_log_30_eff0.04 <- powerSim(lmm1_30_log, test=fixed("Pos.L","t"), nsim = 1000)) # increase to nsim > 1000 for real test
+lastResult()$warnings
+lastResult()$errors
+```
+
+*Model 5: Linear model, continuous predictor, log-transformed RT data*
+
+```{r PowerSim LMM2_log 30 VP effect size 0.013}
+
+# set fixed effect
+fixef(lmm2_30_log)["Pos.c"] <-0.013 # instead of 0.01456741 
+
+# Power analysis
+(PowerLMM2_log_30_eff0.013 <- powerSim(lmm2_30_log, test=fixed("Pos.c","t"), nsim = 1000)) # increase to nsim > 1000 for real test
+lastResult()$warnings
+lastResult()$errors
+```
+
+
+
+# write results
+
+```{r}
+# powersim_results_cont <- rbind(summary(PowerLMM1),
+#                           summary(powersim_24_cont_log), 
+#                           summary(powersim_40_cont_log_015),
+#                           summary(powersim_24_cont_log_015),
+#                           summary(powersim_40_cont),
+#                           summary(powersim_24_cont),
+#                           summary(powersim_40_cont_18ms),
+#                           summary(powersim_24_cont_18ms),
+#                           summary(powersim_30_cont_18ms))
+#                           
+# powersim_results_cont <- cbind(powersim_results_cont, n = c(40,24,40,24,40,24,40,24,30), RT_transform = c("log","log","log","log","no","no","no","no","no"),Effect = c("0.031","0.031","0.015","0.015","32.2ms","32.2ms","18ms","18ms","18ms"))
+# 
+# write.table(powersim_results_cont, "powersim_results_cont.csv", append = FALSE, sep = ";", row.names = FALSE, col.names = TRUE)
+
+```
+

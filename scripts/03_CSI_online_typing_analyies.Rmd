@@ -45,8 +45,8 @@ length(unique(df$subject))
 nrow(df) == 160 * length(unique(df$subject))
 
 # exclude rows with filler trials
-df <- df %>% filter(category != "Filler")
-nrow(df)/length(unique(df$subject)) # 120 Trials per participant
+#df <- df %>% filter(category != "Filler")
+#nrow(df)/length(unique(df$subject)) # 120 Trials per participant
 ```
 
 ## Check participants answer behavior
@@ -117,7 +117,6 @@ answers <- answers %>%  filter(word != "ARMAND", # Item = Armband
                                word != "BÜRLOKLAMEMR",# Item = KLAMMER
                                word != "BÜROKLAMMER",# Item = KLAMMER
                                word != "SCHRANK",# Item = KLEIDERSCHRANK	
-                               word != "KBACKSPACEZTORTE",# Item = KUCHEN
                                word != "TOPRTE",# Item = KUCHEN
                                word != "KUTZSBACKSPACEBACKSPACESCHE",# Item = KUTSCHE
                                word != "LINRBACKSPACEEAL",# Item = LINEAL
@@ -154,35 +153,79 @@ answers <- answers %>%  filter(word != "ARMAND", # Item = Armband
                               word != "TUPBACKSPACELPE", # Item = TULPE
                               word != "USHIFTBOOT", # Item = U-BOOT
                               word != "U-SHIFTBOOT", # Item = U-BOOT
-                              word != "BOOT" # Item = YACHT
+                              word != "BOOT", # Item = YACHT
+                             #Filler 
+                              word != "WANNE", # Item =  BADEWANNE
+                              word != "BEBACKSPACEADEWANNE", # Item =  BADEWANNE
+                              word != "BRIEFKSBACKSPACEASTEN", # Item =  BRIEFKASTEN	
+                             word !=  "BREIFBACKSPACEBACKSPACEBACKSPACEIEFKASTEN", # Item =  BRIEFKASTEN	
+                             word !=  "BRIEFMARE", # Item =  BRIEFMARKE	
+                             word !=  "BRILLLBACKSPACEE", # Item =  BRILLE
+                              word != "BIBACKSPACERILLE", # Item =  BRILLE
+                              word != "FECBACKSPACEBACKSPACEÄCHER", # Item =  FÄCHER
+                              word != "FEBACKSPACEÄCHER", # Item =  FÄCHER
+                              word != "FENSTER+BACKSPACE", # Item =  FENSTER
+                              word != "FOTOAPPARAT", # Item =  KAMERA
+                              word != "KASSEEBACKSPACETTE", # Item =  KASSETTE
+                              word != "KASETTE", # Item =  KASSETTE
+                              word != "KOPFHÖRRBACKSPACEER", # Item =  KOPFHÖRER
+                              word != "KISSEN", # Item =  KOPFKISSEN
+                              word != "BALLON", # Item =  LUFTBALLON	
+                             word !=  "MIKROPHON", # Item =  MIKROFON
+                              word != "PARGUM", # Item =  PARFUM
+                              word != "PFEIGE", # Item =  PFEIFE
+                             word !=  "SCHORNSETBACKSPACEBACKSPACEBACKSPACESTEIN", # Item =  SCHORNSTEIN	
+                              word != "SCJBACKSPACEHORNTEIN", # Item =  SCHORNSTEIN
+                             word !=  "DOLCH", # Item =  SCHWERT
+                             word != "DOCLH", # Item =  SCHWERT
+                             word !=  "STREICHHOLFBACKSPACEZ", # Item =  STREICHHOLZ	
+                              word != "ZIGARTEBACKSPACEBACKSPACEETTE", # Item =  ZIGARETTE
+                             word !=  "ZIGARTEBACKSPACEBACKSPACEABACKSPACEETTEENTER", # Item =  ZIGARETTE
 )
 
-# These 41 entries will be considered as incorrect 
+# These 49 entries will be considered as incorrect 
 (answers)
 
 # Set incorrect entries to NA in data frame
 sum(is.na(df$word))
-df_red <- df
-for (i in 1:nrow(answers)) {
-  df_red$word[df_red$subject == answers$df.subject[i] & 
-            df_red$item == tolower(answers$item[i])] <- NA
-}
-sum(is.na(df_red$word)) # did it work
-
-# set ordinal position to NA for unvalid trials
-for(i in 1:nrow(df_red)) {
-  if(is.na(df_red$word[i])) {
-    df_red$PosOr[i] <- NA
+for(i in 1:nrow(df)) {
+  if(is.na(df$word[i])){
+    df$correct[i] <- NA
+  } else {
+    df$correct[i] <- 1
   }}
-#sum(is.na(df_red$PosOr))
+
+for (i in 1:nrow(answers)) {
+  df$correct[df$subject == answers$df.subject[i] & 
+            df$item == tolower(answers$item[i])] <- NA
+}
+
+# adapt ordinal position for fillers: by mini-block (5 fillers per mini-block)
+table(df$PosOr)
+count <- 1
+for (i in 1:nrow(df)) {
+  if(df$category [i] == "Filler") {
+    df$PosOr[i] <- count
+    count <- count+1
+  }
+  if(count == 6) {  count <- 1}
+}
+table(df$PosOr)
+
+# # set ordinal position to NA for unvalid trials
+# for(i in 1:nrow(df_red)) {
+#   if(is.na(df_red$word[i])) {
+#     df_red$PosOr[i] <- NA
+#   }}
+# #sum(is.na(df_red$PosOr))
 
 # factorize colums
-is.numeric(df_red$timing.01)
-df_red$PosOr <- as.factor(df_red$PosOr)
-df_red$subject <- as.factor(df_red$subject)
+is.numeric(df$timing.01)
+df$PosOr <- as.factor(df$PosOr)
+df$subject <- as.factor(df$subject)
 
 # pretest only: save data frame with incorrect trials set to NA 
-write.csv(df_red, here::here("data", "pretest_long_correct.csv"))
+write.csv(df, here::here("data", "pretest_long_correct.csv"))
 
 ```
 
@@ -194,7 +237,7 @@ is.numeric(df$timing.01)
 df$PosOr <- as.factor(df$PosOr)
 df$subject <- as.factor(df$subject)
 # descriptives 
-(means <- Rmisc::summarySEwithin(df,"timing.01",idvar = "subject",withinvars = "PosOr", na.rm = T))
+(means <- Rmisc::summarySEwithin(df[df$category != "Filler" ,],"timing.01",idvar = "subject",withinvars = "PosOr", na.rm = T))
 ```
 
 
@@ -209,7 +252,7 @@ apatheme <- theme_bw()+
 
 
 ```{r}
-(plot <- ggplot(data=df, aes(x=PosOr, y=timing.01)) +
+(plot <- ggplot(data=df[df$category != "Filler" ,], aes(x=PosOr, y=timing.01)) +
   stat_summary(fun=mean,  geom="point", size = 2)+
   stat_summary(fun=mean,  geom="line", size = 1) +
   apatheme+
@@ -224,7 +267,7 @@ apatheme <- theme_bw()+
 Plot by subcategory
 ```{r}
 
-(plot_by_cat <- ggplot(data=df, aes(x=PosOr, y=timing.01)) +
+(plot_by_cat <- ggplot(data=df[df$category != "Filler" ,], aes(x=PosOr, y=timing.01)) +
   stat_summary(fun=mean,  geom="point", size = 2)+
   stat_summary(fun=mean,  geom="line", size = 1) +
   facet_wrap(~category) +
@@ -238,7 +281,7 @@ Plot by subcategory
 Plot by subject: 
 ```{r}
 
-(plot_by_cat <- ggplot(data=df, aes(x=PosOr, y=timing.01)) +
+(plot_by_cat <- ggplot(data=df[df$category != "Filler" ,], aes(x=PosOr, y=timing.01)) +
   stat_summary(fun=mean,  geom="point", size = 2)+
   stat_summary(fun=mean,  geom="line", size = 1) +
   facet_wrap(~subject) +
@@ -249,92 +292,10 @@ Plot by subject:
 
 ```
 
-
-# Unvalid trials: Ordinal Position changed 
+# Correct trials only
 ```{r}
-# # update ordinal position number
-# # add position number
-# df_red$PosOr_correct <- as.numeric(as.character(df$PosOr))
-# for(i in 1:nrow(df_red)) {
-#   if(is.na(df_red$word[i])){
-#     df_red$PosOr_correct[i] <- df_red$PosOr_correct[i] -1
-#   }
-#   if(df_red$PosOr_correct[i] == 0) {
-#     df_red$PosOr_correct[i] = NA
-#     }  }
-# table(df_red$PosOr_correct)
-# 
-# # convert variables to factors
-# is.numeric(df_red$timing.01)
-# df_red$PosOr_correct <- as.factor(df_red$PosOr_correct)
-# df_red$subject <- as.factor(df_red$subject)
-# # descriptives 
-# (means_redPosOr <- Rmisc::summarySEwithin(df_red,"timing.01",idvar = "subject",withinvars = "PosOr_correct", na.rm = T))
-
-```
-
-### Plot RTs by OrPos
-
-```{r}
-# (plot <- ggplot(data=df_red[!is.na(df_red$PosOr_correct),], aes(x=PosOr_correct, y=timing.01)) +
-#   stat_summary(fun=mean,  geom="point", size = 2)+
-#   stat_summary(fun=mean,  geom="line", size = 1) +
-#   apatheme+
-#   labs(x="Ordinal Position ",y ="RT ms"))#+
-#  # annotate(geom="text", x=2, y=1200, label="n = 4", color="black", size = 8))
-# 
-# 
-# # ggsave(plot = plot, file = "figures/RT_across_conditions.pdf", device = cairo_pdf, dpi = 300)
-# # embedFonts(file = "figures/RT_across_conditions_CSI_online_typing.pdf")
-```
-  
-Plot by subcategory
-```{r}
-# 
-# (plot_by_cat <- ggplot(data=df_red[!is.na(df_red$PosOr_correct),], aes(x=PosOr_correct, y=timing.01)) +
-#   stat_summary(fun=mean,  geom="point", size = 2)+
-#   stat_summary(fun=mean,  geom="line", size = 1) +
-#   facet_wrap(~category) +
-#   apatheme+
-#   labs(x="Ordinal Position ",y ="RT ms"))
-# #ggsave(plot = plot30_facet, file = "Plots/CSI_subcats.pdf", device = cairo_pdf,dpi = 300)
-# #embedFonts(file = "Plots/CSI_online30_subcats.pdf")
-
-```
-
-Plot by subject: 
-```{r}
-
-# (plot_by_cat <- ggplot(data=df_red[!is.na(df_red$PosOr_correct),], aes(x=PosOr_correct, y=timing.01)) +
-#   stat_summary(fun=mean,  geom="point", size = 2)+
-#   stat_summary(fun=mean,  geom="line", size = 1) +
-#   facet_wrap(~subject) +
-#   apatheme+
-#   labs(x="Ordinal Position ",y ="RT ms"))
-# #ggsave(plot = plot30_facet, file = "Plots/CSI_subcats.pdf", device = cairo_pdf,dpi = 300)
-# #embedFonts(file = "Plots/CSI_online30_subcats.pdf")
-
-```
-
-# Unvalid trials: Ordinal Position of unvalid trials set to NA
-```{r}
-# # set ordinal position to NA for unvalid trials
-# for(i in 1:nrow(df_red)) {
-#   if(is.na(df_red$word[i])) {
-#     df_red$PosOr[i] <- NA
-#   }}
-# #sum(is.na(df_red$PosOr))
-# 
-# # factorize colums
-# is.numeric(df_red$timing.01)
-# df_red$PosOr <- as.factor(df_red$PosOr)
-# df_red$subject <- as.factor(df_red$subject)
-# 
-# # pretest only: save data frame with incorrect trials set to NA 
-# write.csv(df_red, here::here("data", "pretest_long_correct.csv"))
-
 # descriptives 
-(means_unvalidtoNA <- Rmisc::summarySEwithin(df_red,"timing.01",idvar = "subject",withinvars = "PosOr", na.rm = T))
+(means_unvalidtoNA <- Rmisc::summarySEwithin(df[df$category != "Filler"  & df$correct == 1,],"timing.01",idvar = "subject",withinvars = "PosOr", na.rm = T))
 ```
 
 
@@ -342,7 +303,7 @@ Plot by subject:
 ### Plot RTs by OrPos
 
 ```{r}
-(plot <- ggplot(data=df_red[!is.na(df_red$PosOr),], aes(x=PosOr, y=timing.01)) +
+(plot <- ggplot(data=df[df$category != "Filler"  & df$correct == 1,], aes(x=PosOr, y=timing.01)) +
   stat_summary(fun=mean,  geom="point", size = 2)+
   stat_summary(fun=mean,  geom="line", size = 1) +
   apatheme+
@@ -357,7 +318,7 @@ Plot by subject:
 Plot by subcategory
 ```{r}
 
-(plot_by_cat <- ggplot(data=df_red[!is.na(df_red$PosOr),], aes(x=PosOr, y=timing.01)) +
+(plot_by_cat <- ggplot(data=df[df$category != "Filler"  & df$correct == 1,], aes(x=PosOr, y=timing.01)) +
   stat_summary(fun=mean,  geom="point", size = 2)+
   stat_summary(fun=mean,  geom="line", size = 1) +
   facet_wrap(~category) +
@@ -371,7 +332,7 @@ Plot by subcategory
 Plot by subject: 
 ```{r}
 
-(plot_by_cat <- ggplot(data=df_red[!is.na(df_red$PosOr),], aes(x=PosOr, y=timing.01)) +
+(plot_by_cat <- ggplot(data=df[df$category != "Filler"  & df$correct == 1,], aes(x=PosOr, y=timing.01)) +
   stat_summary(fun=mean,  geom="point", size = 2)+
   stat_summary(fun=mean,  geom="line", size = 1) +
   facet_wrap(~subject) +
@@ -380,18 +341,52 @@ Plot by subject:
 #ggsave(plot = plot30_facet, file = "Plots/CSI_subcats.pdf", device = cairo_pdf,dpi = 300)
 #embedFonts(file = "Plots/CSI_online30_subcats.pdf")
 
+```
+
+### Control: Plot Rts of Fillers
+```{r}
+(plot <- ggplot(data=df[df$category == "Filler"  & df$correct == 1,], aes(x=PosOr, y=timing.01)) +
+  stat_summary(fun=mean,  geom="point", size = 2)+
+  stat_summary(fun=mean,  geom="line", size = 1) +
+  apatheme+
+  labs(x="Ordinal Position ",y ="RT ms")+
+  annotate(geom="text", x=2, y=1200, label="n = 4", color="black", size = 8))
+```
+
+### Control: Plot RTs accross the experiment
+```{r}
+(plot <- ggplot(data=df[df$correct == 1,], aes(x=trial, y=timing.01)) +
+  stat_summary(fun=mean,  geom="point", size = 2)+
+  stat_summary(fun=mean,  geom="line", size = 1) +
+  apatheme+
+  labs(x="Trial ",y ="RT ms")+
+  annotate(geom="text", x=2, y=1200, label="n = 4", color="black", size = 8))
 ```
 
 # lmms 
 
 ```{r}
-hist(df_red$timing.01)
+hist(df$timing.01)
 
-contrasts(df_red$PosOr) <- contr.poly(5)
-
-m1 <- glmer(timing.01 ~ PosOr + (PosOr|subject) +(PosOr|category) , 
-             data =df_red, family =Gamma(link ="identity"), control=glmerControl(optimizer = "bobyqa"))
-
+# Full GLMM with polynomial contrasts
+contrasts(df$PosOr) <- contr.poly(5)
+# m1 <- glmer(timing.01 ~ PosOr + (PosOr|subject) +(PosOr|category) ,
+#              data = df[df$category != "Filler"  & df$correct == 1,], family =Gamma(link ="identity"), control=glmerControl(optimizer = "bobyqa"))
+#model does not converge
+m1 <- afex::lmer_alt(timing.01 ~ PosOr + (PosOr||subject) +(PosOr||category) , 
+             data = df[df$category != "Filler"  & df$correct == 1,], family =Gamma(link ="identity"), control=glmerControl(optimizer = "bobyqa"))
 summary(m1)
-#tab_model(m1,transform = NULL,show.re.var = F, file = #"Plots/glmm_CSI_online.html")
+
+# linear trend only
+fixef_terms <- model.matrix( ~ PosOr,df) 
+df$PosOr.L <- fixef_terms[,2]
+m2 <- afex::lmer_alt(timing.01 ~ PosOr.L + (PosOr.L||subject) +(1|category) , 
+             data = df[df$category != "Filler"  & df$correct == 1,], family =Gamma(link ="identity"), control=glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 2*10^5)))
+summary(m2)
+
+# Ordinal position as continuous predictor variable
+df$PosOr.cont <- scale(as.numeric(as.character(df$PosOr)), center = T, scale = F)
+m3 <- glmer(timing.01 ~ PosOr.cont + (PosOr.cont|subject) +(PosOr.cont|category) ,
+             data = df[df$category != "Filler"  & df$correct == 1,], family =Gamma(link ="identity"), control=glmerControl(optimizer = "bobyqa"))
+summary(m3)
 ```

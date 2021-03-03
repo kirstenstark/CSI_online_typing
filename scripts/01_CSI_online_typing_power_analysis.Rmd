@@ -75,28 +75,28 @@ qqnorm(model_df$lRT); qqline(model_df$lRT)
 
 ```{r}
 # Model 1: Linear model with untransformed RT data
-lmm1 <- lmer(RT ~ PosOr.L + (PosOr.L|subject) +(1|category) , 
+lmm1 <- lmer(RT ~ PosOr.L + (1|subject) +(1|category) , 
             data =model_df, REML = FALSE)
 summary(lmm1)
 
 # Model 2: Linear model with log transformed RT data
-lmm1_log <- lmer(lRT ~ PosOr.L + (PosOr.L|subject) +(1|category) , 
+lmm1_log <- lmer(lRT ~ PosOr.L + (1|subject) +(1|category) , 
             data =model_df, REML = FALSE)
 summary(lmm1_log)
 
 # Model 3: Generalized linear model with gamma distribution
-glmm1 <- glmer(RT ~ PosOr.L+ (PosOr|subject) +(PosOr.L|category) , 
+glmm1 <- glmer(RT ~ PosOr.L+ (1|subject) +(1|category) , 
             data =model_df, family =Gamma(link ="identity"),
             control=glmerControl(optimizer = "bobyqa"))
 # model has convergence warnings: is singular
 isSingular(glmm1)
 summary(glmm1)
-# try with the lme4 package only: exclude the random effect that explains the least variance
-glmm1 <- glmer(RT ~ PosOr + (1|subject) +(PosOr|category) ,
-             data = model_df, family =Gamma(link ="identity"), control=glmerControl(optimizer = "bobyqa"))
-isSingular(glmm1)
-# model converges so we use this
-summary(glmm1)
+# # try with the lme4 package only: exclude the random effect that explains the least variance
+# glmm1 <- glmer(RT ~ PosOr.L + (PosOr.L|subject) +(PosOr.L|category) ,
+#              data = model_df, family =Gamma(link ="identity"), control=glmerControl(optimizer = "bobyqa"))
+# isSingular(glmm1)
+# # model converges so we use this
+# summary(glmm1)
 
 
 # Model 3: compute GLMM
@@ -117,50 +117,50 @@ summary(glmm1)
 
 #2) Extend dataset
 ```{r}
-lmm1 <- extend(lmm1, along="subject", n=80)
+lmm1 <- extend(lmm1, along="subject", n=100)
 m2data <- getData(lmm1) 
 ## ok, data were indeed extended to n subjects ;-)
 str(m2data)
 str(model_df)
 
-lmm1_log <- extend(lmm1_log, along="subject", n=80)
+lmm1_log <- extend(lmm1_log, along="subject", n=40)
 m2data <- getData(lmm1_log) 
 ## ok, data were indeed extended to n subjects ;-)
 str(m2data)
 str(model_df)
 
-glmm1<- extend(glmm1, along="subject", n=80)
+glmm1<- extend(glmm1, along="subject", n=40)
 m2data <- getData(glmm1) 
 ## ok, data were indeed extended to n subjects ;-)
 str(m2data)
 str(model_df)
 ```
 
-#3) Specify effect size: 15 min (as in the online experiment)
+#3) Specify effect size: 15 ms (as in the online experiment)
 We set the size of the fixed effect of interest, PosOr.L (linear trend of the ordinal position), and leave the random effects and residuals as is. 
 We use the size of the fixed effect that we found in Experiment 1, the online verbal CSI experiment: 15 ms
 ```{r}
 fixef(lmm1)
-fixef(lmm1)["PosOr.L"] <- 15
+fixef(lmm1)["PosOr.L"] <- 30
 
 fixef(lmm1_log)
-fixef(lmm1_log)["PosOr.L"] <- 0.01
+fixef(lmm1_log)["PosOr.L"] <- 0.031
 
 fixef(glmm1)
-fixef(glmm1)["PosOr.L"] <- 15
+fixef(glmm1)["PosOr.L"] <- 30
 ```
 
 #4) Run the power analysis
 1) Linear model
-```{r}
+```{r power analysis LMM untransformed RTs}
 set.seed(27)
 #doTest(lmm1, fixed("PosOr.L"))
-powerSim(lmm1, test=fixed("PosOr.L","t"), nsim = 1000) # increase to nsim > 1000 for real test
+powerSim(lmm1, test=fixed("PosOr.L","t"), nsim = 50) # increase to nsim > 1000 for real test
 lastResult()$warnings
 lastResult()$errors
 ```
 2) Log linear model
-```{r}
+```{r power analysis LMM log-transformed RTs}
 set.seed(27)
 #doTest(lmm1, fixed("PosOr.L"))
 powerSim(lmm1_log, test=fixed("PosOr.L","t"), nsim = 1000) # increase to nsim > 1000 for real test
@@ -168,11 +168,11 @@ lastResult()$warnings
 lastResult()$errors
 ```
 
-1) GLMM
-```{r}
+3) GLMM
+```{r power analysis GLMM}
 set.seed(27)
 doTest(glmm1, fixed("PosOr.L"))
-powerSim(glmm1, test=fixed("PosOr.L","t"), nsim = 1000) # increase to nsim > 1000 for real test
+powerSim(glmm1, test=fixed("PosOr.L","t"), nsim = 50) # increase to nsim > 1000 for real test
 lastResult()$warnings
 lastResult()$errors
 ```
@@ -180,7 +180,7 @@ lastResult()$errors
 # 5) Power analyses at a range of sample sizes
 Unconverted RTs
 ```{r}
-pc1_linear <- powerCurve(lmm1, breaks = c(30, 35, 40, 50, 60, 70),
+pc1_linear <- powerCurve(lmm1, breaks = c(30, 40, 50, 60, 70, 80, 90, 100),
                   nsim = 50) # increase nsim for real power analysis
 print(pc_1)
 ```

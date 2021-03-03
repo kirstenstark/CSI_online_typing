@@ -338,7 +338,7 @@ set.seed(99)
 *Model 1: Linear model, categorical predictor, untransformed RT data* 
 
 ```{r PowerSim LMM1}
-(PowerLMM1 <- powerSim(lmm1, test=fixed("Pos.L","t"), nsim = 1000)) # increase to nsim > 1000 for real test
+(PowerLMM1 <- powerSim(lmm1_2, test=fixed("Pos.L","t"), nsim = 1000)) # increase to nsim > 1000 for real test
 lastResult()$warnings
 lastResult()$errors
 ```
@@ -426,7 +426,7 @@ Several sample sizes
 
 ```{r PowerCurve LMM2_log}
 (pc_lmm2_log <- powerCurve(lmm2_30_log, along = "VP", 
-                          breaks = c(20, 24, 30), nsim = 50))
+                          breaks = c(20, 24, 30), nsim = 1000))
 plot(pc_lmm2_log)
 ```
 
@@ -439,7 +439,7 @@ plot(pc_lmm2_log)
 ```{r PowerSim LMM1_log eff 0.04}
 
 # set fixed effect
-fixef(lmm1_30_log)["Pos.L"] <- 0.04 
+fixef(lmm1_30_log)["Pos.L"] <- 0.042 
 
 # Power analysis
 (PowerLMM1_log_30_eff0.04 <- powerSim(lmm1_30_log, test=fixed("Pos.L","t"), nsim = 1000)) # increase to nsim > 1000 for real test

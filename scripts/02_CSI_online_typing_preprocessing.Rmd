@@ -10,60 +10,51 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Load packages
-```{r}
+
+```{r load_packages}
 library(dplyr)
 library(tidyr)
+
+rm(list = ls())
 ```
 
 
 ## Load and preprocess data
 
-```{r}
+```{r load_data}
 options( "encoding" = "UTF-8" )
-pretest <- read.csv(here::here("data", "pretest_complete.csv"), 
-    sep = ";",  na = "")
-#pretest <- read_delim(here::here("data", "pretest_complete.csv"), 
-#    ";", escape_double = FALSE, na = "", 
-#    trim_ws = TRUE)
 
-# exclude rows of unfinished experiments
-pretest <- pretest %>% filter(FINISHED == "1")
-```
+# input output
+# input <- "pretest_complete.csv"
+input <- "data_csi_online_2021_2021-03-05_17-33.csv"
 
-Check attention checks: 
-```{r}
-## Item vs. non-item
-# CH01_01 (Taube), CH01_02 (Apfel), CH02_01 (Luftballon) and CH02_02 (Biene) are items and 2 should be selected, 
-# CH02_03 (Radio), CH02_04 (Sparschwein), CH02_03 (Laptop) and CH02_04 (Wattestäbchen) are non-items and 1 should be selected
-## Did participants cheat
-# CH03 = 1 - yes, I worked through it till the end, 
-# CH03 = 2 - no, I stopped or cheated midway
-# CH03 = -9 - no answer
-pretest <- pretest %>% mutate(attcheck = 
-                  ifelse(CH01_01 == 2 & CH01_02 == 2 & CH02_01 == 2 & CH02_02 == 2 &
-                  CH01_03 == 1 & CH01_04 == 1 & CH02_03 == 1 & CH02_04 == 1, 1, 0)) %>%
-                   mutate(cheat = ifelse(CH03 == 1,1,ifelse(CH03 == 2,2,0)))
-table(pretest$attcheck)
-table(pretest$cheat)
+# output 
+#output <- "pretest_long.csv"
+output <- "data_long.csv"
 
-# get prolific IDs of participants who failed the attention check
-#pretest %>% subset(attcheck == 0 & cheat == 2 ) %>% 
-#  pull(SD24_01) # SD24_01 is prolific ID
+# arrays
+arrays <- "arrays_umlaut.csv"
 
-# subset to participants who passed only 
-valid <- pretest %>% filter(attcheck == 1 & cheat != 2)
+# prolific IDs to approve
+approve <- "prolificid_approve.csv"
+
+# load data
+data <- read.csv(here::here("data", input), sep = ";",  na = "")
+
+# delete description column and experimenter's tryout data
+data <- data[-c(1:2),]
 
 # add subject id
-valid <- valid %>% mutate(subject = row_number())
-
+data <- data %>% mutate(subject = row_number())
 ```
 
 ## Convert to long format
-First convert all variables that have values for each trial
-```{r}
-### MAIN LETTERS
+First convert all variables that have values for each trial, then bind them together. In a next step bind them to the variables that only have one value per participant.
+
+```{r prepare_long_df}
+### MAIN TASK - LETTERS
 # letters of first 1-80 trials of the main experiment
-df1 <- valid %>%  select('subject', starts_with(c("XT"))) %>% 
+df1 <- data %>%  select('subject', starts_with(c("XT"))) %>% 
                   pivot_longer(
                     cols = -subject,
                      names_to = c("trial", ".value"), 
@@ -73,7 +64,7 @@ df1 <- valid %>%  select('subject', starts_with(c("XT"))) %>%
                     mutate(trial = seq(1,80, by = 1)) %>%
                    setNames(paste0('letters.', names(.))) 
 # letters of last 81-160 trials of the main experiment
-df2 <- valid %>%  select('subject', starts_with(c("XU"))) %>% 
+df2 <- data %>%  select('subject', starts_with(c("XU"))) %>% 
                   pivot_longer(
                     cols = -subject,
                      names_to = c("trial", ".value"), 
@@ -88,12 +79,13 @@ df_letters <- bind_rows(df1, df2) %>%
                trial = letters.trial) %>%
         arrange(subject, trial)
 # delete letter columns from wide data frame
-valid_red <- valid %>% select(!starts_with(c("XT", "XU")))
+data <- data %>% select(!starts_with(c("XT", "XU")))
 
-#### MAIN LETTER TIMING
+#### MAIN TASK - LETTER TIMING
 # letter timing of first 1-80 trials of the main experiment
-df1 <- valid %>% 
-          select('subject', starts_with("TI") & !starts_with("TIME")) %>% 
+df1 <-data %>% 
+          select('subject', starts_with("TI") & 
+                   !starts_with("TIME")) %>% 
                   pivot_longer(
                     cols = -subject,
                      names_to = c("trial", ".value"), 
@@ -103,7 +95,7 @@ df1 <- valid %>%
                     mutate(trial = seq(1,80, by = 1)) %>%
                    setNames(paste0('timing.', names(.))) 
 # letter timing of last 81-160 trials of the main experiment
-df2 <- valid %>%  select('subject', starts_with(c("TJ"))) %>% 
+df2 <- data %>%  select('subject', starts_with(c("TJ"))) %>% 
                   pivot_longer(
                     cols = -subject,
                      names_to = c("trial", ".value"), 
@@ -118,12 +110,12 @@ df_timing <- bind_rows(df1, df2) %>%
                trial = timing.trial) %>%
         arrange(subject, trial)
 # delete timing columns from wide data frame
-valid_red <- valid_red %>% 
+data <- data %>% 
   select(!(starts_with(c("TI", "TJ")) & !starts_with("TIME")))
                 
-### MAIN WORDS
+### MAIN TASK - ENTIRE WORDS
 # typed words of first 1-80 trials of the main experiment
-df1 <- valid %>% 
+df1 <- data %>% 
           select('subject', starts_with("AW")) %>% 
                   pivot_longer(
                     cols = -subject,
@@ -132,7 +124,7 @@ df1 <- valid %>%
                     group_by(subject) %>%
                     mutate(trial = seq(1,80, by = 1)) 
 # typed words of last 1-80 trials of the main experiment
-df2 <- valid %>% 
+df2 <- data %>% 
           select('subject', starts_with("AV")) %>% 
                   pivot_longer(
                     cols = -subject,
@@ -144,14 +136,14 @@ df2 <- valid %>%
 df_words <- bind_rows(df1, df2) %>%
         arrange(subject, trial)
 # delete word columns from wide data frame
-valid_red <- valid_red %>% 
+data <- data %>% 
   select(!starts_with(c("AW", "AV")))
 
 
 ### FAMILIARIZATION WORDS 
 ### (only to control that ppt payed attention to the task)
 # typed words of first 1-80 trials of the familiarization
-df1 <- valid %>% 
+df1 <- data %>% 
           select('subject', starts_with("FA03")) %>% 
                   pivot_longer(
                     cols = -subject,
@@ -160,7 +152,7 @@ df1 <- valid %>%
                     group_by(subject) %>%
                     mutate(trial = seq(1,80, by = 1)) 
 # typed words of last 1-80 trials of the main experiment
-df2 <- valid %>% 
+df2 <- data %>% 
           select('subject', starts_with("FA04")) %>% 
                   pivot_longer(
                     cols = -subject,
@@ -172,7 +164,7 @@ df2 <- valid %>%
 df_fam <- bind_rows(df1, df2) %>%
         arrange(subject, trial)
 # delete word columns from wide data frame
-valid_red <- valid_red %>% 
+data <- data %>% 
   select(!starts_with(c("FA03", "FA04")))
 
 ### Bind the four trial-wise dataframes together
@@ -182,82 +174,128 @@ df_main <- merge(df_main, df_timing, by= c("subject", "trial") ) %>%
   arrange(subject, trial)
 ```
 
-Adapt wide dataframe with only info that is assessed only once
-```{r}
-# delete columns that contain only NAs
-valid_red <- valid_red %>% select_if(~sum(!is.na(.)) > 0)
+Adapt wide data frame with info that is assessed only once
 
-# for pretest only (less than 10 data points): calculate time sum by
-# hand: sum dwell times for each page
-valid_red <- valid_red %>% 
+```{r prepare_wide_df}
+# delete columns that contain only NAs
+data <- data %>% select_if(~sum(!is.na(.)) > 0)
+
+# for control reasons: calculate time sum by hand:
+# sum dwell times for each page
+data <- data %>% 
   mutate_at(vars(contains("TIME0")), as.numeric)
-valid_red <- valid_red %>% rowwise() %>% 
+data <- data %>% rowwise() %>% 
   mutate(timetotal = rowSums(across(starts_with("TIME0")))/60)
 
 # delete columns with info we don't need
-valid_red <- valid_red %>% 
+data <- data %>% 
   select(-c(CASE, QUESTNNR, MODE, STARTED, SD22_PRV,
-                        SD22_BID, SD22_ScW, SD22_ScH, SD22_QnW, 
-                        SD28_01, SD29_01, KB02_01, KB03_01, KB03_02,
-                        KB03_03, FA02_01, PT01, PT02, PT03, PT04, 
-                        TIME002, TIME003, TIME005, TIME007, TIME008,
-                        TIME010, TIME011, TIME012, TIME014, TIME015, 
-                        TIME016, TIME018, TIME019, TIME021, TIME022, 
-                        TIME023, TIME024, TIME025, TIME026, TIME027, 
-                        TIME028, TIME029, TIME030, LASTDATA, 
-                        Q_VIEWER, LASTPAGE, MAXPAGE, MISSING, MISSREL, 
-                        DEG_TIME))
+                        SD22_BID, SD22_BVS,
+                        SD28_01, SD29_01,  
+                        FA02_01, PT01, PT02, PT03, PT04, 
+                        LASTDATA, 
+                        MISSING, MISSREL
+                        ))
 
 # give columns more recognizable names
-valid_red <- valid_red %>% 
+data <- data %>% 
   rename(array_no = OR01_01, gender = SD01, age = SD02_01,
                      language.test = SD20, language = SD21, 
-                     os_system = SD22_OS, browser = SD22_BNM,
+                     os_system = SD22_OS, browser_automatic = SD22_BNM,
                      system_format  = SD22_FmF, prolificid = SD24_01,
                      fingers_l = SD25, fingers_r = SD26, 
-                     handedness = SD27 , keyboard_type = KB01, 
-                     comments = IM01_01, time_wo_outlier = TIME_SUM )
-
+                     handedness = SD27, operator_system = SD30, 
+                     system = SD32, browser = SD31, 
+                     browser_other = SD31_07, keyboard_type = KB01, 
+                     comments = IM01_01, time_wo_outlier = TIME_SUM,
+                     screen_width = SD22_ScW, screen_height = SD22_ScH,
+                     questionnaire_width = SD22_QnW)
 ```
 
-Bind long and wide data frame
-```{r}
-# Repeat each subjects'row 160 times (no of trials)
-valid_red <- valid_red %>% slice(rep(seq_len(n()), 160))
+Bind long and wide data frame together
+
+```{r bind_long_and_wide_df}
+# Repeat each subjects' rows 160 times (no of trials)
+df <- data %>% slice(rep(seq_len(n()), 160))
+
+# Add trial number to wide data frame
+df$trial <- rep(1:160, times = max(data$subject))
 
 # bind wide and long info together
-df <- bind_cols(valid_red, df_main) 
-df <- df %>% select(-subject...111) %>% 
-  rename(subject = subject...109) %>% 
-  relocate(subject)
+df <- df %>% left_join(df_main, by = c("subject", "trial")) %>%
+  relocate(subject, trial)
 ```
 
 Convert numeric variables from string to integer:
-```{r}
+
+```{r convert_variables}
 #str(df)
 df <-  df %>% 
-  mutate_at(vars(!c("prolificid","word", "comments", 
-                    "AY01_01", contains("TT0"), contains("fam_typed"),
+  mutate_at(vars(!c("prolificid", "browser_other", "word", "comments", 
+                    "AY01_01", "TIME_RSI", contains("KB0"),
+                    contains("TT0"), contains("fam_typed"),
                     contains("letters"))), as.numeric)
 ```
 
 
-Add array for each participant
-```{r}
+## Roughly check participant for Prolific approval
+**Did all participants finish the experiment?**
+
+```{r prolific_check}
+# did all participants finish the experiment
+table(data$FINISHED)
+table(data$LASTPAGE)
+```
+
+Two participants didn't finish the experiments and dropped out on page 4 (keyboard test) and 12 (instruction turn on caps lock) of the experiment, respectively.  
+
+Exclude these participants: 
+
+```{r participant_exclusion}
+exclude <- data$prolificid[data$FINISHED == "0" & 
+                             data$LASTPAGE != "30"]
+exclude_id <- data$subject[data$FINISHED == "0" & 
+                             data$LASTPAGE != "30"]
+
+# Exclude from data frame
+df <- df[!df$subject %in% exclude_id,]
+
+# update subject IDs
+df$subject <- rep(1:nlevels(as.factor(df$subject)), each = 160)
+
+# All the other data look fine, so we can include all others:
+include <- as.data.frame(data$prolificid[data$FINISHED == "1" & 
+                             data$LASTPAGE == "33"])
+write.csv(include, here::here("data", approve), row.names = FALSE)
+
+# delete prolific ids ton anonymize data frame
+df <- df %>% 
+  dplyr::select(-prolificid) 
+
+```
+
+## Add array (actual stimuli) for each participant
+
+```{r add_arrays, warning = FALSE  }
 # load arrays
-arrays <- read.csv(here::here("data", "arrays_umlaut.csv"), 
+arrays <- read.csv(here::here("data", arrays), 
     sep = ";", na = "NA")
 # delete empty lines
-arrays %>% filter()
+#arrays %>% filter()
 
 # bind arrays to data frame
-array_experiment <- bind_rows(arrays[,unique(df$array_no)])
-array_experiment <- as.data.frame(unlist(lapply( array_experiment[ , 
-                        names(array_experiment)], as.character) ))
-df$item <- array_experiment[,1]
+df$item <- NA
+for(i in 1:nlevels(as.factor(df$subject))){
+  array <- arrays[,unique(df$array_no[df$subject == i])]
+  df$item[df$subject == i] <- array
+}
+# array_experiment <- bind_rows(arrays[,unique(df$array_no)])
+# array_experiment <- as.data.frame(unlist(lapply(array_experiment[ , 
+#                         names(array_experiment)], as.character) ))
+# df$item <- array_experiment[,1]
 
 # add category columns
-df <- df %>% group_by(item) %>% 
+df <- df %>% group_by(subject, item) %>% 
   mutate(category = arrays$categorie[arrays$item == item]) %>%
   mutate(supercategory = arrays$supercategorie[arrays$item == item] )
 
@@ -265,15 +303,22 @@ df <- df %>% group_by(item) %>%
 df <- df %>% group_by(subject, category) %>% 
   add_count() %>% 
   mutate(PosOr = seq(1:n)) %>% select(-n)
+# add ordinal position for fillers
+table(df$PosOr)
+count <- 1
+for (i in 1:nrow(df)) {
+  if(df$category [i] == "Filler") {
+    df$PosOr[i] <- count
+    count <- count+1
+  }
+  if(count == 6) {  count <- 1}
+}
+table(df$PosOr)
 ```
-Export prepared data frame
-```{r}
-write.csv(df, here::here("data", "pretest_long.csv"), row.names = FALSE)
+
+
+## Export prepared data frame
+
+```{r export_data}
+write.csv(df, here::here("data", output), row.names = FALSE)
 ```
-
-
-# Check attention checks
-
-# Sample description
-
-# Exclude wront answers

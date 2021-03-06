@@ -30,10 +30,12 @@ rm(list = ls())
 
 ```{r}
 options( "encoding" = "UTF-8" )
-df <- read.csv(here::here("data", "pretest_long.csv"))
-#pretest <- read_delim(here::here("data", "pretest_complete.csv"), 
-#    ";", escape_double = FALSE, na = "", 
-#    trim_ws = TRUE)
+
+# input 
+input = "data_long.csv"
+
+# load data
+df <- read.csv(here::here("data", input))
 ```
 
 Check amount of participants and trials and exclude fillers
@@ -49,6 +51,15 @@ nrow(df) == 160 * length(unique(df$subject))
 #nrow(df)/length(unique(df$subject)) # 120 Trials per participant
 ```
 
+Factorize columns
+
+```{r}
+# factorize columns
+is.numeric(df$timing.01)
+df$PosOr <- as.factor(df$PosOr)
+df$subject <- as.factor(df$subject)
+```
+
 ## Check participants answer behavior
 ```{r}
 answers <- data.frame(df$subject, df$item, df$word) %>%
@@ -56,6 +67,8 @@ answers <- data.frame(df$subject, df$item, df$word) %>%
   mutate(item =  toupper(item)) %>% 
   mutate(word = toupper(word))
 sum(is.na(answers$word))
+# percentage of trials where participants didn't enter anything
+sum(is.na(answers$word))/nlevels(df$subject)
 
 # when item and word are exactly identical, the answer is correct
 answers <- answers %>% filter(item != word)
@@ -73,10 +86,116 @@ answers <- answers %>% mutate(word = case_when(
 answers <- answers %>% filter(item != word)
 
 # answers that we still consider as correct: 
-# 1) synonymes
+# 1) synonyms
 # 2) typos or corrections that should not affect first letter timing
+
+# Select typos that we accept as correct for typing onsets
 answers.sort <- with(answers,  answers[order(item) , ])
-answers <- answers %>%  filter(word != "ARMAND", # Item = Armband
+answers <- answers %>% filter(
+   word != "ALBACKSPACEAL", # Item = AAL
+   word != "AL", # Item = AAL
+   word != "AMIBACKSPACEEISE", # Item = AMEISE
+   word != "A;EBACKSPACEBACKSPACEMEISE", # Item = AMEISE
+   word != "AMEISTBACKSPACEE", # Item = AMEISE
+   word != "AMAEISBACKSPACEBACKSPACEBACKSPACEBACKSPACEEISE", # Item = AMEISE
+   word != "ARMEISE", # Item = AMEISE
+   word != "AMOFELBACKSPACEBACKSPACEBACKSPACEPFBACKSPACEBACKSPACEBACKSPACEPFBACKSPACEEL", # Item = AMPEL
+   word != "APFEKBACKSPACEL", # Item = APFEL
+   word != "AARBACKSPACEBACKSPACERM", # Item = ARM
+   word != "ARMABBACKSPACEBACKSPACEBAND", # Item = ARMBAND
+   word != "ARMREIF", # Item = ARMBAND
+   word != "ARMKETTE", # Item = ARMBAND
+   word != "KITTEL", # Item = ARZTKITTEL
+   word != "KITTEL", # Item = ARZTKITTEL
+   word != "KITTEL", # Item = ARZTKITTEL
+   word != "ATBACKSPACERZTKITTEL", # Item = ARZTKITTEL
+   word != "KITTEL", # Item = ARZTKITTEL
+   word != "KITTEL", # Item = ARZTKITTEL
+   word != "KITTEL", # Item = ARZTKITTEL
+   word != "AZBACKSPACERZTKITTEL", # Item = ARZTKITTEL
+   word != "ABACKSPACEKITTEL", # Item = ARZTKITTEL
+   word != "AUTPBACKSPACEO", # Item = AUTO
+   word != "AUTOPBACKSPACE", # Item = AUTO
+   word != "AXRBACKSPACET", # Item = AXT
+   word != "AKBACKSPACEXTXBACKSPACEBACKSPACET", # Item = AXT
+   word != "ACBACKSPACEXT", # Item = AXT
+   word != "AX", # Item = AXT
+   word != "AXTRBACKSPACE", # Item = AXT
+   word != "BABY'BACKSPACE", # Item = BABY
+   word != "BABVBACKSPACEY", # Item = BABY
+   word != "BABZBACKSPACEY", # Item = BABY
+   word != "BADEWBACKSPACEWANNE", # Item = BADEWANNE
+   word != "BADWBACKSPACEEWANNE", # Item = BADEWANNE
+   word != "WANNE", # Item = BADEWANNE
+   word != "WBACKSPACEBASBACKSPACEDEWANNE", # Item = BADEWANNE
+   word != "WANNE", # Item = BADEWANNE
+   word != "BAÖLBACKSPACEBACKSPACELL", # Item = BALL
+   word != "BANANABACKSPACEE", # Item = BANANE
+   word != "BABABACKSPACEBACKSPACENANE", # Item = BANANE
+   word != "BANEBACKSPACEANE", # Item = BANANE
+   word != "BNBACKSPACEBACKSPACEBANANE", # Item = BANANE
+   word != "BANANENBACKSPACEBACKSPACEBACKSPACENE", # Item = BANANE
+   word != "BRBACKSPACEANK", # Item = BANK
+   word != "BAN", # Item = BANK
+   word != "BANKÄBACKSPACE", # Item = BANK
+   word != "BÄT", # Item = BÄR
+   word != "BABACKSPACEÄR", # Item = BÄR
+   word != "BRBACKSPACEÄR", # Item = BÄR
+   word != "BÖRBACKSPACEBACKSPACEÄR", # Item = BÄR
+   word != "BRBACKSPACEÄR", # Item = BÄR
+   word != "BÄRENTERENTER BACKSPACEENTERBACKSPACEBACKSPACEBACKSPACEBÄRENTERENTERENTERENTER", # Item = BÄR
+   word != "BECEBACKSPACEHER", # Item = BECHER
+   word != "BESSENBACKSPACEBACKSPACEBACKSPACEEN", # Item = BESEN
+   word != "BEIBACKSPACEBACKSPACEIENE", # Item = BIENE
+   word != "BRINBACKSPACEBACKSPACEBACKSPACEIRNE", # Item = BIRNE
+   word != "BRBACKSPACEIRNE", # Item = BIRNE
+   word != "BLEISCHBACKSPACEBACKSPACETIFT", # Item = BLEISTIFT
+   word != "BLEISTFBACKSPACEIFT", # Item = BLEISTIFT
+   word != "STIFT", # Item = BLEISTIFT
+   word != "BEISBACKSPACEBACKSPACELBACKSPACEBACKSPACELEISTIFT", # Item = BLEISTIFT
+   word != "BLEISTIFTT", # Item = BLEISTIFT
+   word != "STIFT", # Item = BLEISTIFT
+   word != "BLE$IBACKSPACEBACKSPACEISTIFT", # Item = BLEISTIFT
+   word != "BLEIFSTBACKSPACEBACKSPACEBACKSPACESTIFT", # Item = BLEISTIFT
+   word != "BELISTIFT", # Item = BLEISTIFT
+   word != "BLEISTIFTEBACKSPACE", # Item = BLEISTIFT
+   word != "BOHRER", # Item = BOHRMASCHINE
+   word != "BORHER", # Item = BOHRMASCHINE
+   word != "BOIBACKSPACEHRMASCHINE", # Item = BOHRMASCHINE
+   word != "BOHR", # Item = BOHRMASCHINE
+   word != "BOHRER", # Item = BOHRMASCHINE
+   word != "BOHRER", # Item = BOHRMASCHINE
+   word != "BORBACKSPACEHRMASCHINE", # Item = BOHRMASCHINE
+   word != "BOHRMASCHIENE", # Item = BOHRMASCHINE
+   word != "BOHRER", # Item = BOHRMASCHINE
+   word != "BORHER", # Item = BOHRMASCHINE
+   word != "BOHRER", # Item = BOHRMASCHINE
+   word != "BORBACKSPACEHRMASCHINE", # Item = BOHRMASCHINE
+   word != "BOBBACKSPACENBON", # Item = BONBON
+   word != "BONBONNBACKSPACE", # Item = BONBON
+   word != "BOBBACKSPACENBON", # Item = BONBON
+   word != "BONOBACKSPACEBON", # Item = BONBON
+   word != "BIBACKSPACEONBON", # Item = BONBON
+   word != "BOBNBACKSPACEBACKSPACENBON", # Item = BONBON
+   word != "BONOBACKSPACEBON", # Item = BONBON
+   word != "BRIEFKASTERNBACKSPACEBACKSPACEN", # Item = BRIEFKASTEN
+   word != "BRIEFKATSBACKSPACEBACKSPACESTEN", # Item = BRIEFKASTEN
+   word != "BRIEFKASENBACKSPACEBACKSPACETEN", # Item = BRIEFKASTEN
+   word != "BVBACKSPACERIEFKASTEN", # Item = BRIEFKASTEN
+   word != "BIRBACKSPACEBACKSPACERIEFMARKE", # Item = BRIEFMARKE
+   word != "BRIEGBACKSPACEFMARKE", # Item = BRIEFMARKE
+   word != "BIRBACKSPACEBACKSPACERILLÖEBACKSPACEBACKSPACEE", # Item = BRILLE
+   word != "BROKOLI", # Item = BROKKOLI
+   word != "BROKKBACKSPACEOLI", # Item = BROKKOLI
+   word != "BROKOLLI", # Item = BROKKOLI
+   word != "BBROKKOLI", # Item = BROKKOLI
+   word != "BORBACKSPACEBACKSPACEROKKOLI", # Item = BROKKOLI
+   word != "BROKOLLI", # Item = BROKKOLI
+   word != "BROKOLI", # Item = BROKKOLI
+   word != "BROSSCHBACKSPACEBACKSPACEBACKSPACECHE", # Item = BROSCHE
+
+  # (Typos from Pretest)
+                              word != "ARMAND", # Item = Armband
                                word != "ARZTKIZEBACKSPACEBACKSPACETTEL", # Item = Arztkittel
                                word != "AUTP", # Item = Auto
                                word != "ACCBACKSPACEBACKSPACEXT", # Item = Axt
@@ -180,10 +299,10 @@ answers <- answers %>%  filter(word != "ARMAND", # Item = Armband
                              word != "DOCLH", # Item =  SCHWERT
                              word !=  "STREICHHOLFBACKSPACEZ", # Item =  STREICHHOLZ	
                               word != "ZIGARTEBACKSPACEBACKSPACEETTE", # Item =  ZIGARETTE
-                             word !=  "ZIGARTEBACKSPACEBACKSPACEABACKSPACEETTEENTER", # Item =  ZIGARETTE
+                             word !=  "ZIGARTEBACKSPACEBACKSPACEABACKSPACEETTEENTER" # Item =  ZIGARETTE
 )
 
-# These 49 entries will be considered as incorrect 
+# These 881 entries will be considered as incorrect 
 (answers)
 
 # Set incorrect entries to NA in data frame
@@ -200,17 +319,17 @@ for (i in 1:nrow(answers)) {
             df$item == tolower(answers$item[i])] <- NA
 }
 
-# adapt ordinal position for fillers: by mini-block (5 fillers per mini-block)
-table(df$PosOr)
-count <- 1
-for (i in 1:nrow(df)) {
-  if(df$category [i] == "Filler") {
-    df$PosOr[i] <- count
-    count <- count+1
-  }
-  if(count == 6) {  count <- 1}
-}
-table(df$PosOr)
+# # adapt ordinal position for fillers: by mini-block (5 fillers per mini-block)
+# table(df$PosOr)
+# count <- 1
+# for (i in 1:nrow(df)) {
+#   if(df$category [i] == "Filler") {
+#     df$PosOr[i] <- count
+#     count <- count+1
+#   }
+#   if(count == 6) {  count <- 1}
+# }
+# table(df$PosOr)
 
 # # set ordinal position to NA for unvalid trials
 # for(i in 1:nrow(df_red)) {
@@ -219,15 +338,44 @@ table(df$PosOr)
 #   }}
 # #sum(is.na(df_red$PosOr))
 
-# factorize colums
+# factorize columns
 is.numeric(df$timing.01)
 df$PosOr <- as.factor(df$PosOr)
 df$subject <- as.factor(df$subject)
 
 # pretest only: save data frame with incorrect trials set to NA 
-write.csv(df, here::here("data", "pretest_long_correct.csv"))
+#write.csv(df, here::here("data", "pretest_long_correct.csv"))
 
 ```
+
+## How many trial onset times are considered as invalid?
+
+```{r}
+# Percentage of NA or excluded trials
+(sumna <- sum(is.na(df$correct)))
+(percentagena <- sum(is.na(df$correct))/nrow(df))
+```
+
+In a total of `r sumna` participants did not enter anything or entered a chunks of letters that were not considered as correct based on the preregistered criteria. This is `r percentagena` % of all trials.   
+  
+How many trials per participant
+```{r}
+#Amount of trials with no entry for timing.01
+as.data.frame(table(df$subject, is.na(df$timing.01))) %>% 
+  dplyr::rename(subject = Var1, totaltrials = Var2, correct = Freq) %>%
+  mutate(totaltrials = 160) %>% mutate(percentagecorrect = correct/totaltrials)
+
+```
+
+
+```{r}
+#Amount of correct trials: 
+as.data.frame(table(df$subject, is.na(df$correct))) %>% 
+  dplyr::rename(subject = Var1, totaltrials = Var2, correct = Freq) %>%
+  mutate(totaltrials = 160) %>% mutate(percentagecorrect = correct/totaltrials)
+
+```
+
 
 # ALL TRIALS
 ### Plot RTs by OrPos
@@ -252,12 +400,22 @@ apatheme <- theme_bw()+
 
 
 ```{r}
+plotting <- df %>%
+  mutate(kind = case_when(category == "Filler" ~"Filler",
+                          category != "Filler" ~"Experimental"))
 (plot <- ggplot(data=df[df$category != "Filler" ,], aes(x=PosOr, y=timing.01)) +
   stat_summary(fun=mean,  geom="point", size = 2)+
   stat_summary(fun=mean,  geom="line", size = 1) +
   apatheme+
   labs(x="Ordinal Position ",y ="RT ms")+
   annotate(geom="text", x=2, y=1200, label="n = 4", color="black", size = 8))
+
+(plot <- ggplot(data=plotting, aes(x=PosOr, y=timing.01, group = kind, color = kind)) +
+  stat_summary(fun=mean,  geom="point", size = 2)+
+  stat_summary(fun=mean,  geom="line", size = 1) +
+  apatheme+
+  labs(x="Ordinal Position ",y ="RT ms", color = "Trial type")+
+  annotate(geom="text", x=2, y=1380, label="n = 30", color="black", size = 8))
 
 
 # ggsave(plot = plot, file = "figures/RT_across_conditions.pdf", device = cairo_pdf, dpi = 300)
@@ -295,7 +453,7 @@ Plot by subject:
 # Correct trials only
 ```{r}
 # descriptives 
-(means_unvalidtoNA <- Rmisc::summarySEwithin(df[df$category != "Filler"  & df$correct == 1,],"timing.01",idvar = "subject",withinvars = "PosOr", na.rm = T))
+(means_unvalidtoNA <- Rmisc::summarySEwithin(df[df$category != "Filler",],"timing.01",idvar = "subject",withinvars = "PosOr", na.rm = T))
 ```
 
 
@@ -303,12 +461,23 @@ Plot by subject:
 ### Plot RTs by OrPos
 
 ```{r}
-(plot <- ggplot(data=df[df$category != "Filler"  & df$correct == 1,], aes(x=PosOr, y=timing.01)) +
+plotting <- df %>% filter(correct == 1) %>%
+  mutate(kind = case_when(category == "Filler" ~"Filler",
+                          category != "Filler" ~"Experimental"))
+
+(plot <- ggplot(data=plotting[plotting$category != "Filler",], aes(x=PosOr, y=timing.01)) +
   stat_summary(fun=mean,  geom="point", size = 2)+
   stat_summary(fun=mean,  geom="line", size = 1) +
   apatheme+
   labs(x="Ordinal Position ",y ="RT ms")+
-  annotate(geom="text", x=2, y=1200, label="n = 4", color="black", size = 8))
+  annotate(geom="text", x=2, y=1200, label="n = 30", color="black", size = 8))
+
+(plot2 <- ggplot(data=plotting, aes(x=PosOr, y=timing.01, group=kind, color = kind)) +
+  stat_summary(fun=mean,  geom="point", size = 2)+
+  stat_summary(fun=mean,  geom="line", size = 1) +
+  apatheme+
+  labs(x="Ordinal Position ",y ="RT ms", color = "Trial type")+
+  annotate(geom="text", x=2, y=1300, label="n = 30", color="black", size = 8))
 
 
 # ggsave(plot = plot, file = "figures/RT_across_conditions.pdf", device = cairo_pdf, dpi = 300)
@@ -317,8 +486,10 @@ Plot by subject:
   
 Plot by subcategory
 ```{r}
-
-(plot_by_cat <- ggplot(data=df[df$category != "Filler"  & df$correct == 1,], aes(x=PosOr, y=timing.01)) +
+plotting <- df %>% filter(correct == 1) %>%
+  mutate(kind = case_when(category == "Filler" ~"Filler",
+                          category != "Filler" ~"Experimental"))
+(plot_by_cat <- ggplot(data=plotting[plotting$category != "Filler" ,], aes(x=PosOr, y=timing.01)) +
   stat_summary(fun=mean,  geom="point", size = 2)+
   stat_summary(fun=mean,  geom="line", size = 1) +
   facet_wrap(~category) +
@@ -331,8 +502,10 @@ Plot by subcategory
 
 Plot by subject: 
 ```{r}
-
-(plot_by_cat <- ggplot(data=df[df$category != "Filler"  & df$correct == 1,], aes(x=PosOr, y=timing.01)) +
+plotting <- df %>% filter(correct == 1) %>%
+  mutate(kind = case_when(category == "Filler" ~"Filler",
+                          category != "Filler" ~"Experimental"))
+(plot_by_cat <- ggplot(data=df[df$category != "Filler",], aes(x=PosOr, y=timing.01)) +
   stat_summary(fun=mean,  geom="point", size = 2)+
   stat_summary(fun=mean,  geom="line", size = 1) +
   facet_wrap(~subject) +
@@ -344,23 +517,24 @@ Plot by subject:
 ```
 
 ### Control: Plot Rts of Fillers
+
 ```{r}
-(plot <- ggplot(data=df[df$category == "Filler"  & df$correct == 1,], aes(x=PosOr, y=timing.01)) +
+(plot <- ggplot(data=plotting[plotting$category == "Filler",], aes(x=PosOr, y=timing.01)) +
   stat_summary(fun=mean,  geom="point", size = 2)+
   stat_summary(fun=mean,  geom="line", size = 1) +
   apatheme+
   labs(x="Ordinal Position ",y ="RT ms")+
-  annotate(geom="text", x=2, y=1200, label="n = 4", color="black", size = 8))
+  annotate(geom="text", x=2, y=1200, label="n = 30", color="black", size = 8))
 ```
 
 ### Control: Plot RTs accross the experiment
 ```{r}
-(plot <- ggplot(data=df[df$correct == 1,], aes(x=trial, y=timing.01)) +
+(plot <- ggplot(data=df, aes(x=trial, y=timing.01)) +
   stat_summary(fun=mean,  geom="point", size = 2)+
   stat_summary(fun=mean,  geom="line", size = 1) +
   apatheme+
   labs(x="Trial ",y ="RT ms")+
-  annotate(geom="text", x=2, y=1200, label="n = 4", color="black", size = 8))
+  annotate(geom="text", x=20, y=1570, label="n = 30", color="black", size = 8))
 ```
 
 # lmms 
@@ -373,8 +547,8 @@ contrasts(df$PosOr) <- contr.poly(5)
 # m1 <- glmer(timing.01 ~ PosOr + (PosOr|subject) +(PosOr|category) ,
 #              data = df[df$category != "Filler"  & df$correct == 1,], family =Gamma(link ="identity"), control=glmerControl(optimizer = "bobyqa"))
 #model does not converge
-m1 <- afex::lmer_alt(timing.01 ~ PosOr + (PosOr||subject) +(PosOr||category) , 
-             data = df[df$category != "Filler"  & df$correct == 1,], family =Gamma(link ="identity"), control=glmerControl(optimizer = "bobyqa"))
+m1 <- glmer(timing.01 ~ PosOr + (PosOr|subject) +(PosOr|category) , 
+             data = df[df$category != "Filler"  & df$correct == 1,], family =Gamma(link ="identity"), control=glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 2*10^5)))
 summary(m1)
 
 # linear trend only

@@ -225,7 +225,7 @@ datafiles[[i]]<- datafiles[[i]] %>% select_if(~sum(!is.na(.)) > 0)
 # give columns more recognizable names
 if (type[i] == "main") {
   datafiles[[i]] <- datafiles[[i]] %>% 
-  dplyr::rename(array_no = OR01_01, gender = SD01, age = SD02_01,
+  dplyr::rename(array_no = AY01_01, gender = SD01, age = SD02_01,
                      language.test = SD20, language = SD21, 
                      os_system = SD22_OS, browser_automatic = SD22_BNM,
                      system_format  = SD22_FmF, prolificid = SD24_01,
@@ -239,7 +239,7 @@ if (type[i] == "main") {
                      questionnaire_width = SD22_QnW)
 } else if (type[i] == "replacement") {
   datafiles[[i]] <- datafiles[[i]] %>% 
-  dplyr::rename(array_no = OR01_01, gender = SD01, age = SD02_01,
+  dplyr::rename(array_no = AY01_01, gender = SD01, age = SD02_01,
                      language.test = SD20, language = SD21, 
                      os_system = SD22_OS, browser_automatic = SD22_BNM,
                      system_format  = SD22_FmF, prolificid = SD24_01,
@@ -273,14 +273,14 @@ if(type[i] == "main") {
   datafiles[[i]] <-  datafiles[[i]] %>% 
   mutate_at(vars(!c("prolificid", "browser_other", 
                     "word", "comments", "type",
-                    "AY01_01", "TIME_RSI", contains("KB0"),
+                    "array_no", "TIME_RSI", contains("KB0"),
                     contains("TT0"), contains("fam_typed"),
                     contains("letters"))), as.numeric)
 } else if(type[i] == "replacement") {
     datafiles[[i]] <- datafiles[[i]] %>% 
    mutate_at(vars(!c("prolificid", "operator_system_other", 
                      "word", "comments", "type", 
-                    "AY01_01", contains("KB0"),
+                    "array_no", contains("KB0"),
                     contains("TT0"), contains("fam_typed"),
                     contains("letters"))), as.numeric)
 }
@@ -343,8 +343,11 @@ for (i in 1:length(input)) {
 arrays <- read.csv(here::here("data", arrays), 
     sep = ";", na = "NA")
 
-# bind arrays to data frame
 for (i in 1:length(input)) {
+  # convert array column in datafiles
+  datafiles[[i]]$array_no <- as.numeric(stringr::str_remove(
+    datafiles[[i]]$array_no, "Array"))
+  # bind arrays to data frame
   datafiles[[i]]$item <- NA
     for(j in 1:nlevels(as.factor(datafiles[[i]]$subject))){
       array <- arrays[, unique(datafiles[[i]]$array_no[

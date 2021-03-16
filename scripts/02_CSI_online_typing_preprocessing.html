@@ -419,7 +419,10 @@ summary {
 
 <div id="load-packages" class="section level2">
 <h2>Load packages</h2>
-<pre class="r"><code>library(dplyr)</code></pre>
+<pre class="r"><code>rm(list = ls())
+
+library(tidyr)
+library(dplyr)</code></pre>
 <pre><code>## 
 ## Attaching package: &#39;dplyr&#39;</code></pre>
 <pre><code>## The following objects are masked from &#39;package:stats&#39;:
@@ -428,72 +431,89 @@ summary {
 <pre><code>## The following objects are masked from &#39;package:base&#39;:
 ## 
 ##     intersect, setdiff, setequal, union</code></pre>
-<pre class="r"><code>library(tidyr)
-
-rm(list = ls())</code></pre>
+<pre class="r"><code>options( &quot;encoding&quot; = &quot;UTF-8&quot; )</code></pre>
 </div>
-<div id="load-and-preprocess-data" class="section level2">
-<h2>Load and preprocess data</h2>
+<div id="load-and-preprocess-data" class="section level1">
+<h1>Load and preprocess data</h1>
+<p>This input file needs to be entered by hand:</p>
+<pre class="r"><code># input output main data
+type &lt;- c(&quot;main&quot;, &quot;replacement&quot;)
+input &lt;- c(&quot;data_csi_online_2021_2021-03-05_17-33.csv&quot;, &quot;data_csi_online_20212_2021-03-15_14-23.csv&quot;)</code></pre>
 <pre class="r"><code>options( &quot;encoding&quot; = &quot;UTF-8&quot; )
 
-# input output
+# input output: pretest
 # input &lt;- &quot;pretest_complete.csv&quot;
-input &lt;- &quot;data_csi_online_2021_2021-03-05_17-33.csv&quot;
-
-# output 
 #output &lt;- &quot;pretest_long.csv&quot;
+
+# output
 output &lt;- &quot;data_long.csv&quot;
 
 # arrays
 arrays &lt;- &quot;arrays_umlaut.csv&quot;
 
 # prolific IDs to approve
-approve &lt;- &quot;prolificid_approve.csv&quot;
+approve &lt;- &quot;prolificid_approve&quot;
 
 # load data
-data &lt;- read.csv(here::here(&quot;data&quot;, input), sep = &quot;;&quot;,  na = &quot;&quot;)
+datafiles &lt;- list()
+for(i in 1:length(input)) {
+   #dataname = paste(&quot;data&quot;,type[i],sep = &quot;_&quot;)
+   #assign(dataname, 
+   #      read.csv(here::here(&quot;data&quot;, input[i]), sep = &quot;;&quot;,  na = &quot;&quot;))
+   datafiles[[i]] &lt;- read.csv(here::here(&quot;data&quot;, input[i]), sep = &quot;;&quot;, 
+                              na = &quot;&quot;)
+} 
 
-# delete description column and experimenter&#39;s tryout data
-data &lt;- data[-c(1:2),]
-
-# add subject id
-data &lt;- data %&gt;% mutate(subject = row_number())</code></pre>
+# perform some transformations on each dataframe
+for(i in 1:length(input)) {
+  # add type column
+  datafiles[[i]]$type &lt;- type[i]
+  # delete description column and experimenter&#39;s tryout data
+  datafiles[[i]] &lt;- datafiles[[i]][-c(1:2),]
+  # add subject id
+  datafiles[[i]] &lt;- datafiles[[i]] %&gt;% dplyr::mutate(subject = row_number())
+}</code></pre>
 </div>
-<div id="convert-to-long-format" class="section level2">
-<h2>Convert to long format</h2>
+<div id="convert-to-long-format-prepare-wide-dataframe-and-bind-long-and-wide-dataframe-together" class="section level1">
+<h1>Convert to long format, prepare wide dataframe, and bind long and wide dataframe together</h1>
 <p>First convert all variables that have values for each trial, then bind them together. In a next step bind them to the variables that only have one value per participant.</p>
-<pre class="r"><code>### MAIN TASK - LETTERS
+<pre class="r"><code>for(i in 1:length(input)){
+
+#-------------------------------------------------------------
+# Prepare long data frame
+
+  ### MAIN TASK - LETTERS
 # letters of first 1-80 trials of the main experiment
-df1 &lt;- data %&gt;%  select(&#39;subject&#39;, starts_with(c(&quot;XT&quot;))) %&gt;% 
-                  pivot_longer(
+df1 &lt;- datafiles[[i]] %&gt;%  select(&#39;subject&#39;, starts_with(c(&quot;XT&quot;))) %&gt;% 
+                    pivot_longer(
                     cols = -subject,
                      names_to = c(&quot;trial&quot;, &quot;.value&quot;), 
                     names_pattern = &quot;([^_]+)_(.*)&quot;,
                     values_to = &quot;timing&quot;) %&gt;%
                     group_by(subject) %&gt;%
-                    mutate(trial = seq(1,80, by = 1)) %&gt;%
+                    dplyr::mutate(trial = seq(1,80, by = 1)) %&gt;%
                    setNames(paste0(&#39;letters.&#39;, names(.))) 
 # letters of last 81-160 trials of the main experiment
-df2 &lt;- data %&gt;%  select(&#39;subject&#39;, starts_with(c(&quot;XU&quot;))) %&gt;% 
+df2 &lt;- datafiles[[i]] %&gt;%  select(&#39;subject&#39;, starts_with(c(&quot;XU&quot;))) %&gt;% 
                   pivot_longer(
                     cols = -subject,
                      names_to = c(&quot;trial&quot;, &quot;.value&quot;), 
                     names_pattern = &quot;([^_]+)_(.*)&quot;,
                     values_to = &quot;timing&quot;) %&gt;%
                     group_by(subject) %&gt;%
-                    mutate(trial = seq(81,160, by = 1)) %&gt;%
+                    dplyr::mutate(trial = seq(81,160, by = 1)) %&gt;%
                    setNames(paste0(&#39;letters.&#39;, names(.)))
 # bind first 80 and last 80 trials together
 df_letters &lt;- bind_rows(df1, df2) %&gt;%
-        rename(subject = letters.subject,
+        dplyr::rename(subject = letters.subject,
                trial = letters.trial) %&gt;%
         arrange(subject, trial)
 # delete letter columns from wide data frame
-data &lt;- data %&gt;% select(!starts_with(c(&quot;XT&quot;, &quot;XU&quot;)))
+datafiles[[i]] &lt;- datafiles[[i]] %&gt;% select(!starts_with(c(&quot;XT&quot;, &quot;XU&quot;)))
 
 #### MAIN TASK - LETTER TIMING
 # letter timing of first 1-80 trials of the main experiment
-df1 &lt;-data %&gt;% 
+df1 &lt;-datafiles[[i]] %&gt;% 
           select(&#39;subject&#39;, starts_with(&quot;TI&quot;) &amp; 
                    !starts_with(&quot;TIME&quot;)) %&gt;% 
                   pivot_longer(
@@ -502,99 +522,100 @@ df1 &lt;-data %&gt;%
                     names_pattern = &quot;([^_]+)_(.*)&quot;,
                     values_to = &quot;timing&quot;) %&gt;%
                     group_by(subject) %&gt;%
-                    mutate(trial = seq(1,80, by = 1)) %&gt;%
+                    dplyr::mutate(trial = seq(1,80, by = 1)) %&gt;%
                    setNames(paste0(&#39;timing.&#39;, names(.))) 
 # letter timing of last 81-160 trials of the main experiment
-df2 &lt;- data %&gt;%  select(&#39;subject&#39;, starts_with(c(&quot;TJ&quot;))) %&gt;% 
+df2 &lt;- datafiles[[i]] %&gt;%  select(&#39;subject&#39;, starts_with(c(&quot;TJ&quot;))) %&gt;% 
                   pivot_longer(
                     cols = -subject,
                      names_to = c(&quot;trial&quot;, &quot;.value&quot;), 
                     names_pattern = &quot;([^_]+)_(.*)&quot;,
                     values_to = &quot;timing&quot;) %&gt;%
                     group_by(subject) %&gt;%
-                    mutate(trial = seq(81,160, by = 1)) %&gt;%
+                    dplyr::mutate(trial = seq(81,160, by = 1)) %&gt;%
                    setNames(paste0(&#39;timing.&#39;, names(.)))
 # bind first 80 and last 80 trials together
 df_timing &lt;- bind_rows(df1, df2) %&gt;%
-        rename(subject = timing.subject,
+        dplyr::rename(subject = timing.subject,
                trial = timing.trial) %&gt;%
         arrange(subject, trial)
 # delete timing columns from wide data frame
-data &lt;- data %&gt;% 
+datafiles[[i]] &lt;- datafiles[[i]] %&gt;% 
   select(!(starts_with(c(&quot;TI&quot;, &quot;TJ&quot;)) &amp; !starts_with(&quot;TIME&quot;)))
                 
 ### MAIN TASK - ENTIRE WORDS
 # typed words of first 1-80 trials of the main experiment
-df1 &lt;- data %&gt;% 
+df1 &lt;- datafiles[[i]] %&gt;% 
           select(&#39;subject&#39;, starts_with(&quot;AW&quot;)) %&gt;% 
                   pivot_longer(
                     cols = -subject,
                      names_to = c(&quot;trial&quot;), 
                     values_to = &quot;word&quot;) %&gt;%
                     group_by(subject) %&gt;%
-                    mutate(trial = seq(1,80, by = 1)) 
+                    dplyr::mutate(trial = seq(1,80, by = 1)) 
 # typed words of last 1-80 trials of the main experiment
-df2 &lt;- data %&gt;% 
+df2 &lt;- datafiles[[i]] %&gt;% 
           select(&#39;subject&#39;, starts_with(&quot;AV&quot;)) %&gt;% 
                   pivot_longer(
                     cols = -subject,
                      names_to = c(&quot;trial&quot;), 
                     values_to = &quot;word&quot;) %&gt;%
                     group_by(subject) %&gt;%
-                    mutate(trial = seq(81,160, by = 1))
+                    dplyr::mutate(trial = seq(81,160, by = 1))
 # bind first 80 and last 80 trials together
 df_words &lt;- bind_rows(df1, df2) %&gt;%
         arrange(subject, trial)
 # delete word columns from wide data frame
-data &lt;- data %&gt;% 
+datafiles[[i]] &lt;- datafiles[[i]] %&gt;% 
   select(!starts_with(c(&quot;AW&quot;, &quot;AV&quot;)))
 
 
 ### FAMILIARIZATION WORDS 
 ### (only to control that ppt payed attention to the task)
 # typed words of first 1-80 trials of the familiarization
-df1 &lt;- data %&gt;% 
+df1 &lt;- datafiles[[i]] %&gt;% 
           select(&#39;subject&#39;, starts_with(&quot;FA03&quot;)) %&gt;% 
                   pivot_longer(
                     cols = -subject,
                      names_to = c(&quot;trial&quot;), 
                     values_to = &quot;fam_typed&quot;) %&gt;%
                     group_by(subject) %&gt;%
-                    mutate(trial = seq(1,80, by = 1)) 
+                    dplyr::mutate(trial = seq(1,80, by = 1)) 
 # typed words of last 1-80 trials of the main experiment
-df2 &lt;- data %&gt;% 
+df2 &lt;- datafiles[[i]] %&gt;% 
           select(&#39;subject&#39;, starts_with(&quot;FA04&quot;)) %&gt;% 
                   pivot_longer(
                     cols = -subject,
                      names_to = c(&quot;trial&quot;), 
                     values_to = &quot;fam_typed&quot;) %&gt;%
                     group_by(subject) %&gt;%
-                    mutate(trial = seq(81,160, by = 1))
+                    dplyr::mutate(trial = seq(81,160, by = 1))
 # bind first 80 and last 80 trials together
 df_fam &lt;- bind_rows(df1, df2) %&gt;%
         arrange(subject, trial)
 # delete word columns from wide data frame
-data &lt;- data %&gt;% 
+datafiles[[i]] &lt;- datafiles[[i]] %&gt;% 
   select(!starts_with(c(&quot;FA03&quot;, &quot;FA04&quot;)))
 
 ### Bind the four trial-wise dataframes together
 df_main &lt;- merge(df_fam, df_words, by = c(&quot;subject&quot;, &quot;trial&quot;))
 df_main &lt;- merge(df_main, df_letters, by= c(&quot;subject&quot;, &quot;trial&quot;) )
 df_main &lt;- merge(df_main, df_timing, by= c(&quot;subject&quot;, &quot;trial&quot;) ) %&gt;%
-  arrange(subject, trial)</code></pre>
-<p>Adapt wide data frame with info that is assessed only once</p>
-<pre class="r"><code># delete columns that contain only NAs
-data &lt;- data %&gt;% select_if(~sum(!is.na(.)) &gt; 0)
+  arrange(subject, trial)
+
+#-------------------------------------------------------------
+# Adapt wide data frame with info that is assessed only once
+
 
 # for control reasons: calculate time sum by hand:
 # sum dwell times for each page
-data &lt;- data %&gt;% 
+datafiles[[i]] &lt;- datafiles[[i]] %&gt;% 
   mutate_at(vars(contains(&quot;TIME0&quot;)), as.numeric)
-data &lt;- data %&gt;% rowwise() %&gt;% 
-  mutate(timetotal = rowSums(across(starts_with(&quot;TIME0&quot;)))/60)
+datafiles[[i]] &lt;- datafiles[[i]] %&gt;% rowwise() %&gt;% 
+  dplyr::mutate(timetotal = rowSums(across(starts_with(&quot;TIME0&quot;)))/60)
 
 # delete columns with info we don&#39;t need
-data &lt;- data %&gt;% 
+datafiles[[i]] &lt;- datafiles[[i]] %&gt;% 
   select(-c(CASE, QUESTNNR, MODE, STARTED, SD22_PRV,
                         SD22_BID, SD22_BVS,
                         SD28_01, SD29_01,  
@@ -603,121 +624,179 @@ data &lt;- data %&gt;%
                         MISSING, MISSREL
                         ))
 
+# delete columns that contain only NAs
+datafiles[[i]]&lt;- datafiles[[i]] %&gt;% select_if(~sum(!is.na(.)) &gt; 0)
+
 # give columns more recognizable names
-data &lt;- data %&gt;% 
-  rename(array_no = OR01_01, gender = SD01, age = SD02_01,
+if (type[i] == &quot;main&quot;) {
+  datafiles[[i]] &lt;- datafiles[[i]] %&gt;% 
+  dplyr::rename(array_no = AY01_01, gender = SD01, age = SD02_01,
                      language.test = SD20, language = SD21, 
                      os_system = SD22_OS, browser_automatic = SD22_BNM,
                      system_format  = SD22_FmF, prolificid = SD24_01,
                      fingers_l = SD25, fingers_r = SD26, 
                      handedness = SD27, operator_system = SD30, 
                      system = SD32, browser = SD31, 
-                     browser_other = SD31_07, keyboard_type = KB01, 
+                     browser_other = SD31_07, 
+                      keyboard_type = KB01, 
                      comments = IM01_01, time_wo_outlier = TIME_SUM,
                      screen_width = SD22_ScW, screen_height = SD22_ScH,
-                     questionnaire_width = SD22_QnW)</code></pre>
-<p>Bind long and wide data frame together</p>
-<pre class="r"><code># Repeat each subjects&#39; rows 160 times (no of trials)
-df &lt;- data %&gt;% slice(rep(seq_len(n()), 160))
+                     questionnaire_width = SD22_QnW)
+} else if (type[i] == &quot;replacement&quot;) {
+  datafiles[[i]] &lt;- datafiles[[i]] %&gt;% 
+  dplyr::rename(array_no = AY01_01, gender = SD01, age = SD02_01,
+                     language.test = SD20, language = SD21, 
+                     os_system = SD22_OS, browser_automatic = SD22_BNM,
+                     system_format  = SD22_FmF, prolificid = SD24_01,
+                     fingers_l = SD25, fingers_r = SD26, 
+                     handedness = SD27, operator_system = SD30, 
+                     system = SD32, browser = SD31, 
+                      operator_system_other = SD30_07, 
+                      keyboard_type = KB01, 
+                     comments = IM01_01, time_wo_outlier = TIME_SUM,
+                     screen_width = SD22_ScW, screen_height = SD22_ScH,
+                     questionnaire_width = SD22_QnW)
+}
+
+#-------------------------------------------------------------
+# Bind long and wide data frame together
+# Repeat each subjects&#39; rows 160 times (no of trials)
+datafiles[[i]] &lt;- datafiles[[i]] %&gt;% slice(rep(seq_len(n()), 160))
 
 # Add trial number to wide data frame
-df$trial &lt;- rep(1:160, times = max(data$subject))
+datafiles[[i]]$trial &lt;- rep(1:160, times = max(datafiles[[i]]$subject))
 
 # bind wide and long info together
-df &lt;- df %&gt;% left_join(df_main, by = c(&quot;subject&quot;, &quot;trial&quot;)) %&gt;%
-  relocate(subject, trial)</code></pre>
-<p>Convert numeric variables from string to integer:</p>
-<pre class="r"><code>#str(df)
-df &lt;-  df %&gt;% 
-  mutate_at(vars(!c(&quot;prolificid&quot;, &quot;browser_other&quot;, &quot;word&quot;, &quot;comments&quot;, 
-                    &quot;AY01_01&quot;, &quot;TIME_RSI&quot;, contains(&quot;KB0&quot;),
+datafiles[[i]] &lt;- datafiles[[i]] %&gt;% 
+  left_join(df_main, by = c(&quot;subject&quot;, &quot;trial&quot;)) %&gt;%
+  relocate(subject, trial)
+
+#-------------------------------------------------------------
+# Convert numeric variables from string to integer:
+#str(df)
+if(type[i] == &quot;main&quot;) {
+  datafiles[[i]] &lt;-  datafiles[[i]] %&gt;% 
+  mutate_at(vars(!c(&quot;prolificid&quot;, &quot;browser_other&quot;, 
+                    &quot;word&quot;, &quot;comments&quot;, &quot;type&quot;,
+                    &quot;array_no&quot;, &quot;TIME_RSI&quot;, contains(&quot;KB0&quot;),
                     contains(&quot;TT0&quot;), contains(&quot;fam_typed&quot;),
-                    contains(&quot;letters&quot;))), as.numeric)</code></pre>
+                    contains(&quot;letters&quot;))), as.numeric)
+} else if(type[i] == &quot;replacement&quot;) {
+    datafiles[[i]] &lt;- datafiles[[i]] %&gt;% 
+   mutate_at(vars(!c(&quot;prolificid&quot;, &quot;operator_system_other&quot;, 
+                     &quot;word&quot;, &quot;comments&quot;, &quot;type&quot;, 
+                    &quot;array_no&quot;, contains(&quot;KB0&quot;),
+                    contains(&quot;TT0&quot;), contains(&quot;fam_typed&quot;),
+                    contains(&quot;letters&quot;))), as.numeric)
+}
+}</code></pre>
 </div>
-<div id="roughly-check-participant-for-prolific-approval" class="section level2">
-<h2>Roughly check participant for Prolific approval</h2>
+<div id="roughly-check-participant-for-prolific-approval" class="section level1">
+<h1>Roughly check participant for Prolific approval</h1>
 <p><strong>Did all participants finish the experiment?</strong></p>
-<pre class="r"><code># did all participants finish the experiment
-table(data$FINISHED)</code></pre>
-<pre><code>## 
+<pre class="r"><code># did all participants finish the experiment?
+for(i in 1:length(input)) {
+  print(paste(type[i],&quot;:&quot;))
+  print(&quot;Experiment completed?&quot;)
+  print(table(datafiles[[i]]$FINISHED)/160)
+  print(&quot;What was the last experimental page reached?&quot;)
+  print(table(datafiles[[i]]$LASTPAGE)/160)
+}</code></pre>
+<pre><code>## [1] &quot;main :&quot;
+## [1] &quot;Experiment completed?&quot;
+## 
 ##  0  1 
-##  2 30</code></pre>
-<pre class="r"><code>table(data$LASTPAGE)</code></pre>
-<pre><code>## 
-## 12 33  4 
-##  1 30  1</code></pre>
-<p>Two participants didn’t finish the experiments and dropped out on page 4 (keyboard test) and 12 (instruction turn on caps lock) of the experiment, respectively.</p>
-<p>Exclude these participants:</p>
-<pre class="r"><code>exclude &lt;- data$prolificid[data$FINISHED == &quot;0&quot; &amp; 
-                             data$LASTPAGE != &quot;30&quot;]
-exclude_id &lt;- data$subject[data$FINISHED == &quot;0&quot; &amp; 
-                             data$LASTPAGE != &quot;30&quot;]
+##  2 30 
+## [1] &quot;What was the last experimental page reached?&quot;
+## 
+##  4 12 33 
+##  1  1 30 
+## [1] &quot;replacement :&quot;
+## [1] &quot;Experiment completed?&quot;
+## 
+## 0 1 
+## 2 3 
+## [1] &quot;What was the last experimental page reached?&quot;
+## 
+##  3 20 33 
+##  1  1  3</code></pre>
+<p>Two participants didn’t finish the experiment and dropped out on page 4 (keyboard test) and 12 (instruction turn on caps lock) of the experiment, respectively.<br />
+Replacement data: Here too, two participants entered the experiment, but didn’t complete it. One dropped out on page 3 (welcome page) and one on page 20 (main experiment).</p>
+<p>Exclude these participants and export prolific IDs for approval:</p>
+<pre class="r"><code>for (i in 1:length(input)) {
+  exclude &lt;- datafiles[[i]]$prolificid[datafiles[[i]]$FINISHED == &quot;0&quot; &amp; 
+                             datafiles[[i]]$LASTPAGE != &quot;30&quot;]
+  exclude_id &lt;- datafiles[[i]]$subject[datafiles[[i]]$FINISHED == &quot;0&quot; &amp; 
+                             datafiles[[i]]$LASTPAGE != &quot;30&quot;]
 
-# Exclude from data frame
-df &lt;- df[!df$subject %in% exclude_id,]
+  # Exclude from data frame
+  datafiles[[i]] &lt;- datafiles[[i]][!datafiles[[i]]$subject %in% exclude_id,]
 
-# update subject IDs
-df$subject &lt;- rep(1:nlevels(as.factor(df$subject)), each = 160)
+  # update subject IDs
+  datafiles[[i]]$subject &lt;- 
+    rep(1:nlevels(as.factor(datafiles[[i]]$subject)), each = 160)
 
-# All the other data look fine, so we can include all others:
-include &lt;- as.data.frame(data$prolificid[data$FINISHED == &quot;1&quot; &amp; 
-                             data$LASTPAGE == &quot;33&quot;])
-write.csv(include, here::here(&quot;data&quot;, approve), row.names = FALSE)
+  # All the other data look fine, so we can include all others:
+  include &lt;- as.data.frame(
+    datafiles[[i]]$prolificid[datafiles[[i]]$FINISHED == &quot;1&quot; &amp; 
+                             datafiles[[i]]$LASTPAGE == &quot;33&quot;])
+  
+  # export prolific IDs
+  filename &lt;- paste(approve, &quot;_&quot;,type[i], &quot;.csv&quot;, sep = &quot;&quot;)
+  write.csv(include, here::here(&quot;data&quot;, filename), row.names = FALSE)
 
-# delete prolific ids ton anonymize data frame
-df &lt;- df %&gt;% 
-  dplyr::select(-prolificid) </code></pre>
+  # delete prolific ids ton anonymize data frame
+  datafiles[[i]] &lt;- datafiles[[i]] %&gt;% 
+   dplyr::select(-prolificid) 
+}</code></pre>
 </div>
-<div id="add-array-actual-stimuli-for-each-participant" class="section level2">
-<h2>Add array (actual stimuli) for each participant</h2>
+<div id="add-array-actual-stimuli-for-each-participant" class="section level1">
+<h1>Add array (actual stimuli) for each participant</h1>
 <pre class="r"><code># load arrays
 arrays &lt;- read.csv(here::here(&quot;data&quot;, arrays), 
     sep = &quot;;&quot;, na = &quot;NA&quot;)
-# delete empty lines
-#arrays %&gt;% filter()
 
-# bind arrays to data frame
-df$item &lt;- NA
-for(i in 1:nlevels(as.factor(df$subject))){
-  array &lt;- arrays[,unique(df$array_no[df$subject == i])]
-  df$item[df$subject == i] &lt;- array
-}
-# array_experiment &lt;- bind_rows(arrays[,unique(df$array_no)])
-# array_experiment &lt;- as.data.frame(unlist(lapply(array_experiment[ , 
-#                         names(array_experiment)], as.character) ))
-# df$item &lt;- array_experiment[,1]
+for (i in 1:length(input)) {
+  # convert array column in datafiles
+  datafiles[[i]]$array_no &lt;- as.numeric(stringr::str_remove(
+    datafiles[[i]]$array_no, &quot;Array&quot;))
+  # bind arrays to data frame
+  datafiles[[i]]$item &lt;- NA
+    for(j in 1:nlevels(as.factor(datafiles[[i]]$subject))){
+      array &lt;- arrays[, unique(datafiles[[i]]$array_no[
+                        datafiles[[i]]$subject == j])]
+      datafiles[[i]]$item[datafiles[[i]]$subject == j] &lt;- array
+    }
 
-# add category columns
-df &lt;- df %&gt;% group_by(subject, item) %&gt;% 
-  mutate(category = arrays$categorie[arrays$item == item]) %&gt;%
-  mutate(supercategory = arrays$supercategorie[arrays$item == item] )
+  # add category columns
+  datafiles[[i]] &lt;- datafiles[[i]] %&gt;% group_by(subject, item) %&gt;% 
+    dplyr::mutate(category = arrays$categorie[arrays$item == item]) %&gt;%
+    dplyr::mutate(supercategory = 
+                    arrays$supercategorie[arrays$item == item] )
 
-# add position number
-df &lt;- df %&gt;% group_by(subject, category) %&gt;% 
-  add_count() %&gt;% 
-  mutate(PosOr = seq(1:n)) %&gt;% select(-n)
-# add ordinal position for fillers
-table(df$PosOr)</code></pre>
-<pre><code>## 
-##   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20 
-## 750 750 750 750 750  30  30  30  30  30  30  30  30  30  30  30  30  30  30  30 
-##  21  22  23  24  25  26  27  28  29  30  31  32  33  34  35  36  37  38  39  40 
-##  30  30  30  30  30  30  30  30  30  30  30  30  30  30  30  30  30  30  30  30</code></pre>
-<pre class="r"><code>count &lt;- 1
-for (i in 1:nrow(df)) {
-  if(df$category [i] == &quot;Filler&quot;) {
-    df$PosOr[i] &lt;- count
-    count &lt;- count+1
-  }
-  if(count == 6) {  count &lt;- 1}
-}
-table(df$PosOr)</code></pre>
-<pre><code>## 
-##   1   2   3   4   5 
-## 960 960 960 960 960</code></pre>
+    # add position number
+    datafiles[[i]] &lt;- datafiles[[i]] %&gt;% group_by(subject, category) %&gt;% 
+      add_count() %&gt;% 
+      dplyr::mutate(PosOr = seq(1:n)) %&gt;% select(-n)
+    # add ordinal position for fillers
+    table(datafiles[[i]]$PosOr)
+    count &lt;- 1
+    for (j in 1:nrow(datafiles[[i]])) {
+      if(datafiles[[i]]$category [j] == &quot;Filler&quot;) {
+        datafiles[[i]]$PosOr[j] &lt;- count
+        count &lt;- count+1
+      }
+      if(count == 6) {  count &lt;- 1}
+    }
+    table(datafiles[[i]]$PosOr)
+}</code></pre>
 </div>
-<div id="export-prepared-data-frame" class="section level2">
-<h2>Export prepared data frame</h2>
+<div id="bind-the-dataframes-together" class="section level1">
+<h1>Bind the dataframes together</h1>
+<pre class="r"><code>df &lt;- bind_rows(datafiles)</code></pre>
+</div>
+<div id="export-prepared-data-frame" class="section level1">
+<h1>Export prepared data frame</h1>
 <pre class="r"><code>write.csv(df, here::here(&quot;data&quot;, output), row.names = FALSE)</code></pre>
 </div>
 

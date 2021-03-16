@@ -1,0 +1,276 @@
+---
+title: "03 CSI online typing: Answer classification and participant exclusion"
+author: "Kirsten Stark"
+date: "3/15/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load packages
+
+```{r load_packages}
+rm(list = ls())
+
+library(tidyr)
+library(dplyr)
+```
+
+
+# Load data and answercodes
+
+```{r}
+options( "encoding" = "UTF-8" )
+
+# input 
+input = "data_long.csv"
+
+# load data
+df <- read.csv(here::here("data", input))
+
+# load answer codes
+answercodes <- read.csv(here::here("data", "answercodes.csv"),sep = ";")
+```
+
+
+# Check and classify participants' answer behavior
+Assign answer codes to participants' typed naming
+
+```{r}
+df$answercode <- NA
+for(i in 1:nrow(answercodes)) {
+  df$answercode[toupper(df$item) == toupper(answercodes$item[i]) &
+                  toupper(df$word) == toupper(answercodes$word[i])] <- 
+    answercodes$answercode[i]
+}
+df$answercode <- ifelse(is.na(df$word), "isna", df$answercode)
+```
+
+Have all answers been classified? 
+
+```{r}
+sum(is.na(df$answercode)) == 0
+```
+
+Overview of answer codes (naming mistakes) - BEFORE participant exclusion:
+
+```{r}
+table(df$answercode)
+```
+
+- *Almost correct* naming are either synonyms or naming with only minor or corrected typos where the word is still recognizable and the initial letter is correct.  
+- Naming was classified as *backspace_space_enter* when the they started by typing the backspace, space, enter, or caps lock key, and then typed some word.  
+- *Correct* are all word entrys that are identical to the naming participants were familiarized with.  
+- *First_letter_incorrect* are words/synonymes that are later typed (almost) correct, but where the first letter was wrong, even if it was later on corrected. The entries suggest that participants sometimes continued typing the last word if they hadn't finished to do so.  
+- *isna* when no typed entry was recorded.  
+- *semantic_relation* when another semantically related word was typed that was not a synonym.  
+- *shift_start* when participants started typing the word with pressing the shift button. 
+- *unrelated_other* are either completely unrelated words, nonwords, single letter entries, or only keys like backspace, space, enter.  
+  
+**For the main analysis, we consider correct and almost correct entries as correct:**
+
+```{r}
+df$correct <- NA
+df$correct <- ifelse(df$answercode == "correct" | df$answercode == "almostcorrect", 1, NA)
+
+sum(df$answercode == "correct") + sum(df$answercode == "almostcorrect") ==
+  sum(df$correct, na.rm = TRUE)
+```
+
+## How many trial onset times are considered as invalid?
+
+```{r}
+# Amount and percentage of NA or excluded trials
+(sumna <- sum(is.na(df$correct)))
+(percentagena <- sum(is.na(df$correct))/nrow(df))
+```
+
+In a total of `r sumna` participants did not enter anything or entered a chunks of characters that were not considered as correct based on the preregistered criteria. This is `r percentagena` % of all trials.   
+  
+*Trials with missing values per participant:*
+
+```{r}
+for (i in 1:length(unique(df$type))) {
+  print(paste(unique(df$type)[i],"data collection: ", sep = " "))
+  print("Amount of trials without any entry for timing.01")
+  print(as.data.frame(table(
+    df$subject[df$type == unique(df$type)[i]],
+    is.na(df$timing.01[df$type == unique(df$type)[i]]))) %>% 
+      filter(Var2 == TRUE) %>%
+  dplyr::rename(subject = Var1, totaltrials = Var2, NA_trials = Freq) %>%
+  mutate(totaltrials = 160) %>% 
+    mutate(percentage_NA = NA_trials/totaltrials))
+}
+```
+
+*Amount of trials classified as correct per participant:*
+
+```{r}
+for (i in 1:length(unique(df$type))) {
+  print(paste(unique(df$type)[i],"data collection: ", sep = " "))  
+  print("Amount of trials classified as correct 
+        (correct, correct with typos, synonymes")
+  print(as.data.frame(table(df$subject[df$type == unique(df$type)[i]],
+                      !is.na(df$correct[df$type == unique(df$type)[i]]))) %>%
+    filter(Var2 == TRUE) %>%
+    dplyr::rename(subject = Var1, totaltrials = Var2, correct = Freq) %>%
+      mutate(totaltrials = 160) %>% 
+      mutate(percentagecorrect = correct/totaltrials))
+}
+```
+
+# Participant exclusion
+## Naming performance 
+
+As preregistered, participants with an accuracy below 80 % (either because of inaccurate naming or because of no naming) will be excluded and replaced for the main analyses:
+
+```{r}
+for (i in 1:length(unique(df$type))) {
+  print(paste(unique(df$type)[i],"data collection: ", sep = " "))  
+   print("Participants with performance below 80 %")
+   print(as.data.frame(table(df$subject[df$type == unique(df$type)[i]],
+                      !is.na(df$correct[df$type == unique(df$type)[i]]))) %>%
+    filter(Var2 == TRUE) %>%
+    dplyr::rename(subject = Var1, totaltrials = Var2, correct = Freq) %>%
+     mutate(totaltrials = 160) %>% 
+     mutate(percentagecorrect = correct/totaltrials) %>%
+     filter(percentagecorrect < .80))
+}
+```
+
+**In the main data collection, participants with subject no. 3 and 9 will be excluded from the data analyses.**
+
+## Comments
+
+```{r}
+#table(unique(df$comments[df$comments != "NA"]))
+as.data.frame(table(df$type, df$subject, df$comments)) %>% filter(Freq != 0)
+```
+
+We will exclude one participant, the participant with the subject no. 20, who indicated that she has been living in England for several years and is writing usually in English and therefore at first only remembered the English word of the items and is unfamiliar with typing Umlaute. Her answer behavior also indicated that she typed the English words several times.
+
+```{r}
+unique(df$comments[df$subject == 20 & df$type == "main"])
+```
+
+## Attention checks
+*1) Item vs. non-item*  
+We had two item- vs. non-item attention checks
+
+```{r}
+## Item vs. non-item
+# CH01_01 (Taube), CH01_02 (Apfel), CH02_01 (Luftballon) and CH02_02 (Biene) are items and 2 should appear in the dataframe,
+# CH02_03 (Radio), CH02_04 (Sparschwein), CH02_03 (Laptop) and CH02_04 (Wattestäbchen) are non-items and 1 should appear in the dataframe
+# --> As subjects had to select two items, 
+# controlling the selected items is enough
+
+table(unique(df %>% select(type, subject, CH01_01, CH01_02, CH02_01, CH02_02)))
+
+
+
+attcheck <- data.frame(subject = unique(df$subject)) 
+
+df <- df %>% mutate(itemvsnonitem1 = 
+                      case_when(CH01_01==2 & CH01_02==2 & CH01_03==1 & CH01_04==1 ~2,
+                                CH01_01==2 || CH01_02==2 ~1, 
+                                CH01_01!=2 & CH01_02!=2 ~0)) %>%
+  mutate(itemvsnonitem2 = 
+                      case_when(CH02_01==2 & CH02_02==2 & CH02_03==1 & CH02_04==1 ~2,
+                                CH02_01==2 || CH02_02==2 ~1, 
+                                CH02_01!=2 & CH02_02!=2 ~0))
+table(df$itemvsnonitem1)/160
+table(df$itemvsnonitem2)/160
+
+# attcheck <- data.frame(subject = unique(df$subject))
+# 
+# 
+# data <- data %>% mutate(attcheck =
+#                   ifelse(CH01_01 == 2 & CH01_02 == 2 & CH02_01 == 2 & CH02_02 == 2 &
+#                   CH01_03 == 1 & CH01_04 == 1 & CH02_03 == 1 & CH02_04 == 1, 1, 0)) %>%
+#                    mutate(cheat = ifelse(CH03 == 1,1,ifelse(CH03 == 2,2,0)))
+# data.frame(data$subject, )
+# table(data$attcheck)
+# table(data$cheat)
+# 
+# # get prolific IDs of participants who failed the attention check
+# #pretest %>% subset(attcheck == 0 & cheat == 2 ) %>%
+# #  pull(SD24_01) # SD24_01 is prolific ID
+# 
+# # subset to participants who passed only
+# valid <- pretest  %>% filter(attcheck == 1 & cheat != 2)
+# 
+# inspect <- data.frame(df$subject, df$word, df$fam_typed)
+
+```
+
+2) Cheating
+
+```{r}
+## Did participants cheat
+# CH03 = 1 - yes, I worked through it till the end,
+# CH03 = 2 - no, I stopped or cheated midway
+# CH03 = -9 - no answer
+
+```
+
+
+## Mother tongue
+
+## Keyboard
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+df2 <- df %>% filter(type == "main") %>% filter(!subject == 3 & !subject == 9  & !subject == 20)
+df3 <- df %>% filter(type == "replacement") %>% mutate(subject = case_when(subject == 1 ~ 3,
+                subject == 2 ~ 9, 
+                subject == 3 ~ 20))
+df <- bind_rows(df2, df3)
+table(df$subject)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

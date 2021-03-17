@@ -188,6 +188,24 @@ Correct trials only, including fillers
 
 # Regression analyses
 
+Check distribution
+
+```{r RT_distributions}
+# check distribution of RTs (by eyeballing)
+# 1) density plot of RTs
+qplot(data=df[df$category != "Filler"  & df$correct == 1,], timing.01,
+      geom="density", na.rm=TRUE)+ theme_bw() 
+# 2) plot data against real normal distribution -> is it way off?
+qqnorm(df$timing.01); qqline(df$timing.01)
+
+# check distribution of logRTs (by eyeballing)
+df$l <- log(df_online$RT)
+# 1) density plot of logRTs
+qplot(data=df[df$category != "Filler"  & df$correct == 1,],
+      log(df$timing.01), geom="density", na.rm=TRUE)+ theme_bw() 
+# 2) plot data against real normal distribution -> is it way off?
+qqnorm(log(df$timing.01[df$category != "Filler"  & df$correct == 1,])); qqline(log(df$timing.01[df$category != "Filler"  & df$correct == 1,]))
+```
 
 ```{r}
 hist(df$timing.01)

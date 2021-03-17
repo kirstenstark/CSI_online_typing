@@ -1,5 +1,6 @@
 # (Unanonymized data)
-./data/
+data/
+old/
 
 # History files
 .Rhistory

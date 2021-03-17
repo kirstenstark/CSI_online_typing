@@ -1,37 +1,43 @@
----
-title: "02 CSI online typing: Preprocessing"
-author: "Kirsten Stark"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: github_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+02 CSI online typing: Preprocessing
+================
+Kirsten Stark
+17 März, 2021
 
 ## Load packages
 
-```{r load_packages}
+``` r
 rm(list = ls())
 
 library(tidyr)
 library(dplyr)
+```
 
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
 options( "encoding" = "UTF-8" )
 ```
 
-
 # Load and preprocess data
-This input file needs to be entered by hand: 
 
-```{r specify input}
+This input file needs to be entered by hand:
+
+``` r
 # input output main data
 type <- c("main", "replacement")
 input <- c("data_csi_online_2021_2021-03-05_17-33.csv", "data_csi_online_20212_2021-03-15_14-23.csv")
 ```
 
-
-```{r load_data}
+``` r
 options( "encoding" = "UTF-8" )
 
 # input output: pretest
@@ -69,9 +75,12 @@ for(i in 1:length(input)) {
 ```
 
 # Convert to long format, prepare wide dataframe, and bind long and wide dataframe together
-First convert all variables that have values for each trial, then bind them together. In a next step bind them to the variables that only have one value per participant.
 
-```{r prepare_long_df}
+First convert all variables that have values for each trial, then bind
+them together. In a next step bind them to the variables that only have
+one value per participant.
+
+``` r
 for(i in 1:length(input)){
 
 #-------------------------------------------------------------
@@ -288,9 +297,10 @@ if(type[i] == "main") {
 ```
 
 # Roughly check participant for Prolific approval
+
 **Did all participants finish the experiment?**
 
-```{r prolific_check}
+``` r
 # did all participants finish the experiment?
 for(i in 1:length(input)) {
   print(paste(type[i],":"))
@@ -299,15 +309,37 @@ for(i in 1:length(input)) {
   print("What was the last experimental page reached?")
   print(table(datafiles[[i]]$LASTPAGE)/160)
 }
-
 ```
 
-Two participants didn't finish the experiment and dropped out on page 4 (keyboard test) and 12 (instruction turn on caps lock) of the experiment, respectively.  
-Replacement data: Here too, two participants entered the experiment, but didn't complete it. One dropped out on page 3 (welcome page) and one on page 20 (main experiment).  
+    ## [1] "main :"
+    ## [1] "Experiment completed?"
+    ## 
+    ##  0  1 
+    ##  2 30 
+    ## [1] "What was the last experimental page reached?"
+    ## 
+    ##  4 12 33 
+    ##  1  1 30 
+    ## [1] "replacement :"
+    ## [1] "Experiment completed?"
+    ## 
+    ## 0 1 
+    ## 2 3 
+    ## [1] "What was the last experimental page reached?"
+    ## 
+    ##  3 20 33 
+    ##  1  1  3
 
-Exclude these participants and export prolific IDs for approval: 
+Two participants didn’t finish the experiment and dropped out on page 4
+(keyboard test) and 12 (instruction turn on caps lock) of the
+experiment, respectively.  
+Replacement data: Here too, two participants entered the experiment, but
+didn’t complete it. One dropped out on page 3 (welcome page) and one on
+page 20 (main experiment).
 
-```{r participant_exclusion}
+Exclude these participants and export prolific IDs for approval:
+
+``` r
 for (i in 1:length(input)) {
   exclude <- datafiles[[i]]$prolificid[datafiles[[i]]$FINISHED == "0" & 
                              datafiles[[i]]$LASTPAGE != "30"]
@@ -338,7 +370,7 @@ for (i in 1:length(input)) {
 
 # Add array (actual stimuli) for each participant
 
-```{r add_arrays, warning = FALSE  }
+``` r
 # load arrays
 arrays <- read.csv(here::here("data", arrays), 
     sep = ";", na = "NA")
@@ -381,13 +413,12 @@ for (i in 1:length(input)) {
 
 # Bind the dataframes together
 
-```{r bind_input_dataframes_into_one}
+``` r
 df <- bind_rows(datafiles)
 ```
 
-
 # Export prepared data frame
 
-```{r export_data}
+``` r
 write.csv(df, here::here("data", output), row.names = FALSE)
 ```

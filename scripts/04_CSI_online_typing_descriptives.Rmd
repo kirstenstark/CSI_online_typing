@@ -1,8 +1,8 @@
 ---
-title: "03_CSI_online_typing_descriptives"
+title: "04 CSI online typing: Descriptives"
 author: "Kirsten Stark"
-date: "6 3 2021"
-output: html_document
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: github_document
 ---
 
 ```{r setup, include=FALSE}

@@ -1,0 +1,28 @@
+---
+title: "06 CSI online typing: Comparison to verbal naming"
+author: "Kirsten Stark"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load packages
+
+```{r load packages}
+library(dplyr)
+library(tidyr)
+library(lme4)
+library(lmerTest)
+library(Rmisc)
+library(Cairo)
+#library(strengejacke)
+library(ggplot2)
+
+options(scipen=999)
+
+rm(list = ls())
+```
+

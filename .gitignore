@@ -4,6 +4,7 @@ data/
 data_for_power_analysis/
 scripts/old
 .DS_Store
+*/.DS_Store
 
 # History files
 .Rhistory

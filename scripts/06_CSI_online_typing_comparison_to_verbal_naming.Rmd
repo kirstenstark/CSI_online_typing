@@ -2,7 +2,7 @@
 title: "06 CSI online typing: Comparison to verbal naming"
 author: "Kirsten Stark"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: github_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -39,8 +39,8 @@ df_typing <- read.csv(here::here("data", "data_long_final.csv"))
 Load verbal data
 
 ```{r load_verbal_data}
-load(here::here("data", "verbal_CSI", "CSI_online_Conny_df_correct.RData"))
-df_verbal <- df_correct
+load(here::here("data", "verbal_CSI", "CSI_online_verbal_df_full.RData"))
+df_verbal <- df_full
 ```
 
 # Combine both data frames into one
@@ -92,17 +92,49 @@ df_verbal <- df_verbal %>%
 df <- bind_rows(df_typing, df_verbal)
 ```
 
+5) Give identical category names in both experiments
+
+```{r category_names}
+df <- df %>% mutate(category = case_when(category == "Buero" ~ "Büro",
+                                  category == "Gebaeude" ~ "Gebäude",
+                                  category == "Gemuese" ~ "Gemüse",
+                                  category == 
+                                    "Koerperteile" ~ "Körperteile",
+                                  category == "Kueche" ~ "Küche",
+                                  category == 
+                                    "Suessigkeiten" ~ "Süssigkeiten",
+                                  category == 
+                                    "Trinkgefaesse" ~ "Trinkgefässe",
+                                  category == "Voegel" ~ "Vögel",
+                                  TRUE ~ as.character(category))) %>%
+  mutate(category == as.factor(category)) %>% droplevels()
+table(df$category)
+```
+
+5) Drop filler trials
+
+```{r drop_filler}
+ df <- df %>% filter(category != "Filler" & 
+                      category != "Filler1" & category != "Filler2") %>%
+  droplevels()
+```
+
+
+5) Add ordinal position as continuous predictor variable
+
+```{r Pos_cont}
+df$Pos.cont <- scale(as.numeric(as.character(df$Pos)),
+                       center = T, scale = F)
+```
+
 3) Drop incorrect trials
 
 ```{r subset_to_correct}
-df <- df %>% filter(!is.na(correct)) %>% select(-correct)
+df <- df %>% filter(!is.na(correct) & correct != 0) %>% 
+  select(-correct) %>%
+  droplevels()
 ```
 
-4) Drop filler trials
-
-```{r drop_filler}
-df <- df %>% filter(category != "Filler") %>% droplevels()
-```
 
 # Descriptives
 
@@ -144,9 +176,9 @@ Check distribution
 hist(df$RT)
 ```
 
-Full GLMM with polynomial contrasts (linear trend only)
+Set contrasts
 
-```{r glmm_poly_lin}
+```{r set contrasts}
 # define sliding difference contrast for factor experiment: 
 # contrast is verbal - typing, intercept being the grand mean 
 levels(df$experiment)
@@ -157,6 +189,11 @@ contrasts(df$Pos) <- contr.poly(5)
 # select linear trend
 fixef_terms <- model.matrix( ~ Pos,df) 
 df$Pos.L <- fixef_terms[,2]
+```
+
+### Full GLMM with polynomial contrasts (linear trend only)
+
+```{r glmm_poly_lin}
 
 # define model
 m1 <- glmer(RT ~ Pos.L*experiment +
@@ -167,33 +204,26 @@ m1 <- glmer(RT ~ Pos.L*experiment +
 summary(m1)
 ```
 
-Full GLMM with polynomial contrasts (all contrasts included):
+### Full GLMM with polynomial contrasts (all contrasts included):
 
 ```{r glmm_poly}
-library(buildmer)
-m2 <- buildmer(RT ~ Pos*experiment +
-                       (Pos|subject) + (Pos*experiment|category),
-	family=Gamma(link ="identity"),df,
-	control=glmerControl(optimizer = "bobyqa",
-                                optCtrl = list(maxfun = 2*10^5)),
-	buildmerControl=buildmerControl(direction=
-	                                  c('order','backward')))
+m2 <- afex::lmer_alt(RT ~ Pos*experiment +
+                       (Pos||subject) + (Pos*experiment||category),
+            data = df,
+            family =Gamma(link ="identity"),
+            control=glmerControl(optimizer = "bobyqa",
+                                   optCtrl = list(maxfun = 2*10^5)))
 summary(m2)
 ```
 
-
-Ordinal position as a continuous predictor variable
+### Ordinal position as a continuous predictor variable
 
 ```{r glmm_cont}
-# table(df$Pos)
-# df$Pos.cont <- scale(as.numeric(as.character(df$Pos)), 
-#                        center = T, scale = F)
-# table(df$Pos.cont)
-# m3 <- glmer(timing.01 ~ PosOr.cont + 
-#                (PosOr.cont|subject) +(PosOr.cont|category),
-#              data = df[df$category != "Filler"  & df$correct == 1,], 
-#             family =Gamma(link ="identity"), 
-#             control=glmerControl(optimizer = "bobyqa"))
-# summary(m3)
+m4 <- glmer(RT ~ Pos.cont*experiment +
+               (Pos.cont|subject) +(Pos.cont*experiment|category),
+             data = df,
+            family =Gamma(link ="identity"),
+            control=glmerControl(optimizer = "bobyqa"))
+summary(m4)
 ```
 

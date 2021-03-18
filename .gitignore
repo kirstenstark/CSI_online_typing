@@ -1,5 +1,7 @@
 # (Unanonymized data)
 data/
+tables/
+figures/
 *.csv
 data_for_power_analysis/
 scripts/old

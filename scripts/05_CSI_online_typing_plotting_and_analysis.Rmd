@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Load packages
-```{r}
+```{r load_packages}
 library(dplyr)
 library(tidyr)
 library(lme4)
@@ -19,18 +19,18 @@ library(Rmisc)
 library(Cairo)
 #library(strengejacke)
 library(ggplot2)
+library(sjPlot)
 
 options(scipen=999)
 
 rm(list = ls())
+options( "encoding" = "UTF-8" )
 ```
 
 
 ## Load and preprocess data
 
-```{r}
-options( "encoding" = "UTF-8" )
-
+```{r load_data}
 # input 
 input = "data_long_final.csv"
 
@@ -40,7 +40,7 @@ df <- read.csv(here::here("data", input))
 
 Check amount of participants and trials
 
-```{r}
+```{r checks}
 # no. of participants: 
 length(unique(df$subject))
 
@@ -50,22 +50,18 @@ nrow(df) == 160 * length(unique(df$subject))
 
 Factorize columns
 
-```{r}
+```{r transform_variables}
 # factorize columns
 is.numeric(df$timing.01)
 df$PosOr <- as.factor(df$PosOr)
 df$subject <- as.factor(df$subject)
-
-# exclude rows with filler trials
-#df <- df %>% filter(category != "Filler")
-#nrow(df)/length(unique(df$subject)) # 120 Trials per participant
 ```
 
 # Plotting
 
 Make plots suitable for APA format, font sizes can be adjusted
 
-```{r}
+```{r apatheme}
 apatheme <- theme_bw()+
   theme(plot.title=element_text(family="Arial",size=22,hjust = .5),
         panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
@@ -73,29 +69,31 @@ apatheme <- theme_bw()+
         text=element_text(family="Arial",size=16))
 ```
 
-## Correct trials only:
-We only consider trials with (almost) correct answers
-
-```{r}
-sum(!is.na(df$correct))
-sum(!is.na(df$correct[df$category != "Filler"]))
-# nrow(df) - (sum(df$answercode == "correct") + sum(df$answercode == "almostcorrect"))
-# df$timing.01[is.na(df$correct)] <- NA
-# sum(is.na(df$timing.01))
-```
-
 ### Descriptives
 
-```{r}
+```{r descriptives}
 (means_final<- df %>% filter(!is.na(correct)) %>% 
    filter(category != "Filler") %>% 
    Rmisc::summarySEwithin(.,"timing.01",idvar = "subject",
                           withinvars = "PosOr", na.rm = T))
+
+#huxt <- huxtable::huxtable(means_final, autoformat = FALSE)
+#huxtable::print_md(huxt, max_width = Inf)
+
+# Export as word file
+library(flextable)
+huxt_word <- huxtable::huxtable(means_final)
+huxt_word <- huxtable::set_number_format(huxt_word, round(2))
+huxtable::quick_docx(huxt_word, 
+                     file = here::here("tables",
+                                       "CSI_online_typing_RT_summary.docx"), 
+                                       open = FALSE)
+
 ```
 
 ### RTs by ordinal position
 
-```{r}
+```{r plot_rt}
 (plot_rt <- df %>% filter(!is.na(correct)) %>% 
    filter(category != "Filler") %>% 
     ggplot(., aes(x=PosOr, y=timing.01)) +
@@ -103,14 +101,21 @@ sum(!is.na(df$correct[df$category != "Filler"]))
     stat_summary(fun=mean,  geom="line", size = 1) +
     apatheme+
     labs(x="Ordinal Position ",y ="RT (ms)")+
-  annotate(geom="text", x=2, y=1200, label="n = 30", 
+   annotate(geom="text", x=1.5, y=1330, label="n = 30", 
            color="black", size = 8))
+
+filename <- "CSI_online_typing_plot_rt.pdf"
+ggsave(plot_rt, filename = 
+         here::here("figures", filename),
+       width = 18, height = 13, units = "cm", 
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("figures", filename))
 
 ```
 
 ### ... with fillers for control
 
-```{r}
+```{r plot_rt_fillers}
 
 (plot_rt_fillers <- df %>% filter(!is.na(correct)) %>% 
     mutate(kind = case_when(category == "Filler" ~"Filler",
@@ -120,16 +125,20 @@ sum(!is.na(df$correct[df$category != "Filler"]))
     stat_summary(fun=mean,  geom="line", size = 1) +
     apatheme+
     labs(x="Ordinal Position ",y ="RT (ms)", color = "Trial type")+
-  annotate(geom="text", x=2, y=1300, label="n = 30", 
+  annotate(geom="text", x=1.5, y=1350, label="n = 30", 
            color="black", size = 8))
 
-# ggsave(plot = plot, file = "figures/RT_across_conditions.pdf", device = cairo_pdf, dpi = 300)
-# embedFonts(file = "figures/RT_across_conditions_CSI_online_typing.pdf")
+filename <- "CSI_online_typing_plot_rt_with_fillers.pdf"
+ggsave(plot_rt_fillers, filename = 
+         here::here("figures", filename),
+       width = 18, height = 13, units = "cm", 
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("figures", filename))
 ```
   
 ### Plot by subcategory
 
-```{r}
+```{r plot_rt_by_cat}
 (plot_rt_by_cat <- df %>% filter(!is.na(correct)) %>% 
    filter(category != "Filler") %>% 
     ggplot(., aes(x=PosOr, y=timing.01)) +
@@ -138,14 +147,19 @@ sum(!is.na(df$correct[df$category != "Filler"]))
     facet_wrap(~category) +
     apatheme+
     labs(x="Ordinal Position ",y ="RT (ms)"))
-#ggsave(plot = plot30_facet, file = "Plots/CSI_subcats.pdf", device = cairo_pdf,dpi = 300)
-#embedFonts(file = "Plots/CSI_online30_subcats.pdf")
+
+filename <- "CSI_online_typing_plot_rt_by_category.pdf"
+ggsave(plot_rt_by_cat, filename = 
+         here::here("figures", filename),
+       width = 18, height = 19, units = "cm", 
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("figures", filename))
 
 ```
 
 ### Plot by subject
 
-```{r}
+```{r plot_by_subject}
 (plot_rt_by_subject <- df %>% filter(!is.na(correct)) %>% 
    filter(category != "Filler") %>% 
     ggplot(., aes(x=PosOr, y=timing.01)) +
@@ -154,29 +168,41 @@ sum(!is.na(df$correct[df$category != "Filler"]))
     facet_wrap(~subject) +
     apatheme+
     labs(x="Ordinal Position ",y ="RT (ms)"))
-#ggsave(plot = plot30_facet, file = "Plots/CSI_subcats.pdf", device = cairo_pdf,dpi = 300)
-#embedFonts(file = "Plots/CSI_online30_subcats.pdf")
+
+filename <- "CSI_online_typing_plot_rt_by_subject.pdf"
+ggsave(plot_rt_by_subject, filename = 
+         here::here("figures", filename),
+       width = 18, height = 19, units = "cm", 
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("figures", filename))
 
 ```
 
 ### Control: Plot RTs accross the experiment
 All trials including uncorrect trials
 
-```{r}
+```{r plot_RTs_all}
 (plot_RTs_all <- ggplot(data=df, aes(x=trial, y=timing.01)) +
   stat_summary(fun=mean,  geom="point", size = 2)+
   stat_summary(fun=mean,  geom="line", size = 1) +
   apatheme+
-  labs(x="Trial ",y ="RT ms")+
+  labs(x="Trial ",y ="RT (ms)")+
   annotate(geom="text", x=20, y=1570, label="n = 30", 
            color="black", size = 8))
+
+filename <- "CSI_online_typing_plot_rts_across_experiment.pdf"
+ggsave(plot_RTs_all, filename = 
+         here::here("figures", filename),
+       width = 18, height = 13, units = "cm", 
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("figures", filename))
 ```
 
-Correct trials only, including fillers
+Correct non-filler trials only:
 
-```{r}
+```{r plot_RTs_correct}
 (plot_RTs_correct <- df %>% filter(!is.na(correct)) %>% 
-   #filter(category != "Filler") %>% 
+   filter(category != "Filler") %>% 
     ggplot(., aes(x=trial, y=timing.01)) +
     stat_summary(fun=mean,  geom="point", size = 2)+
     stat_summary(fun=mean,  geom="line", size = 1) +
@@ -184,6 +210,13 @@ Correct trials only, including fillers
     labs(x="Trial ",y ="RT ms")+
     annotate(geom="text", x=20, y=1570, label="n = 30", 
              color="black", size = 8))
+
+filename <- "CSI_online_typing_plot_rts_across_experiment_correct_experimental_trials.pdf"
+ggsave(plot_RTs_correct, filename = 
+         here::here("figures", filename),
+       width = 18, height = 13, units = "cm", 
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("figures", filename))
 ```
 
 # Regression analyses
@@ -191,128 +224,144 @@ Correct trials only, including fillers
 Check distribution
 
 ```{r RT_distributions}
+df_final <- df %>% filter(category != "Filler"  & correct == 1)
+
 # check distribution of RTs (by eyeballing)
 # 1) density plot of RTs
-qplot(data=df[df$category != "Filler"  & df$correct == 1,], timing.01,
+qplot(data=df_final, timing.01,
       geom="density", na.rm=TRUE)+ theme_bw() 
 # 2) plot data against real normal distribution -> is it way off?
-qqnorm(df$timing.01); qqline(df$timing.01)
+qqnorm(df_final$timing.01); qqline(df_final$timing.01)
 
 # check distribution of logRTs (by eyeballing)
-df$l <- log(df_online$RT)
+df$ltiming.01 <- log(df$timing.01)
 # 1) density plot of logRTs
-qplot(data=df[df$category != "Filler"  & df$correct == 1,],
-      log(df$timing.01), geom="density", na.rm=TRUE)+ theme_bw() 
+qplot(data=df_final,
+      log(timing.01), geom="density", na.rm=TRUE)+ theme_bw() 
 # 2) plot data against real normal distribution -> is it way off?
-qqnorm(log(df$timing.01[df$category != "Filler"  & df$correct == 1,])); qqline(log(df$timing.01[df$category != "Filler"  & df$correct == 1,]))
+qqnorm(log(df_final$timing.01)); qqline(log(df_final$timing.01))
+
 ```
 
-```{r}
+```{r hist}
 hist(df$timing.01)
-```
-
-Full GLMM with polynomial contrasts
-
-```{r}
-contrasts(df$PosOr) <- contr.poly(5)
-# m1 <- glmer(timing.01 ~ PosOr + (PosOr|subject) +(PosOr|category) ,
-#              data = df[df$category != "Filler"  & df$correct == 1,], family =Gamma(link ="identity"), control=glmerControl(optimizer = "bobyqa"))
-#model does not converge
-m1 <- afex::lmer_alt(timing.01 ~ PosOr + (PosOr||subject) +(1|category), 
-                  df[df$category != "Filler"  & df$correct == 1,],
-                  family =Gamma(link ="identity"),
-                  control=glmerControl(optimizer = "bobyqa", 
-                                       optCtrl = list(maxfun = 2*10^5)))
-summary(m1)
-```
-
-Linear trend only
-
-````{r}
-fixef_terms <- model.matrix( ~ PosOr,df) 
-df$PosOr.L <- fixef_terms[,2]
-m2 <- glmer(timing.01 ~ PosOr.L + (PosOr.L|subject) +(PosOr.L|category) ,
-             data = df[df$category != "Filler"  & df$correct == 1,], 
-            family =Gamma(link ="identity"), 
-            control=glmerControl(optimizer = "bobyqa"))
-summary(m2)
 ```
 
 Ordinal position as a continuous predictor variable
 
-```{r}
+```{r GLMM_cont}
 df$PosOr.cont <- scale(as.numeric(as.character(df$PosOr)), 
                        center = T, scale = F)
-m3 <- glmer(timing.01 ~ PosOr.cont + 
+m1 <- glmer(timing.01 ~ PosOr.cont + 
                (PosOr.cont|subject) +(PosOr.cont|category),
              data = df[df$category != "Filler"  & df$correct == 1,], 
             family =Gamma(link ="identity"), 
             control=glmerControl(optimizer = "bobyqa"))
-summary(m3)
+summary(m1)
+
+# save model
+tab_model(m1,transform = NULL,
+          show.re.var = F, show.stat = T,show.r2 = F,show.icc = F,
+          title = "GLMM (Gamma distribution) with continuous predictor",
+          pred.labels = c("(Intercept)", "Ordinal Position"),
+          dv.labels = "Typing Onset Latency",
+          #string.pred = "",
+          string.stat = "t-Value",
+          file = here::here("tables", "CSI_online_typing_glmm_cont.html"))
 ```
 
-
-
+# ---------------------------------------------
+# Other
 # Plotting before data preprocessing
 # ALL TRIALS
 ### Plot RTs by OrPos
 
 ```{r}
-is.numeric(df$timing.01)
-df$PosOr <- as.factor(df$PosOr)
-df$subject <- as.factor(df$subject)
-# descriptives 
-(means <- Rmisc::summarySEwithin(df[df$category != "Filler" ,],"timing.01",idvar = "subject",withinvars = "PosOr", na.rm = T))
+# is.numeric(df$timing.01)
+# df$PosOr <- as.factor(df$PosOr)
+# df$subject <- as.factor(df$subject)
+# # descriptives 
+# (means <- Rmisc::summarySEwithin(df[df$category != "Filler" ,],"timing.01",idvar = "subject",withinvars = "PosOr", na.rm = T))
 ```
 
 
 ```{r}
-plotting <- df %>%
-  mutate(kind = case_when(category == "Filler" ~"Filler",
-                          category != "Filler" ~"Experimental"))
-(plot <- ggplot(data=df[df$category != "Filler" ,], aes(x=PosOr, y=timing.01)) +
-  stat_summary(fun=mean,  geom="point", size = 2)+
-  stat_summary(fun=mean,  geom="line", size = 1) +
-  apatheme+
-  labs(x="Ordinal Position ",y ="RT ms")+
-  annotate(geom="text", x=2, y=1200, label="n = 4", color="black", size = 8))
-
-(plot <- ggplot(data=plotting, aes(x=PosOr, y=timing.01, group = kind, color = kind)) +
-  stat_summary(fun=mean,  geom="point", size = 2)+
-  stat_summary(fun=mean,  geom="line", size = 1) +
-  apatheme+
-  labs(x="Ordinal Position ",y ="RT ms", color = "Trial type")+
-  annotate(geom="text", x=2, y=1380, label="n = 30", color="black", size = 8))
-
-
-# ggsave(plot = plot, file = "figures/RT_across_conditions.pdf", device = cairo_pdf, dpi = 300)
-# embedFonts(file = "figures/RT_across_conditions_CSI_online_typing.pdf")
+# plotting <- df %>%
+#   mutate(kind = case_when(category == "Filler" ~"Filler",
+#                           category != "Filler" ~"Experimental"))
+# (plot <- ggplot(data=df[df$category != "Filler" ,], aes(x=PosOr, y=timing.01)) +
+#   stat_summary(fun=mean,  geom="point", size = 2)+
+#   stat_summary(fun=mean,  geom="line", size = 1) +
+#   apatheme+
+#   labs(x="Ordinal Position ",y ="RT ms")+
+#   annotate(geom="text", x=2, y=1200, label="n = 4", color="black", size = 8))
+# 
+# (plot <- ggplot(data=plotting, aes(x=PosOr, y=timing.01, group = kind, color = kind)) +
+#   stat_summary(fun=mean,  geom="point", size = 2)+
+#   stat_summary(fun=mean,  geom="line", size = 1) +
+#   apatheme+
+#   labs(x="Ordinal Position ",y ="RT ms", color = "Trial type")+
+#   annotate(geom="text", x=2, y=1380, label="n = 30", color="black", size = 8))
+# 
+# 
+# # ggsave(plot = plot, file = "figures/RT_across_conditions.pdf", device = cairo_pdf, dpi = 300)
+# # embedFonts(file = "figures/RT_across_conditions_CSI_online_typing.pdf")
 ```
   
 Plot by subcategory
 ```{r}
 
-(plot_by_cat <- ggplot(data=df[df$category != "Filler" ,], aes(x=PosOr, y=timing.01)) +
-  stat_summary(fun=mean,  geom="point", size = 2)+
-  stat_summary(fun=mean,  geom="line", size = 1) +
-  facet_wrap(~category) +
-  apatheme+
-  labs(x="Ordinal Position ",y ="RT ms"))
-#ggsave(plot = plot30_facet, file = "Plots/CSI_subcats.pdf", device = cairo_pdf,dpi = 300)
-#embedFonts(file = "Plots/CSI_online30_subcats.pdf")
+# (plot_by_cat <- ggplot(data=df[df$category != "Filler" ,], aes(x=PosOr, y=timing.01)) +
+#   stat_summary(fun=mean,  geom="point", size = 2)+
+#   stat_summary(fun=mean,  geom="line", size = 1) +
+#   facet_wrap(~category) +
+#   apatheme+
+#   labs(x="Ordinal Position ",y ="RT ms"))
+# #ggsave(plot = plot30_facet, file = "Plots/CSI_subcats.pdf", device = cairo_pdf,dpi = 300)
+# #embedFonts(file = "Plots/CSI_online30_subcats.pdf")
 
 ```
 
 Plot by subject: 
 ```{r}
+# 
+# (plot_by_cat <- ggplot(data=df[df$category != "Filler" ,], aes(x=PosOr, y=timing.01)) +
+#   stat_summary(fun=mean,  geom="point", size = 2)+
+#   stat_summary(fun=mean,  geom="line", size = 1) +
+#   facet_wrap(~subject) +
+#   apatheme+
+#   labs(x="Ordinal Position ",y ="RT ms"))
+# #ggsave(plot = plot30_facet, file = "Plots/CSI_subcats.pdf", device = cairo_pdf,dpi = 300)
+# #embedFonts(file = "Plots/CSI_online30_subcats.pdf")
 
-(plot_by_cat <- ggplot(data=df[df$category != "Filler" ,], aes(x=PosOr, y=timing.01)) +
-  stat_summary(fun=mean,  geom="point", size = 2)+
-  stat_summary(fun=mean,  geom="line", size = 1) +
-  facet_wrap(~subject) +
-  apatheme+
-  labs(x="Ordinal Position ",y ="RT ms"))
-#ggsave(plot = plot30_facet, file = "Plots/CSI_subcats.pdf", device = cairo_pdf,dpi = 300)
-#embedFonts(file = "Plots/CSI_online30_subcats.pdf")
+```
 
+# Other
+
+Full GLMM with polynomial contrasts
+
+```{r}
+# contrasts(df$PosOr) <- contr.poly(5)
+# # m1 <- glmer(timing.01 ~ PosOr + (PosOr|subject) +(PosOr|category) ,
+# #              data = df[df$category != "Filler"  & df$correct == 1,], family =Gamma(link ="identity"), control=glmerControl(optimizer = "bobyqa"))
+# #model does not converge
+# m1 <- afex::lmer_alt(timing.01 ~ PosOr + (PosOr||subject) +(1|category), 
+#                   df[df$category != "Filler"  & df$correct == 1,],
+#                   family =Gamma(link ="identity"),
+#                   control=glmerControl(optimizer = "bobyqa", 
+#                                        optCtrl = list(maxfun = 2*10^5)))
+# summary(m1)
+```
+
+Linear trend only
+
+````{r}
+# contrasts(df$PosOr) <- contr.poly(5)
+# fixef_terms <- model.matrix( ~ PosOr,df) 
+# df$PosOr.L <- fixef_terms[,2]
+# m2 <- glmer(timing.01 ~ PosOr.L + (PosOr.L|subject) +(PosOr.L|category) ,
+#              data = df[df$category != "Filler"  & df$correct == 1,], 
+#             family =Gamma(link ="identity"), 
+#             control=glmerControl(optimizer = "bobyqa"))
+# summary(m2)
 ```

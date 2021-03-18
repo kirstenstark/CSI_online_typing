@@ -60,7 +60,7 @@ df_verbal <- df_verbal %>%
 
 2) Give subjects from both experiments different names
 
-```{r}
+```{r adapt_subject_names}
 df_typing <- df_typing %>% mutate(subject = subject + 200)
 df_verbal <- df_verbal %>% mutate(subject = subject + 100)
 ```
@@ -140,13 +140,13 @@ Plot RTs by ordinal position for both experiments
 # GLMMs
 Check distribution
 
-```{r}
+```{r RT_hist}
 hist(df$RT)
 ```
 
 Full GLMM with polynomial contrasts (linear trend only)
 
-```{r}
+```{r glmm_poly_lin}
 # define sliding difference contrast for factor experiment: 
 # contrast is verbal - typing, intercept being the grand mean 
 levels(df$experiment)
@@ -167,7 +167,9 @@ m1 <- glmer(RT ~ Pos.L*experiment +
 summary(m1)
 ```
 
-```{r}
+Full GLMM with polynomial contrasts (all contrasts included):
+
+```{r glmm_poly}
 library(buildmer)
 m2 <- buildmer(RT ~ Pos*experiment +
                        (Pos|subject) + (Pos*experiment|category),
@@ -175,14 +177,14 @@ m2 <- buildmer(RT ~ Pos*experiment +
 	control=glmerControl(optimizer = "bobyqa",
                                 optCtrl = list(maxfun = 2*10^5)),
 	buildmerControl=buildmerControl(direction=
-	                                  c('order','backward',crit='LRT')))
+	                                  c('order','backward')))
 summary(m2)
 ```
 
 
 Ordinal position as a continuous predictor variable
 
-```{r}
+```{r glmm_cont}
 # table(df$Pos)
 # df$Pos.cont <- scale(as.numeric(as.character(df$Pos)), 
 #                        center = T, scale = F)

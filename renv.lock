@@ -107,6 +107,13 @@
       "Repository": "CRAN",
       "Hash": "4f57884290cc75ab22f4af9e9d4ca862"
     },
+    "afex": {
+      "Package": "afex",
+      "Version": "0.28-1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "7dc0cff795c1998d6123e6649b467a2b"
+    },
     "askpass": {
       "Package": "askpass",
       "Version": "1.1",
@@ -862,6 +869,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "b5510c50c7f31d453c385c7b460af2b9"
+    },
+    "reshape2": {
+      "Package": "reshape2",
+      "Version": "1.4.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "bb5996d0bd962d214a11140d77589917"
     },
     "rex": {
       "Package": "rex",

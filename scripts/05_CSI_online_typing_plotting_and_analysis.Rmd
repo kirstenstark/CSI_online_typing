@@ -77,9 +77,6 @@ apatheme <- theme_bw()+
    Rmisc::summarySEwithin(.,"timing.01",idvar = "subject",
                           withinvars = "PosOr", na.rm = T))
 
-#huxt <- huxtable::huxtable(means_final, autoformat = FALSE)
-#huxtable::print_md(huxt, max_width = Inf)
-
 # Export as word file
 library(flextable)
 huxt_word <- huxtable::huxtable(means_final)

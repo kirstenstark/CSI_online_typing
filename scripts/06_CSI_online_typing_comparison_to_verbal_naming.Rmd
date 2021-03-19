@@ -167,6 +167,13 @@ Plot RTs by ordinal position for both experiments
     stat_summary(fun=mean,  geom="line", size = 1) +
     apatheme+
     labs(x="Ordinal Position ",y ="RT (ms)", color = "Experiment"))
+
+filename <- "CSI_online_exp_comparison_plot_rt.pdf"
+ggsave(plot, filename = 
+         here::here("figures", filename),
+       width = 18, height = 13, units = "cm", 
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("figures", filename))
 ```
 
 # GLMMs

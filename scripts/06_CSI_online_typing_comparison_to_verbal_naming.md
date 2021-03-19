@@ -1,7 +1,7 @@
 06 CSI online typing: Comparison to verbal naming
 ================
 Kirsten Stark
-17 März, 2021
+18 März, 2021
 
 # Load packages
 
@@ -75,6 +75,11 @@ library(Rmisc)
 
 ``` r
 library(Cairo)
+```
+
+    ## Warning: package 'Cairo' was built under R version 4.0.3
+
+``` r
 #library(strengejacke)
 library(ggplot2)
 
@@ -98,8 +103,8 @@ df_typing <- read.csv(here::here("data", "data_long_final.csv"))
 Load verbal data
 
 ``` r
-load(here::here("data", "verbal_CSI", "CSI_online_Conny_df_correct.RData"))
-df_verbal <- df_correct
+load(here::here("data", "verbal_CSI", "CSI_online_verbal_df_full.RData"))
+df_verbal <- df_full
 ```
 
 # Combine both data frames into one
@@ -159,20 +164,66 @@ df_verbal <- df_verbal %>%
 df <- bind_rows(df_typing, df_verbal)
 ```
 
+5)  Give identical category names in both experiments
+
+<!-- end list -->
+
+``` r
+df <- df %>% mutate(category = case_when(category == "Buero" ~ "Büro",
+                                  category == "Gebaeude" ~ "Gebäude",
+                                  category == "Gemuese" ~ "Gemüse",
+                                  category == 
+                                    "Koerperteile" ~ "Körperteile",
+                                  category == "Kueche" ~ "Küche",
+                                  category == 
+                                    "Suessigkeiten" ~ "Süssigkeiten",
+                                  category == 
+                                    "Trinkgefaesse" ~ "Trinkgefässe",
+                                  category == "Voegel" ~ "Vögel",
+                                  TRUE ~ as.character(category))) %>%
+  mutate(category == as.factor(category)) %>% droplevels()
+table(df$category)
+```
+
+    ## 
+    ## Aufbewahrung    Bauernhof       Blumen         Büro       Filler      Filler1 
+    ##          300          300          300          300         1200          600 
+    ##      Filler2       Fische      Gebäude       Gemüse   Heimwerker     Huftiere 
+    ##          600          300          300          300          300          300 
+    ##     Insekten  Instrumente       Jacken       Kochen  Körperteile        Küche 
+    ##          300          300          300          300          300          300 
+    ##         Obst    Raubtiere      Schmuck       Sitzen      Strasse Süssigkeiten 
+    ##          300          300          300          300          300          300 
+    ## Trinkgefässe        Vögel       Wasser 
+    ##          300          300          300
+
+5)  Drop filler trials
+
+<!-- end list -->
+
+``` r
+ df <- df %>% filter(category != "Filler" & 
+                      category != "Filler1" & category != "Filler2") %>%
+  droplevels()
+```
+
+5)  Add ordinal position as continuous predictor variable
+
+<!-- end list -->
+
+``` r
+df$Pos.cont <- scale(as.numeric(as.character(df$Pos)),
+                       center = T, scale = F)
+```
+
 3)  Drop incorrect trials
 
 <!-- end list -->
 
 ``` r
-df <- df %>% filter(!is.na(correct)) %>% select(-correct)
-```
-
-4)  Drop filler trials
-
-<!-- end list -->
-
-``` r
-df <- df %>% filter(category != "Filler") %>% droplevels()
+df <- df %>% filter(!is.na(correct) & correct != 0) %>% 
+  select(-correct) %>%
+  droplevels()
 ```
 
 # Descriptives
@@ -221,6 +272,45 @@ Plot RTs by ordinal position for both experiments
     labs(x="Ordinal Position ",y ="RT (ms)", color = "Experiment"))
 ```
 
+    ## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)):
+    ## Zeichensatzfamilie in der Windows Zeichensatzdatenbank nicht gefunden
+    
+    ## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)):
+    ## Zeichensatzfamilie in der Windows Zeichensatzdatenbank nicht gefunden
+
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
+    ## Zeichensatzfamilie in der Windows Zeichensatzdatenbank nicht gefunden
+    
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
+    ## Zeichensatzfamilie in der Windows Zeichensatzdatenbank nicht gefunden
+    
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
+    ## Zeichensatzfamilie in der Windows Zeichensatzdatenbank nicht gefunden
+    
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
+    ## Zeichensatzfamilie in der Windows Zeichensatzdatenbank nicht gefunden
+    
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
+    ## Zeichensatzfamilie in der Windows Zeichensatzdatenbank nicht gefunden
+    
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
+    ## Zeichensatzfamilie in der Windows Zeichensatzdatenbank nicht gefunden
+    
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
+    ## Zeichensatzfamilie in der Windows Zeichensatzdatenbank nicht gefunden
+    
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
+    ## Zeichensatzfamilie in der Windows Zeichensatzdatenbank nicht gefunden
+
+    ## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+    ## Zeichensatzfamilie in der Windows Zeichensatzdatenbank nicht gefunden
+
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
+    ## Zeichensatzfamilie in der Windows Zeichensatzdatenbank nicht gefunden
+    
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, :
+    ## Zeichensatzfamilie in der Windows Zeichensatzdatenbank nicht gefunden
+
 ![](06_CSI_online_typing_comparison_to_verbal_naming_files/figure-gfm/plot-1.png)<!-- -->
 
 # GLMMs
@@ -231,9 +321,9 @@ Check distribution
 hist(df$RT)
 ```
 
-![](06_CSI_online_typing_comparison_to_verbal_naming_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+![](06_CSI_online_typing_comparison_to_verbal_naming_files/figure-gfm/RT_hist-1.png)<!-- -->
 
-Full GLMM with polynomial contrasts (linear trend only)
+Set contrasts
 
 ``` r
 # define sliding difference contrast for factor experiment: 
@@ -251,7 +341,11 @@ contrasts(df$Pos) <- contr.poly(5)
 # select linear trend
 fixef_terms <- model.matrix( ~ Pos,df) 
 df$Pos.L <- fixef_terms[,2]
+```
 
+### Full GLMM with polynomial contrasts (linear trend only)
+
+``` r
 # define model
 m1 <- glmer(RT ~ Pos.L*experiment +
                        (Pos.L|subject) + (Pos.L*experiment|category),
@@ -270,49 +364,174 @@ summary(m1)
     ## Control: glmerControl(optimizer = "bobyqa")
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
-    ##  91687.8  91809.7 -45825.9  91651.8     6438 
+    ##  91678.6  91800.5 -45821.3  91642.6     6438 
     ## 
     ## Scaled residuals: 
     ##     Min      1Q  Median      3Q     Max 
-    ## -2.0742 -0.6078 -0.2341  0.3207  9.6093 
+    ## -2.0824 -0.6079 -0.2318  0.3183  9.5419 
     ## 
     ## Random effects:
     ##  Groups   Name                Variance   Std.Dev. Corr             
-    ##  subject  (Intercept)         5629.84977 75.0323                   
-    ##           Pos.L               4100.51845 64.0353  0.01             
-    ##  category (Intercept)         4644.62935 68.1515                   
-    ##           Pos.L               2332.18638 48.2927   0.37            
-    ##           experiment2-1       3476.51573 58.9620   0.67  0.20      
-    ##           Pos.L:experiment2-1 5260.91295 72.5322  -0.02  0.29  0.14
-    ##  Residual                        0.09852  0.3139                   
-    ## Number of obs: 6456, groups:  subject, 60; category, 32
+    ##  subject  (Intercept)         5616.57778 74.9438                   
+    ##           Pos.L               4074.79684 63.8341  0.01             
+    ##  category (Intercept)         4303.98398 65.6048                   
+    ##           Pos.L               2262.09940 47.5615   0.35            
+    ##           experiment2-1       2764.23780 52.5760   0.68  0.13      
+    ##           Pos.L:experiment2-1 5150.70487 71.7684  -0.02  0.29  0.05
+    ##  Residual                        0.09839  0.3137                   
+    ## Number of obs: 6456, groups:  subject, 60; category, 24
     ## 
     ## Fixed effects:
-    ##                     Estimate Std. Error t value             Pr(>|z|)    
-    ## (Intercept)         1137.605     12.801  88.871 < 0.0000000000000002 ***
-    ## Pos.L                114.054     15.749   7.242    0.000000000000442 ***
-    ## experiment2-1        277.552      8.482  32.721 < 0.0000000000000002 ***
-    ## Pos.L:experiment2-1   39.347     19.639   2.003               0.0451 *  
+    ##                     Estimate Std. Error t value            Pr(>|z|)    
+    ## (Intercept)         1152.558      9.803  117.58 <0.0000000000000002 ***
+    ## Pos.L                117.028      4.414   26.52 <0.0000000000000002 ***
+    ## experiment2-1        294.495      7.531   39.11 <0.0000000000000002 ***
+    ## Pos.L:experiment2-1   40.449      3.555   11.38 <0.0000000000000002 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Correlation of Fixed Effects:
     ##             (Intr) Pos.L  exp2-1
-    ## Pos.L       -0.861              
-    ## expermnt2-1  0.703 -0.775       
-    ## Ps.L:xpr2-1  0.586 -0.710  0.629
+    ## Pos.L       -0.019              
+    ## expermnt2-1  0.395  0.077       
+    ## Ps.L:xpr2-1 -0.046 -0.031  0.069
 
-Ordinal position as a continuous predictor variable
+### Full GLMM with polynomial contrasts (all contrasts included):
 
 ``` r
-# table(df$Pos)
-# df$Pos.cont <- scale(as.numeric(as.character(df$Pos)), 
-#                        center = T, scale = F)
-# table(df$Pos.cont)
-# m3 <- glmer(timing.01 ~ PosOr.cont + 
-#                (PosOr.cont|subject) +(PosOr.cont|category),
-#              data = df[df$category != "Filler"  & df$correct == 1,], 
-#             family =Gamma(link ="identity"), 
-#             control=glmerControl(optimizer = "bobyqa"))
-# summary(m3)
+m2 <- afex::lmer_alt(RT ~ Pos*experiment +
+                       (Pos||subject) + (Pos*experiment||category),
+            data = df,
+            family =Gamma(link ="identity"),
+            control=glmerControl(optimizer = "bobyqa",
+                                   optCtrl = list(maxfun = 2*10^5)))
 ```
+
+    ## Registered S3 methods overwritten by 'car':
+    ##   method                          from
+    ##   influence.merMod                lme4
+    ##   cooks.distance.influence.merMod lme4
+    ##   dfbeta.influence.merMod         lme4
+    ##   dfbetas.influence.merMod        lme4
+
+``` r
+summary(m2)
+```
+
+    ## Generalized linear mixed model fit by maximum likelihood (Laplace
+    ##   Approximation) [glmerMod]
+    ##  Family: Gamma  ( identity )
+    ## Formula: RT ~ Pos * experiment + (1 + re1.Pos.L + re1.Pos.Q + re1.Pos.C +  
+    ##     re1.Pos.4 || subject) + (1 + re2.Pos.L + re2.Pos.Q + re2.Pos.C +  
+    ##     re2.Pos.4 + re2.experiment2.1 + re2.Pos.L_by_experiment2.1 +  
+    ##     re2.Pos.Q_by_experiment2.1 + re2.Pos.C_by_experiment2.1 +  
+    ##     re2.Pos.4_by_experiment2.1 || category)
+    ##    Data: data
+    ## Control: glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 2 *  
+    ##     10^5))
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ##  91604.3  91780.4 -45776.2  91552.3     6430 
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.0524 -0.6041 -0.2288  0.3175  8.9528 
+    ## 
+    ## Random effects:
+    ##  Groups     Name                       Variance   Std.Dev.
+    ##  subject    (Intercept)                5564.04623 74.5925 
+    ##  subject.1  re1.Pos.L                  4146.56026 64.3938 
+    ##  subject.2  re1.Pos.Q                  3385.18820 58.1824 
+    ##  subject.3  re1.Pos.C                  4541.72039 67.3923 
+    ##  subject.4  re1.Pos.4                  3207.65549 56.6362 
+    ##  category   (Intercept)                4226.95991 65.0151 
+    ##  category.1 re2.Pos.L                  2403.02818 49.0207 
+    ##  category.2 re2.Pos.Q                  1298.32168 36.0322 
+    ##  category.3 re2.Pos.C                  1357.50092 36.8443 
+    ##  category.4 re2.Pos.4                  1134.08328 33.6762 
+    ##  category.5 re2.experiment2.1          3851.74673 62.0624 
+    ##  category.6 re2.Pos.L_by_experiment2.1 4392.36248 66.2749 
+    ##  category.7 re2.Pos.Q_by_experiment2.1 2171.74784 46.6020 
+    ##  category.8 re2.Pos.C_by_experiment2.1 3662.81673 60.5212 
+    ##  category.9 re2.Pos.4_by_experiment2.1 5046.00107 71.0352 
+    ##  Residual                                 0.09447  0.3074 
+    ## Number of obs: 6456, groups:  subject, 60; category, 24
+    ## 
+    ## Fixed effects:
+    ##                      Estimate Std. Error t value             Pr(>|z|)    
+    ## (Intercept)         1158.5946     5.7539 201.359 < 0.0000000000000002 ***
+    ## Pos.L                108.8093     4.0262  27.025 < 0.0000000000000002 ***
+    ## Pos.Q                 -0.1705     5.0331  -0.034               0.9730    
+    ## Pos.C                 17.1070     4.0664   4.207 0.000025884279943370 ***
+    ## Pos^4                  1.1772     4.0283   0.292               0.7701    
+    ## experiment2-1        281.1490     4.5685  61.541 < 0.0000000000000002 ***
+    ## Pos.L:experiment2-1   35.6401     4.3927   8.113 0.000000000000000492 ***
+    ## Pos.Q:experiment2-1  -24.3964     3.9231  -6.219 0.000000000501246420 ***
+    ## Pos.C:experiment2-1   -8.9570     4.6228  -1.938               0.0527 .  
+    ## Pos^4:experiment2-1  -24.6678     4.3707  -5.644 0.000000016625995799 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr) Pos.L  Pos.Q  Pos.C  Pos^4  exp2-1 P.L:2- P.Q:2- P.C:2-
+    ## Pos.L        0.098                                                        
+    ## Pos.Q        0.360  0.052                                                 
+    ## Pos.C        0.138  0.047  0.222                                          
+    ## Pos^4        0.284 -0.010  0.216  0.099                                   
+    ## expermnt2-1  0.044 -0.040  0.091 -0.134  0.115                            
+    ## Ps.L:xpr2-1  0.095  0.103  0.010  0.022 -0.065 -0.054                     
+    ## Ps.Q:xpr2-1  0.097  0.008  0.007 -0.031  0.036  0.018  0.070              
+    ## Ps.C:xpr2-1  0.209  0.150  0.030 -0.052 -0.036 -0.084  0.178 -0.058       
+    ## Ps^4:xpr2-1 -0.155  0.123  0.002  0.048  0.006  0.097 -0.090 -0.080 -0.053
+
+### Ordinal position as a continuous predictor variable
+
+``` r
+m4 <- glmer(RT ~ Pos.cont*experiment +
+               (Pos.cont|subject) +(Pos.cont*experiment|category),
+             data = df,
+            family =Gamma(link ="identity"),
+            control=glmerControl(optimizer = "bobyqa"))
+summary(m4)
+```
+
+    ## Generalized linear mixed model fit by maximum likelihood (Laplace
+    ##   Approximation) [glmerMod]
+    ##  Family: Gamma  ( identity )
+    ## Formula: RT ~ Pos.cont * experiment + (Pos.cont | subject) + (Pos.cont *  
+    ##     experiment | category)
+    ##    Data: df
+    ## Control: glmerControl(optimizer = "bobyqa")
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ##  91678.6  91800.5 -45821.3  91642.6     6438 
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.0824 -0.6079 -0.2318  0.3183  9.5419 
+    ## 
+    ## Random effects:
+    ##  Groups   Name                   Variance   Std.Dev. Corr             
+    ##  subject  (Intercept)            5616.57817 74.9438                   
+    ##           Pos.cont                407.48027 20.1861  0.01             
+    ##  category (Intercept)            4303.97748 65.6047                   
+    ##           Pos.cont                226.20997 15.0403   0.35            
+    ##           experiment2-1          2764.19566 52.5756   0.68  0.13      
+    ##           Pos.cont:experiment2-1  515.06061 22.6949  -0.02  0.29  0.05
+    ##  Residual                           0.09839  0.3137                   
+    ## Number of obs: 6456, groups:  subject, 60; category, 24
+    ## 
+    ## Fixed effects:
+    ##                        Estimate Std. Error t value             Pr(>|z|)    
+    ## (Intercept)            1152.558      4.768 241.719 < 0.0000000000000002 ***
+    ## Pos.cont                 37.007      3.527  10.493 < 0.0000000000000002 ***
+    ## experiment2-1           294.497      6.381  46.153 < 0.0000000000000002 ***
+    ## Pos.cont:experiment2-1   12.791      3.869   3.306             0.000946 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr) Ps.cnt exp2-1
+    ## Pos.cont    -0.177              
+    ## expermnt2-1 -0.114  0.118       
+    ## Ps.cnt:x2-1  0.183 -0.093  0.199

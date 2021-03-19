@@ -2,7 +2,7 @@
 title: "06 CSI online typing: Comparison to verbal naming"
 author: "Kirsten Stark"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: html_document
+output: md_document
 ---
 
 ```{r setup, include=FALSE}
@@ -20,6 +20,7 @@ library(Rmisc)
 library(Cairo)
 #library(strengejacke)
 library(ggplot2)
+library(sjPlot)
 
 options(scipen=999)
 
@@ -95,7 +96,7 @@ df <- bind_rows(df_typing, df_verbal)
 5) Give identical category names in both experiments
 
 ```{r category_names}
-df <- df %>% mutate(category = case_when(category == "Buero" ~ "Büro",
+df <- df %>% dplyr::mutate(category = case_when(category == "Buero" ~ "Büro",
                                   category == "Gebaeude" ~ "Gebäude",
                                   category == "Gemuese" ~ "Gemüse",
                                   category == 
@@ -171,7 +172,7 @@ Plot RTs by ordinal position for both experiments
 filename <- "CSI_online_exp_comparison_plot_rt.pdf"
 ggsave(plot, filename = 
          here::here("figures", filename),
-       width = 18, height = 13, units = "cm", 
+       width = 18, height = 12, units = "cm", 
        dpi = 300, device = cairo_pdf)
 embedFonts(file = here::here("figures", filename))
 ```
@@ -190,47 +191,94 @@ Set contrasts
 # contrast is verbal - typing, intercept being the grand mean 
 levels(df$experiment)
 contrasts(df$experiment) <- MASS::contr.sdif(2)
-
-# define polynomial contrasts for factor Position
-contrasts(df$Pos) <- contr.poly(5)
-# select linear trend
-fixef_terms <- model.matrix( ~ Pos,df) 
-df$Pos.L <- fixef_terms[,2]
-```
-
-### Full GLMM with polynomial contrasts (linear trend only)
-
-```{r glmm_poly_lin}
-
-# define model
-m1 <- glmer(RT ~ Pos.L*experiment +
-                       (Pos.L|subject) + (Pos.L*experiment|category),
-            data = df,
-            family =Gamma(link ="identity"),
-            control=glmerControl(optimizer = "bobyqa"))
-summary(m1)
-```
-
-### Full GLMM with polynomial contrasts (all contrasts included):
-
-```{r glmm_poly}
-m2 <- afex::lmer_alt(RT ~ Pos*experiment +
-                       (Pos||subject) + (Pos*experiment||category),
-            data = df,
-            family =Gamma(link ="identity"),
-            control=glmerControl(optimizer = "bobyqa",
-                                   optCtrl = list(maxfun = 2*10^5)))
-summary(m2)
 ```
 
 ### Ordinal position as a continuous predictor variable
 
 ```{r glmm_cont}
-m4 <- glmer(RT ~ Pos.cont*experiment +
+m1 <- glmer(RT ~ Pos.cont*experiment +
                (Pos.cont|subject) +(Pos.cont*experiment|category),
              data = df,
             family =Gamma(link ="identity"),
             control=glmerControl(optimizer = "bobyqa"))
-summary(m4)
+summary(m1)
+
+# save model output
+tab_model(m1,transform = NULL,
+          show.re.var = F, show.stat = T,show.r2 = F,show.icc = F,
+          title = "GLMM (Gamma distribution) with continuous predictor",
+          pred.labels = c("(Intercept)", "Ordinal Position", 
+                          "Experiment", "(Ordinal Position) x 
+                          \n (Experiment)"),
+          wrap.labels = 10,
+          dv.labels = "Typing Onset Latency",
+          #string.pred = "",
+          string.stat = "t-Value",
+          file = here::here("tables",
+                            "CSI_online_experiment_comp_glmm_cont.html"))
 ```
 
+### Follow-up on the interaction with a nested model
+
+```{r glmm_cont_nested}
+
+(nested_bonferroni <- emmeans::emmeans(m1, "Pos.cont", by = "experiment", infer = TRUE, adjust = "bonferroni"))
+
+
+# m1.nested <- glmer(RT ~ experiment/Pos.cont +
+#                (Pos.cont|subject) +(Pos.cont*experiment|category),
+#              data = df,
+#             family =Gamma(link ="identity"),
+#             control=glmerControl(optimizer = "bobyqa"))
+# # Model failed to converge
+
+m1.nested <- afex::lmer_alt(RT ~ experiment/Pos.cont +
+               (Pos.cont||subject) +(Pos.cont*experiment||category),
+             data = df,
+            family =Gamma(link ="identity"),
+            control=glmerControl(optimizer = "bobyqa",
+                                    optCtrl = list(maxfun = 2*10^5)))
+
+summary(m1.nested)
+
+# save model output
+tab_model(m1.nested,transform = NULL,
+          show.re.var = F, show.stat = T,show.r2 = F,show.icc = F,
+          title = "GLMM (Gamma distribution) with continuous predictor",
+          pred.labels = c("(Intercept)", "Experiment", 
+                          "Verbal: Ordinal Position", 
+                          "Typing: Ordinal Position"),
+          wrap.labels = 10,
+          dv.labels = "Typing Onset Latency",
+          #string.pred = "",
+          string.stat = "t-Value",
+          file = here::here("tables",
+                            "CSI_online_experiment_comp_nested_glmm.html"))
+```
+
+### ----------------------------------------------------------------
+
+### Full GLMM with polynomial contrasts (linear trend only)
+
+```{r glmm_poly_lin}
+
+# # define model
+# m1 <- glmer(RT ~ Pos.L*experiment +
+#                        (Pos.L|subject) + (Pos.L*experiment|category),
+#             data = df,
+#             family =Gamma(link ="identity"),
+#             control=glmerControl(optimizer = "bobyqa"))
+# summary(m1)
+```
+
+### Full GLMM with polynomial contrasts (all contrasts included):
+
+```{r glmm_poly}
+# m2 <- afex::lmer_alt(RT ~ Pos*experiment +
+#                        (Pos||subject) + (Pos*experiment||category),
+#             data = df,
+#             family =Gamma(link ="identity"),
+#             control=glmerControl(optimizer = "bobyqa",
+#                                    optCtrl = list(maxfun = 2*10^5)))
+# summary(m2)
+```

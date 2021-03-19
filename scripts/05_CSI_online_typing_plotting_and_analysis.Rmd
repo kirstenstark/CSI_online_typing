@@ -256,7 +256,7 @@ m1 <- glmer(timing.01 ~ PosOr.cont +
             control=glmerControl(optimizer = "bobyqa"))
 summary(m1)
 
-# save model
+# save model output
 tab_model(m1,transform = NULL,
           show.re.var = F, show.stat = T,show.r2 = F,show.icc = F,
           title = "GLMM (Gamma distribution) with continuous predictor",

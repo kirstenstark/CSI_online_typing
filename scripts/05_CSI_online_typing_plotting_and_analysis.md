@@ -1,7 +1,7 @@
 05 CSI online typing: Plotting and analysis
 ================
 Kirsten Stark
-18 März, 2021
+19 März, 2021
 
 ## Load packages
 
@@ -154,9 +154,6 @@ apatheme <- theme_bw()+
     ## 5     5 628  1319.104 561.7945 22.41804 44.02354
 
 ``` r
-#huxt <- huxtable::huxtable(means_final, autoformat = FALSE)
-#huxtable::print_md(huxt, max_width = Inf)
-
 # Export as word file
 library(flextable)
 huxt_word <- huxtable::huxtable(means_final)
@@ -656,7 +653,7 @@ summary(m1)
     ## PosOr.cont 0.096
 
 ``` r
-# save model
+# save model output
 tab_model(m1,transform = NULL,
           show.re.var = F, show.stat = T,show.r2 = F,show.icc = F,
           title = "GLMM (Gamma distribution) with continuous predictor",

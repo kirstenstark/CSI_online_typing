@@ -66,8 +66,6 @@ Load packages
     library(ggplot2)
     library(sjPlot)
 
-    ## Install package "strengejacke" from GitHub (`devtools::install_github("strengejacke/strengejacke")`) to load all sj-packages at once!
-
     options(scipen=999)
 
     rm(list = ls())
@@ -536,7 +534,8 @@ Observations
     # save model output
     tab_model(m1.nested,transform = NULL,
               show.re.var = F, show.stat = T,show.r2 = F,show.icc = F,
-              title = "GLMM (Gamma distribution) with continuous predictor",
+              title = 
+                "Nested GLMM (Gamma distribution) with continuous predictor",
               pred.labels = c("(Intercept)", "Experiment", 
                               "Verbal: Ordinal Position", 
                               "Typing: Ordinal Position"),
@@ -549,7 +548,7 @@ Observations
 
 <table style="border-collapse:collapse; border:none;">
 <caption style="font-weight: bold; text-align:left;">
-GLMM (Gamma distribution) with continuous predictor
+Nested GLMM (Gamma distribution) with continuous predictor
 </caption>
 <tr>
 <th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">

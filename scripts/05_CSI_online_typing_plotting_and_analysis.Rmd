@@ -46,6 +46,8 @@ length(unique(df$subject))
 
 # no. of trials is 160 per participant? 
 nrow(df) == 160 * length(unique(df$subject))
+
+table(df$answercode)
 ```
 
 Factorize columns
@@ -93,13 +95,14 @@ huxtable::quick_docx(huxt_word,
 ```{r plot_rt}
 (plot_rt <- df %>% filter(!is.na(correct)) %>% 
    filter(category != "Filler") %>% 
-    ggplot(., aes(x=PosOr, y=timing.01)) +
+    ggplot(., aes(x=PosOr, y=timing.01, group = correct)) +
     stat_summary(fun=mean,  geom="point", size = 2)+
     stat_summary(fun=mean,  geom="line", size = 1) +
     apatheme+
     labs(x="Ordinal Position ",y ="RT (ms)")+
    annotate(geom="text", x=1.5, y=1330, label="n = 30", 
            color="black", size = 8))
+
 
 filename <- "CSI_online_typing_plot_rt.pdf"
 ggsave(plot_rt, filename = 

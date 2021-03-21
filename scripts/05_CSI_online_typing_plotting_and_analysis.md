@@ -169,7 +169,7 @@ huxtable::quick_docx(huxt_word,
 ``` r
 (plot_rt <- df %>% filter(!is.na(correct)) %>% 
    filter(category != "Filler") %>% 
-    ggplot(., aes(x=PosOr, y=timing.01)) +
+    ggplot(., aes(x=PosOr, y=timing.01, group = correct)) +
     stat_summary(fun=mean,  geom="point", size = 2)+
     stat_summary(fun=mean,  geom="line", size = 1) +
     apatheme+
@@ -177,9 +177,6 @@ huxtable::quick_docx(huxt_word,
    annotate(geom="text", x=1.5, y=1330, label="n = 30", 
            color="black", size = 8))
 ```
-
-    ## geom_path: Each group consists of only one observation. Do you need to adjust
-    ## the group aesthetic?
 
 ![](05_CSI_online_typing_plotting_and_analysis_files/figure-gfm/plot_rt-1.png)<!-- -->
 
@@ -189,12 +186,6 @@ ggsave(plot_rt, filename =
          here::here("figures", filename),
        width = 18, height = 13, units = "cm", 
        dpi = 300, device = cairo_pdf)
-```
-
-    ## geom_path: Each group consists of only one observation. Do you need to adjust
-    ## the group aesthetic?
-
-``` r
 embedFonts(file = here::here("figures", filename))
 ```
 

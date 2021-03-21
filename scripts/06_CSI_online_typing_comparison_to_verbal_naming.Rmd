@@ -177,6 +177,9 @@ ggsave(plot, filename =
 embedFonts(file = here::here("figures", filename))
 ```
 
+# Check distribution
+
+
 # GLMMs
 Check distribution
 
@@ -244,7 +247,8 @@ summary(m1.nested)
 # save model output
 tab_model(m1.nested,transform = NULL,
           show.re.var = F, show.stat = T,show.r2 = F,show.icc = F,
-          title = "GLMM (Gamma distribution) with continuous predictor",
+          title = 
+            "Nested GLMM (Gamma distribution) with continuous predictor",
           pred.labels = c("(Intercept)", "Experiment", 
                           "Verbal: Ordinal Position", 
                           "Typing: Ordinal Position"),

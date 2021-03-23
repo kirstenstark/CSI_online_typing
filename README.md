@@ -1,1 +1,4 @@
-# CSI_online_typing
+# CSI_online_typing: Typed continuous picture naming in an online setting
+
+The study serves as a proof of principle demonstration (a) that language production experiments can be run online and (b) that a cumulative semantic interference (CSI) effect can be elicited in typed picture naming. In a first study, we replicated an effect that is well-established in the laboratory, the verbal CSI effect in a continuous picture naming paradigm, in an online setting on participants' web browsers. In this study, we aim at replicating the verbal CSI effect in typed picture naming. The replocation of the CSI effect in keystroke latencies can facilitate data collection and preprocessing in future continuous picture naming experiments.
+The study was coded in SoSci Survey and run in participants’ web browser, participants were recruited via prolific, and analyses were performed in R. 

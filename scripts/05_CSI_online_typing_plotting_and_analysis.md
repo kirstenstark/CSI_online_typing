@@ -1,7 +1,7 @@
 05 CSI online typing: Plotting and analysis
 ================
 Kirsten Stark
-19 März, 2021
+22 März, 2021
 
 ## Load packages
 
@@ -78,7 +78,11 @@ library(Cairo)
 #library(strengejacke)
 library(ggplot2)
 library(sjPlot)
+```
 
+    ## #refugeeswelcome
+
+``` r
 options(scipen=999)
 
 rm(list = ls())
@@ -110,6 +114,18 @@ nrow(df) == 160 * length(unique(df$subject))
 ```
 
     ## [1] TRUE
+
+``` r
+table(df$answercode)
+```
+
+    ## 
+    ##          almostcorrect  backspace_space_enter                correct 
+    ##                    824                     25                   3473 
+    ## first_letter_incorrect                   isna      semantic_relation 
+    ##                    189                    153                    113 
+    ##            shift_start        unrelated_other 
+    ##                     10                     13
 
 Factorize columns
 
@@ -588,6 +604,151 @@ qqnorm(log(df_final$timing.01)); qqline(log(df_final$timing.01))
 ```
 
 ![](05_CSI_online_typing_plotting_and_analysis_files/figure-gfm/RT_distributions-4.png)<!-- -->
+Version 2:
+
+``` r
+library(fitdistrplus)
+```
+
+    ## Loading required package: MASS
+
+    ## 
+    ## Attaching package: 'MASS'
+
+    ## The following object is masked from 'package:dplyr':
+    ## 
+    ##     select
+
+    ## Loading required package: survival
+
+``` r
+fit.gamma <- fitdist(df_final$timing.01, distr = "gamma", method = "mle")
+summary(fit.gamma)
+```
+
+    ## Fitting of the distribution ' gamma ' by maximum likelihood 
+    ## Parameters : 
+    ##          estimate   Std. Error
+    ## shape 8.426841022 0.1695374039
+    ## rate  0.006768845 0.0001371728
+    ## Loglikelihood:  -23747.01   AIC:  47498.02   BIC:  47510.16 
+    ## Correlation matrix:
+    ##           shape      rate
+    ## shape 1.0000000 0.9557653
+    ## rate  0.9557653 1.0000000
+
+``` r
+plot(fit.gamma)
+```
+
+![](05_CSI_online_typing_plotting_and_analysis_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
+
+``` r
+logLik(fit.gamma)
+```
+
+    ## [1] -23747.01
+
+``` r
+fit.log <- fitdist(df_final$timing.01, distr = "lnorm", method = "mle")
+summary(fit.log)
+```
+
+    ## Fitting of the distribution ' lnorm ' by maximum likelihood 
+    ## Parameters : 
+    ##          estimate  Std. Error
+    ## meanlog 7.0664155 0.005829825
+    ## sdlog   0.3293722 0.004122138
+    ## Loglikelihood:  -23540.32   AIC:  47084.64   BIC:  47096.78 
+    ## Correlation matrix:
+    ##         meanlog sdlog
+    ## meanlog       1     0
+    ## sdlog         0     1
+
+``` r
+plot(fit.log)
+```
+
+![](05_CSI_online_typing_plotting_and_analysis_files/figure-gfm/unnamed-chunk-1-2.png)<!-- -->
+
+``` r
+fit.normal<- fitdist(df_final$timing.01, distr = "norm", method = "mle")
+summary(fit.normal)
+```
+
+    ## Fitting of the distribution ' norm ' by maximum likelihood 
+    ## Parameters : 
+    ##      estimate Std. Error
+    ## mean 1245.059   8.854498
+    ## sd    500.280   6.261299
+    ## Loglikelihood:  -24368.07   AIC:  48740.14   BIC:  48752.27 
+    ## Correlation matrix:
+    ##                mean             sd
+    ## mean  1.00000000000 -0.00002521149
+    ## sd   -0.00002521149  1.00000000000
+
+``` r
+plot(fit.normal)
+```
+
+![](05_CSI_online_typing_plotting_and_analysis_files/figure-gfm/unnamed-chunk-1-3.png)<!-- -->
+
+``` r
+fit.Weibull <- fitdist(df_final$timing.01, distr = "weibull", method = "mle")
+summary(fit.Weibull)
+```
+
+    ## Fitting of the distribution ' weibull ' by maximum likelihood 
+    ## Parameters : 
+    ##          estimate  Std. Error
+    ## shape    2.494976  0.02901252
+    ## scale 1400.049223 10.57461548
+    ## Loglikelihood:  -24246.65   AIC:  48497.3   BIC:  48509.44 
+    ## Correlation matrix:
+    ##           shape     scale
+    ## shape 1.0000000 0.3437264
+    ## scale 0.3437264 1.0000000
+
+``` r
+plot(fit.Weibull)
+```
+
+![](05_CSI_online_typing_plotting_and_analysis_files/figure-gfm/unnamed-chunk-1-4.png)<!-- -->
+
+``` r
+fit.cauchy<- fitdist(df_final$timing.01, distr = "cauchy", method = "mle")
+
+
+gofstat(list(fit.gamma, fit.log, fit.normal, fit.Weibull, fit.cauchy),
+        fitnames = c("Gamma", "Lognormal", "Normal", "Weibull", "Cauchy"))
+```
+
+    ## Goodness-of-fit statistics
+    ##                                    Gamma   Lognormal      Normal     Weibull
+    ## Kolmogorov-Smirnov statistic  0.09570347  0.07526354   0.1433931   0.1481325
+    ## Cramer-von Mises statistic   11.62658147  6.22409629  27.3370983  25.5050117
+    ## Anderson-Darling statistic   70.20443668 38.96236215 158.3844544 155.7125727
+    ##                                   Cauchy
+    ## Kolmogorov-Smirnov statistic   0.1373352
+    ## Cramer-von Mises statistic    15.9861285
+    ## Anderson-Darling statistic   111.0867892
+    ## 
+    ## Goodness-of-fit criteria
+    ##                                   Gamma Lognormal   Normal  Weibull   Cauchy
+    ## Akaike's Information Criterion 47498.02  47084.64 48740.14 48497.30 47877.34
+    ## Bayesian Information Criterion 47510.16  47096.78 48752.27 48509.44 47889.48
+
+``` r
+denscomp(list(fit.gamma, fit.log, fit.normal, fit.Weibull))
+```
+
+![](05_CSI_online_typing_plotting_and_analysis_files/figure-gfm/unnamed-chunk-1-5.png)<!-- -->
+
+``` r
+qqcomp(list(fit.gamma, fit.log, fit.normal, fit.Weibull))
+```
+
+![](05_CSI_online_typing_plotting_and_analysis_files/figure-gfm/unnamed-chunk-1-6.png)<!-- -->
 
 ``` r
 hist(df$timing.01)
@@ -826,6 +987,62 @@ Observations
 </tr>
 
 </table>
+
+``` r
+m1.log <- lmer(log(timing.01) ~ PosOr.cont + 
+               (PosOr.cont|subject) +(1|category),
+             data = df[df$category != "Filler"  & df$correct == 1,],  
+            control=lmerControl(optimizer = "bobyqa", 
+                                optCtrl = list(maxfun = 2*10^5)))
+summary(m1.log)
+```
+
+    ## Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+    ## lmerModLmerTest]
+    ## Formula: log(timing.01) ~ PosOr.cont + (PosOr.cont | subject) + (1 | category)
+    ##    Data: df[df$category != "Filler" & df$correct == 1, ]
+    ## Control: lmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 2 *  
+    ##     10^5))
+    ## 
+    ## REML criterion at convergence: 1273.8
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.4773 -0.6596 -0.2047  0.4519  5.1366 
+    ## 
+    ## Random effects:
+    ##  Groups   Name        Variance  Std.Dev. Corr 
+    ##  subject  (Intercept) 0.0119857 0.10948       
+    ##           PosOr.cont  0.0001449 0.01204  -0.26
+    ##  category (Intercept) 0.0134423 0.11594       
+    ##  Residual             0.0825384 0.28729       
+    ## Number of obs: 3192, groups:  subject, 30; category, 24
+    ## 
+    ## Fixed effects:
+    ##              Estimate Std. Error        df t value             Pr(>|t|)    
+    ## (Intercept)  7.075011   0.031396 45.730399  225.35 < 0.0000000000000002 ***
+    ## PosOr.cont   0.030105   0.004222 29.408589    7.13           0.00000007 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##            (Intr)
+    ## PosOr.cont -0.085
+
+``` r
+anova(m1, m1.log)
+```
+
+    ## refitting model(s) with ML (instead of REML)
+
+    ## Data: df[df$category != "Filler" & df$correct == 1, ]
+    ## Models:
+    ## m1.log: log(timing.01) ~ PosOr.cont + (PosOr.cont | subject) + (1 | category)
+    ## m1: timing.01 ~ PosOr.cont + (PosOr.cont | subject) + (PosOr.cont | 
+    ## m1:     category)
+    ##        npar   AIC   BIC   logLik deviance Chisq Df Pr(>Chisq)
+    ## m1.log    7  1274  1316   -629.8     1260                    
+    ## m1        9 46748 46803 -23365.2    46730     0  2          1
 
 # ———————————————
 

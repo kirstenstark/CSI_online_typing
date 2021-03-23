@@ -2,7 +2,7 @@
 title: "05 CSI online typing: Plotting and analysis"
 author: "Kirsten Stark"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: github_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -219,42 +219,78 @@ ggsave(plot_RTs_correct, filename =
 embedFonts(file = here::here("figures", filename))
 ```
 
-# Regression analyses
+# Check distribution of data
+Are the data normally distributed or does a gamma distribution fit the data better?  
+*Subset data to correct trials only and excude fillers*
 
-Check distribution
-
-```{r RT_distributions}
-df_final <- df %>% filter(category != "Filler"  & correct == 1)
-
-# check distribution of RTs (by eyeballing)
-# 1) density plot of RTs
-qplot(data=df_final, timing.01,
-      geom="density", na.rm=TRUE)+ theme_bw() 
-# 2) plot data against real normal distribution -> is it way off?
-qqnorm(df_final$timing.01); qqline(df_final$timing.01)
-
-# check distribution of logRTs (by eyeballing)
-df$ltiming.01 <- log(df$timing.01)
-# 1) density plot of logRTs
-qplot(data=df_final,
-      log(timing.01), geom="density", na.rm=TRUE)+ theme_bw() 
-# 2) plot data against real normal distribution -> is it way off?
-qqnorm(log(df_final$timing.01)); qqline(log(df_final$timing.01))
-
+```{r final_data}
+df_valid <- df %>% filter(category != "Filler") %>% 
+  filter(correct == 1) %>% droplevels()
 ```
 
-```{r hist}
-hist(df$timing.01)
+*Center predictor variable*
+
+```{r}
+df_valid$PosOr.cont <- scale(as.numeric(as.character(df_valid$PosOr)),
+                                        center = T, scale = F)
+# table(df_valid$PosOr.cont)
+# mean(df_valid$PosOr.cont)
 ```
 
-Ordinal position as a continuous predictor variable
+*Histogram of the reaction time data*
+
+```{r RT_hist}
+hist(df_valid$timing.01)
+```
+
+*Check fit of normal vs gamma distribution in histograms, q-q-plots and using objective criteria:*  
+1) Fit normal and gamma distributions to the reaction time data
+
+```{r load_fitdistrplus}
+library(fitdistrplus)
+```
+
+```{r fit.normal}
+fit.normal<- fitdist(df_valid$timing.01, distr = "norm", method = "mle")
+summary(fit.normal)
+#plot(fit.normal)
+```
+
+```{r fit.gamma}
+fit.gamma <- fitdist(df_valid$timing.01, distr = "gamma", method = "mle")
+summary(fit.gamma)
+#plot(fit.gamma)
+```
+
+2) Compare the fit of the two distributions  
+Visually compare fit of both distributions in histogram
+
+```{r density-comparison}
+denscomp(list(fit.gamma, fit.normal))
+```
+Visually compare fit of both distributions in Q-Q-plots
+
+```{r q-q-comparison}
+qqcomp(list(fit.gamma, fit.normal))
+```
+
+Compare information criteria
+
+```{r fit_criteria-comparison}
+gofstat(list(fit.gamma, fit.normal),
+        fitnames = c("Gamma", "Normal"))
+```
+
+**Conclusion:** Both the visual inspection and the objective criteria suggest that a gamma distribution fits the data better (although not that well). Therefore, we fit a Gamma distribution in a GLMM with the continuous predictor ordinal position (Pos.cont), the factorial predictor (experiment), and their interaction. We compute the maximal random effects structure.
+
+
+# Inferential analyses: GLMM (Gamma distribution) with ordinal position as a continuous predictor
+
 
 ```{r GLMM_cont}
-df$PosOr.cont <- scale(as.numeric(as.character(df$PosOr)), 
-                       center = T, scale = F)
 m1 <- glmer(timing.01 ~ PosOr.cont + 
                (PosOr.cont|subject) +(PosOr.cont|category),
-             data = df[df$category != "Filler"  & df$correct == 1,], 
+             data = df_valid, 
             family =Gamma(link ="identity"), 
             control=glmerControl(optimizer = "bobyqa"))
 summary(m1)
@@ -364,4 +400,29 @@ Linear trend only
 #             family =Gamma(link ="identity"), 
 #             control=glmerControl(optimizer = "bobyqa"))
 # summary(m2)
+```
+
+Log-transformed data
+
+```{r LMM_log_cont}
+# m1.log <- lmer(log(timing.01) ~ PosOr.cont + 
+#                (PosOr.cont|subject) +(1|category),
+#              data = df_valid,  
+#             control=lmerControl(optimizer = "bobyqa", 
+#                                 optCtrl = list(maxfun = 2*10^5)))
+# summary(m1.log)
+# 
+# # save model output
+# tab_model(m1.log,transform = NULL,
+#           show.re.var = F, show.stat = T,show.r2 = F,show.icc = F,
+#           title = "GLMM (Gamma distribution) with continuous predictor",
+#           pred.labels = c("(Intercept)", "Ordinal Position"),
+#           dv.labels = "Typing Onset Latency",
+#           #string.pred = "",
+#           string.stat = "t-Value",
+#           file = here::here("tables", "CSI_online_typing_lmm_log_cont.html"))
+```
+
+```{r}
+# anova(m1, m1.log)
 ```

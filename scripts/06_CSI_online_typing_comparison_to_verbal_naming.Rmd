@@ -128,6 +128,12 @@ df <- df %>% filter(!is.na(correct) & correct != 0) %>%
   droplevels()
 ```
 
+7) Export combined data frame for post-hoc power plot
+
+```{r export_df}
+write.csv(df, here::here("data", "CSI_online_combined.csv"))
+```
+
 # Descriptives
 
 ```{r descriptives}

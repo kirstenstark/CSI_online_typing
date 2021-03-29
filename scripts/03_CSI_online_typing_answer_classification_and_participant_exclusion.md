@@ -1,7 +1,7 @@
 03 CSI online typing: Answer classification and participant exclusion
 ================
 Kirsten Stark
-17 März, 2021
+29 März, 2021
 
 ## Load packages
 
@@ -69,7 +69,7 @@ table(df$answercode)
 
     ## 
     ##          almostcorrect  backspace_space_enter                correct 
-    ##                    919                     34                   3709 
+    ##                    866                     34                   3762 
     ## first_letter_incorrect                   isna      semantic_relation 
     ##                    214                    228                    130 
     ##            shift_start        unrelated_other 

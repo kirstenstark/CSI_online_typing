@@ -104,29 +104,34 @@ calculate_stringdist <- function(word, stims, alternatives = alternatives, metho
   }
   
   dist <- 1 # check out what the maximum value is for the other potential methods
-    
+  jw <- stringdist(toupper(word), toupper(stims), method = method)
+  bestmatch <- stims
   for(i in 1:length(word)){
-    #i = 765
+    #i = 26
     #print(i)
-      jw <- stringdist(toupper(word[i]), toupper(stims[i]), method = method)
-      bestmatch[i] <- stims[i]
       
       if(toupper(stims[i]) %in% toupper(alternatives$item)) {
         for (j in 1:ncol(alternatives %>% 
                      dplyr:: select(starts_with("alternative")))) {
-            currentalternative <- toupper(alternatives[
-            toupper(alternatives$item) == toupper(stims[i]), j+2])
-            if(currentalternative != "" & substring(toupper(word),1,1) == substring(toupper(currentalternative),1,1) ) {
-                dist <- stringdist(toupper(word[i]), currentalternative , method = "jw")}
-            if(dist < jw[i] & !is.na(jw[i]) & !is.na(dist)) {
+          #j = 1
+          #print(j)
+            currentalternative <- alternatives[
+            toupper(alternatives$item) == toupper(stims[i]), j+2]
+            if(!is.na(currentalternative) & !is.na(word[i])){
+              if(substring(toupper(word[i]),1,1) ==
+               substring(toupper(currentalternative),1,1) & 
+               currentalternative != "") {
+                dist <- stringdist(toupper(word[i]), 
+                                   toupper(currentalternative), method = "jw")}
+              if(dist < jw[i] & !is.na(jw[i]) & !is.na(dist)) {
                 jw[i] <- dist
                 bestmatch[i] <- currentalternative
                 dist <- 1
+              }}
         }
-    }
-  }
-  }
-  return(jw, bestmatch)
+      }}
+  jwbest <- cbind(jw, bestmatch)
+  return(jwbest)
 #df$wordcorrected[df$jw < .30 & df$bestmatch != df$item]
 }
 
@@ -159,6 +164,9 @@ df$word.cb <- replace_backspace(df$word.c2, backspace = "6")
 
 ```{r calculate_stringdist}
 stringdist(toupper(df$word.cb[1:200]), toupper(df$item[1:200]), method = "jw")
-output <- calculate_stringdist(word = df$word.cb, stims = df$item, alternatives = alternatives, 
-                                            method = "jw", firstlettercorrect = TRUE)
+output <- calculate_stringdist(word = df$word.cb, stims = df$item, 
+                               alternatives = alternatives, method = "jw",
+                               firstlettercorrect = TRUE)
+df$jw <- output[,1]
+df$bestmatch <- output[,2]
 ```

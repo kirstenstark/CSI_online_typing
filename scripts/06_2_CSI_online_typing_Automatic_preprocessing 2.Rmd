@@ -118,12 +118,12 @@ calculate_stringdist <- function(word, stims, alternatives = alternatives, metho
             currentalternative <- alternatives[
             toupper(alternatives$item) == toupper(stims[i]), j+2]
             if(!is.na(currentalternative) & !is.na(word[i])){
-              if(substring(toupper(word[i]),1,1) ==
-               substring(toupper(currentalternative),1,1) & 
-               currentalternative != "") {
+              if(currentalternative != "") {
                 dist <- stringdist(toupper(word[i]), 
                                    toupper(currentalternative), method = "jw")}
-              if(dist < jw[i] & !is.na(jw[i]) & !is.na(dist)) {
+              if(dist < jw[i] & !is.na(jw[i]) & !is.na(dist) & substring(
+                toupper(word[i]),1,1) == substring(
+                  toupper(currentalternative),1,1)) {
                 jw[i] <- dist
                 bestmatch[i] <- currentalternative
                 dist <- 1
@@ -136,6 +136,47 @@ calculate_stringdist <- function(word, stims, alternatives = alternatives, metho
 }
 
 ```
+
+### 5) Function that classifies the word entries
+
+```{r classification_function}
+case_character_type <- function(word, item, wordcorrected, jw, bestmatch, d) {
+  case_when(
+    # almostcorrect: jw limits needs to be set!
+    (jw < d) & (substring(wordcorrected,1,1) == substring(bestmatch,1,1)) & (substring(word, 1,1) == substring(bestmatch,1,1)) ~ "almostcorrect",
+    
+    # correctedtocorrect: participants corrected their entry to the correct
+    # word using "Backspace"
+    (toupper(wordcorrected) == toupper(item) | 
+       toupper(wordcorrected) == toupper(str_c(item, " ")) |
+       toupper(wordcorrected) == toupper(str_c(item, "Enter"))) &
+        substring(wordcorrected,1,1) == substring(word,1,1) &
+        substring(word,2, 10) != "Backspace" ~ "correctedtocorrect",
+    
+    # correct answers: participants typed exactly the correct word, 
+    # with space or enter at the end
+     toupper(word) == toupper(item) | 
+       toupper(word) == toupper(str_c(item, " ")) |
+       toupper(word) == toupper(str_c(item, "Enter")) ~ "correct",
+       
+    # backspace_space_enter: participants started by typing backspace, space,
+    # enter, or capslock
+     str_starts(word,"Backspace") |
+       str_starts(word," ") |
+       str_starts(word,"CapsLock") |
+       str_starts(word,"Enter") ~ "backspace_space_enter",
+    
+    # shift_start: participants started by pressing the shift key
+     str_starts(word,"Shift") ~ "shift_start",
+    
+    # isna: participants didn't enter anything
+      is.na(word)       ~ "isna",
+  
+    # are all answers classified
+    TRUE                      ~ "not_correct" )
+}
+```
+
 
 ## Preprocess data, applying functions
 ### 1) Clean word ending 
@@ -163,10 +204,50 @@ df$word.cb <- replace_backspace(df$word.c2, backspace = "6")
 ### 4) Compute stringdist between word entries and items/alternatives
 
 ```{r calculate_stringdist}
-stringdist(toupper(df$word.cb[1:200]), toupper(df$item[1:200]), method = "jw")
+#stringdist(toupper(df$word.cb[1:200]), toupper(df$item[1:200]), method = "jw")
 output <- calculate_stringdist(word = df$word.cb, stims = df$item, 
                                alternatives = alternatives, method = "jw",
                                firstlettercorrect = TRUE)
 df$jw <- output[,1]
 df$bestmatch <- output[,2]
+```
+
+### 5) Classify word entries
+
+```{r classify_entries}
+df2 <- df %>% mutate(answer_auto = case_character_type(
+  word, item, word.cb, jw, bestmatch, d = 0.3))
+```
+
+### Inspect results
+
+```{r}
+table(df2$answer_auto)
+df2 <- df2 %>% mutate(correct_auto = case_when(answer_auto == "almostcorrect" ~ 1,
+                                          answer_auto == "correct" ~ 1,
+                                          answer_auto == "correctedtocorrect" ~ 1,
+                                          TRUE ~ 0))
+df2 <- df2 %>% mutate(correct_manual = case_when(answercode == "almostcorrect" ~ 1,
+                                          answercode == "correct" ~ 1,
+                                          TRUE ~ 0))
+table(df2$correct_auto)
+table(df2$correct_manual)
+table(df2$correct_auto, df2$correct_manual)
+
+new_incorrect <- cbind(item = df$item[
+  df2$correct_auto == 0 & df2$correct_manual == 1],
+                   word = df2$word[df2$correct_auto == 0 & df2$correct_manual == 1],
+                   word.cb = df2$word.cb[df2$correct_auto == 0 & df2$correct_manual == 1],
+                   jw = df2$jw[df2$correct_auto == 0 & df2$correct_manual == 1],
+                   bestmatch = df2$bestmatch[
+                     df2$correct_auto == 0 & df2$correct_manual == 1],
+                   answer_auto = df2$answer_auto[
+                     df2$correct_auto == 0 & df2$correct_manual == 1],
+                    answercode = df2$answercode[
+                     df2$correct_auto == 0 & df2$correct_manual == 1])
+new_correct <- cbind(item = df2$item[df2$correct_auto == 1 & df2$correct_manual == 0],
+                   word = df2$word[df2$correct_auto == 1 & df2$correct_manual == 0],
+                   word.cb = df2$word.cb[df2$correct_auto == 1 & df2$correct_manual == 0],
+                 jw= df2$jw[df2$correct_auto == 1 & df2$correct_manual == 0],
+                 bestmatch = df2$bestmatch[df2$correct_auto == 1 & df2$correct_manual == 0])
 ```

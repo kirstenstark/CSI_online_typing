@@ -1003,6 +1003,13 @@
       "Repository": "CRAN",
       "Hash": "5b229273695937933bc21ef235e84962"
     },
+    "stringdist": {
+      "Package": "stringdist",
+      "Version": "0.9.6.3",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "1ab14e88df14b856dd4d2e34a80c0ba6"
+    },
     "stringi": {
       "Package": "stringi",
       "Version": "1.5.3",

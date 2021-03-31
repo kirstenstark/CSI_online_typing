@@ -1,0 +1,164 @@
+---
+title: '06 CSI online typing: Automatic answer classification'
+author: "Kirsten Stark"
+date: "3/30/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load packages
+
+```{r load_packages}
+rm(list = ls())
+
+library(tidyr)
+library(dplyr)
+library(stringr)
+library(stringdist)
+
+options( "encoding" = "UTF-8" )
+```
+
+## Load data
+
+```{r load_data}
+# input 
+input = "data_long_final.csv"
+
+# input synonym/alternative naming list
+alternatives = "naming_alternatives.csv"
+
+# load data
+df <- read.csv(here::here("data", input))
+
+# load alternatives
+alternatives <- read.csv(here::here("data", alternatives), sep = ";")
+```
+
+## Define functions
+### 1) Function to delete of last character typed words if those are space or enter
+
+```{r function_delete_ending}
+delete_ending <- function(word) {
+  case_when(str_ends(word, " ") ~ str_sub(word, end=str_length(word)-1),
+            str_ends(word, "Enter") ~ str_sub(word, end =str_length(word)-5),
+            TRUE ~ word)
+}
+```
+
+### 2) Replace special keys (e.g. backspace, shift, etc.) by numbers
+
+```{r function_replace_special_chars}
+replace_special_chars <- function(input, oldnames, newnames) {
+  if(length(oldnames) != length(newnames)){
+    print("Your oldname/newname vectors don't have the same length. Please correct!")
+    stop()
+  }
+  for (i in 1:length(input)) {
+    for (j in 1:length(oldnames)) {
+      input[i] <- str_replace_all(input[i], pattern = oldnames[j], 
+                        replacement = as.character(newnames[j]))
+      if( i == 1) {
+          print(paste0("The pattern ", oldnames[j], 
+                   " has been replaced by the pattern ", 
+                   newnames[j], ".", sep = ""))}
+    }}
+  return(input)
+} 
+
+
+```
+
+### 3) Function that computes the final words by applying all backspaces
+
+```{r function_replace_backspace}
+replace_backspace <- function(input, backspace = "Backspace") {
+  nletters = str_count(backspace)
+  for(i in 1:length(input)) {
+    backspaces <- str_locate_all(input[i], backspace)[[1]]
+    for(j in 1:nrow(backspaces)){
+      input[i] <- sub(str_c(".{1}",backspace), "", input[i])
+    }
+  }
+  return(input)
+}
+```
+
+### 4) Function that computes the fuzzy string matching
+Calculate stringdistance between (backspace corrected) input word and item/alternative namings, and select the "best match", i.e. the item/alternative with the lowest distance and the first letter being correct.
+
+```{r function_calculate_stringdist}
+# alternatives should be a dataframe with col 1 = category, col 2 = item, col3...n = alternative1 ... alternativen
+calculate_stringdist <- function(word, stims, alternatives = alternatives, method = "jw", firstlettercorrect = TRUE) { # ToDo: Check out JW options
+  #word <- df$word.cb
+  #stims <- df$item
+  #alternatives <- alternatives
+  #method = "jw"
+ 
+  if(length(word) != length(stims)){
+    print("Your typed words and item vectors don't have the same length. Please correct!")
+    stop()
+  }
+  
+  dist <- 1 # check out what the maximum value is for the other potential methods
+    
+  for(i in 1:length(word)){
+    #i = 765
+    #print(i)
+      jw <- stringdist(toupper(word[i]), toupper(stims[i]), method = method)
+      bestmatch[i] <- stims[i]
+      
+      if(toupper(stims[i]) %in% toupper(alternatives$item)) {
+        for (j in 1:ncol(alternatives %>% 
+                     dplyr:: select(starts_with("alternative")))) {
+            currentalternative <- toupper(alternatives[
+            toupper(alternatives$item) == toupper(stims[i]), j+2])
+            if(currentalternative != "" & substring(toupper(word),1,1) == substring(toupper(currentalternative),1,1) ) {
+                dist <- stringdist(toupper(word[i]), currentalternative , method = "jw")}
+            if(dist < jw[i] & !is.na(jw[i]) & !is.na(dist)) {
+                jw[i] <- dist
+                bestmatch[i] <- currentalternative
+                dist <- 1
+        }
+    }
+  }
+  }
+  return(jw, bestmatch)
+#df$wordcorrected[df$jw < .30 & df$bestmatch != df$item]
+}
+
+```
+
+## Preprocess data, applying functions
+### 1) Clean word ending 
+By deleting the last character(s) of typed words if those are space or enter keys
+
+```{r clean_word_ending}
+df <- df %>% mutate(word.c = delete_ending(df$word))
+```
+
+### 2) Replace special characters
+
+```{r replace_special_chars}
+oldnames <- c("Enter", "CapsLock", "Shift", "ArrowLeft", "ArrowRight", "Backspace")
+newnames <- c("1", "2", "3", "4", "5", "6")
+df$word.c2 <- replace_special_chars(input = df$word.c, oldnames = oldnames, newnames = newnames)
+```
+
+### 3) Compute finally submitted words by applying all backspaces
+
+```{r replace_backspace}
+#df$word.cb <- replace_backspace(df$word.c, backspace = "Backspace")
+df$word.cb <- replace_backspace(df$word.c2, backspace = "6")
+```
+
+### 4) Compute stringdist between word entries and items/alternatives
+
+```{r calculate_stringdist}
+stringdist(toupper(df$word.cb[1:200]), toupper(df$item[1:200]), method = "jw")
+output <- calculate_stringdist(word = df$word.cb, stims = df$item, alternatives = alternatives, 
+                                            method = "jw", firstlettercorrect = TRUE)
+```

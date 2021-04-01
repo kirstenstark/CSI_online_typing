@@ -142,9 +142,13 @@ calculate_stringdist <- function(word, stims, alternatives = alternatives, metho
 ```{r classification_function}
 case_character_type <- function(word, item, wordcorrected, jw, bestmatch, d) {
   case_when(
-    # almostcorrect: jw limits needs to be set!
-    (jw < d) & (substring(wordcorrected,1,1) == substring(bestmatch,1,1)) & (substring(word, 1,1) == substring(bestmatch,1,1)) ~ "almostcorrect",
-    
+        
+    # correct answers: participants typed exactly the correct word, 
+    # with space or enter at the end
+     toupper(word) == toupper(item) | 
+       toupper(word) == toupper(str_c(item, " ")) |
+       toupper(word) == toupper(str_c(item, "Enter")) ~ "correct",
+     
     # correctedtocorrect: participants corrected their entry to the correct
     # word using "Backspace"
     (toupper(wordcorrected) == toupper(item) | 
@@ -153,11 +157,11 @@ case_character_type <- function(word, item, wordcorrected, jw, bestmatch, d) {
         substring(wordcorrected,1,1) == substring(word,1,1) &
         substring(word,2, 10) != "Backspace" ~ "correctedtocorrect",
     
-    # correct answers: participants typed exactly the correct word, 
-    # with space or enter at the end
-     toupper(word) == toupper(item) | 
-       toupper(word) == toupper(str_c(item, " ")) |
-       toupper(word) == toupper(str_c(item, "Enter")) ~ "correct",
+    # alternative: jw limits needs to be set!
+    (jw < d) & toupper(substring(wordcorrected,1,1)) ==
+                  toupper(substring(bestmatch,1,1)) & 
+      toupper(substring(word, 1,1)) == toupper(substring(bestmatch,1,1)) &
+      substring(word,2, 10) != "Backspace" ~ "alternative",
        
     # backspace_space_enter: participants started by typing backspace, space,
     # enter, or capslock
@@ -223,7 +227,7 @@ df2 <- df %>% mutate(answer_auto = case_character_type(
 
 ```{r}
 table(df2$answer_auto)
-df2 <- df2 %>% mutate(correct_auto = case_when(answer_auto == "almostcorrect" ~ 1,
+df2 <- df2 %>% mutate(correct_auto = case_when(answer_auto == "alternative" ~ 1,
                                           answer_auto == "correct" ~ 1,
                                           answer_auto == "correctedtocorrect" ~ 1,
                                           TRUE ~ 0))
@@ -250,4 +254,20 @@ new_correct <- cbind(item = df2$item[df2$correct_auto == 1 & df2$correct_manual 
                    word.cb = df2$word.cb[df2$correct_auto == 1 & df2$correct_manual == 0],
                  jw= df2$jw[df2$correct_auto == 1 & df2$correct_manual == 0],
                  bestmatch = df2$bestmatch[df2$correct_auto == 1 & df2$correct_manual == 0])
+```
+
+
+
+```{r}
+for (i in 1:length(unique(df2$type))) {
+  print(paste(unique(df2$type)[i],"data collection: ", sep = " "))  
+  print("Amount of trials classified as correct 
+        (correct, correct with typos, synonymes")
+  print(as.data.frame(table(df2$subject[df$type == unique(df2$type)[i]],
+                      !is.na(df2$correct[df$type == unique(df2$type)[i]]))) %>%
+    filter(Var2 == TRUE) %>%
+    dplyr::rename(subject = Var1, totaltrials = Var2, correct = Freq) %>%
+      mutate(totaltrials = 160) %>% 
+      mutate(percentagecorrect = correct/totaltrials))
+}
 ```

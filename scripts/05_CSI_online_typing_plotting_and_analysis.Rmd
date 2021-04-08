@@ -33,9 +33,11 @@ options( "encoding" = "UTF-8" )
 ```{r load_data}
 # input 
 input = "data_long_final.csv"
+classification_type = "automatic" # select "manual" or "automatic"
 
 # load data
 df <- read.csv(here::here("data", input))
+
 ```
 
 Check amount of participants and trials
@@ -46,8 +48,6 @@ length(unique(df$subject))
 
 # no. of trials is 160 per participant? 
 nrow(df) == 160 * length(unique(df$subject))
-
-table(df$answercode)
 ```
 
 Factorize columns
@@ -58,6 +58,42 @@ is.numeric(df$timing.01)
 df$PosOr <- as.factor(df$PosOr)
 df$subject <- as.factor(df$subject)
 ```
+
+# Select correct classification column
+
+```{r classification_type}
+if(classification_type == "automatic") {
+  df$answercode <- df$answer_auto_jaro
+  df$correct <- df$correct_auto_jaro
+} else if(classification_type == "manual") {
+  df$answercode <- df$answercode
+  df$correct <- df$correct_manual
+} else {
+  print("Select a correct type!")
+}
+```
+
+```{r answercode_table}
+as.data.frame(table(df$correct, df$answercode)) %>% filter(Freq != 0) 
+as.data.frame(table(df$correct, df$answercode)) %>% filter(Freq != 0) %>% mutate(Percentage = case_when(Var1 == 1 ~ Freq/sum(df$correct == 1),
+                                                                                                        Var1 == 0 ~ Freq/sum(df$correct == 0)))
+```
+
+```{r table_correctness}
+table(df$correct)
+round(table(df$correct)/nrow(df),2)
+
+## How many correct/incorrect non-filler trials?
+table(df$correct[df$category != "Filler"])
+```
+
+
+Drop incorrect trials: 
+
+```{r}
+df <- df %>% filter(df$correct == 1)
+```
+
 
 # Plotting
 
@@ -74,7 +110,7 @@ apatheme <- theme_bw()+
 ### Descriptives
 
 ```{r descriptives}
-(means_final<- df %>% filter(!is.na(correct)) %>% 
+(means_final<- df %>% 
    filter(category != "Filler") %>% 
    Rmisc::summarySEwithin(.,"timing.01",idvar = "subject",
                           withinvars = "PosOr", na.rm = T))
@@ -93,16 +129,17 @@ huxtable::quick_docx(huxt_word,
 ### RTs by ordinal position
 
 ```{r plot_rt}
-(plot_rt <- df %>% filter(!is.na(correct)) %>% 
-   filter(category != "Filler") %>% 
-    ggplot(., aes(x=PosOr, y=timing.01, group = correct)) +
+(plot_rt <- means_final %>% 
+    ggplot(., aes(x=PosOr, y=timing.01)) +
     stat_summary(fun=mean,  geom="point", size = 2)+
-    stat_summary(fun=mean,  geom="line", size = 1) +
+    stat_summary(fun=mean,  geom="line", size = 1, group = 1) +
+    geom_errorbar(aes(ymin=timing.01-se, ymax=timing.01+se), width =.1) +
     apatheme+
-    labs(x="Ordinal Position ",y ="RT (ms)")+
-   annotate(geom="text", x=1.5, y=1330, label="n = 30", 
-           color="black", size = 8))
-
+    scale_y_continuous(limits = c(1100, 1350), 
+                       breaks = c(1100, 1150, 1200, 1250, 1300, 1350)) + 
+    labs(x="Ordinal Position ",y ="RT (ms)")) #+
+  # annotate(geom="text", x=1.5, y=1330, label="n = 30", 
+  #         color="black", size = 8))
 
 filename <- "CSI_online_typing_plot_rt.pdf"
 ggsave(plot_rt, filename = 
@@ -117,7 +154,7 @@ embedFonts(file = here::here("figures", filename))
 
 ```{r plot_rt_fillers}
 
-(plot_rt_fillers <- df %>% filter(!is.na(correct)) %>% 
+(plot_rt_fillers <- df %>% 
     mutate(kind = case_when(category == "Filler" ~"Filler",
                           category != "Filler" ~"Experimental")) %>%
     ggplot(., aes(x=PosOr, y=timing.01, group=kind, color=kind)) +
@@ -139,7 +176,7 @@ embedFonts(file = here::here("figures", filename))
 ### Plot by subcategory
 
 ```{r plot_rt_by_cat}
-(plot_rt_by_cat <- df %>% filter(!is.na(correct)) %>% 
+(plot_rt_by_cat <- df %>%  
    filter(category != "Filler") %>% 
     ggplot(., aes(x=PosOr, y=timing.01)) +
     stat_summary(fun=mean,  geom="point", size = 2)+
@@ -160,7 +197,7 @@ embedFonts(file = here::here("figures", filename))
 ### Plot by subject
 
 ```{r plot_by_subject}
-(plot_rt_by_subject <- df %>% filter(!is.na(correct)) %>% 
+(plot_rt_by_subject <- df %>% 
    filter(category != "Filler") %>% 
     ggplot(., aes(x=PosOr, y=timing.01)) +
     stat_summary(fun=mean,  geom="point", size = 2) +  
@@ -179,7 +216,7 @@ embedFonts(file = here::here("figures", filename))
 ```
 
 ### Control: Plot RTs accross the experiment
-All trials including uncorrect trials
+All trials correct trials
 
 ```{r plot_RTs_all}
 (plot_RTs_all <- ggplot(data=df, aes(x=trial, y=timing.01)) +
@@ -201,7 +238,7 @@ embedFonts(file = here::here("figures", filename))
 Correct non-filler trials only:
 
 ```{r plot_RTs_correct}
-(plot_RTs_correct <- df %>% filter(!is.na(correct)) %>% 
+(plot_RTs_correct <- df %>% 
    filter(category != "Filler") %>% 
     ggplot(., aes(x=trial, y=timing.01)) +
     stat_summary(fun=mean,  geom="point", size = 2)+

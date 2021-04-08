@@ -218,13 +218,16 @@ case_character_type <- function(word, item, wordcorrected,
       substring(word,2, 10) != "Backspace" ~ "approx_correct",
     
     # alternative: alternative was typed correctly 
-      (distance == 0) & toupper(word) == toupper(wordcorrected) &
+      (distance == 0) & (toupper(word) == toupper(wordcorrected) |
+        toupper(str_c(word, " ")) == toupper(wordcorrected) |
+        toupper(str_c(word, "Enter")) == toupper(wordcorrected))  &
       toupper(substring(word,1,1)) ==
-      toupper(substring(bestmatch,1,1)) & 
-      substring(word,2, 10) != "Backspace" ~ "alternative",
+      toupper(substring(bestmatch,1,1)) ~ "alternative",
     
     # alternative_corrected: alternative typed correctly after backspace correction
      (distance == 0) & toupper(word) != toupper(wordcorrected) &
+      toupper(str_c(word, " ")) != toupper(wordcorrected) &
+      toupper(str_c(word, "Enter")) != toupper(wordcorrected) &
       toupper(substring(word, 1,1)) ==
       toupper(substring(bestmatch,1,1)) &
       substring(word,2, 10) != "Backspace" ~ 
@@ -250,6 +253,22 @@ case_character_type <- function(word, item, wordcorrected,
     
     # isna: participants didn't enter anything
       is.na(word)       ~ "isna",
+    
+    # distance-based error
+    (distance >= d) & 
+      toupper(substring(wordcorrected,1,1)) ==
+      toupper(substring(bestmatch,1,1)) &
+      toupper(substring(word, 1,1)) ==
+      toupper(substring(bestmatch,1,1)) &
+      substring(word,2, 10) != "Backspace" ~ "distance_based_error",
+    
+    # first letter-based error
+    (distance < d) & 
+      (toupper(substring(wordcorrected,1,1)) !=
+      toupper(substring(bestmatch,1,1)) |
+      toupper(substring(word, 1,1)) !=
+      toupper(substring(bestmatch,1,1)) |
+      substring(word,2, 10) == "Backspace") ~ "first_letter_error",
   
     # are all answers classified
     TRUE                      ~ "not_correct" )
@@ -580,5 +599,5 @@ print(as.data.frame(table(
 
 ## Write data file for statistical analyses
 ```{r}
-write.csv(df2, here::here("data","df_long.csv"))
+write.csv(df2, here::here("data","data_long_final.csv"))
 ```

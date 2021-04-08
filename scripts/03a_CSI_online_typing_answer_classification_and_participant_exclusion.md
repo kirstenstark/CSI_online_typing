@@ -1,7 +1,7 @@
 03 CSI online typing: Answer classification and participant exclusion
 ================
 Kirsten Stark
-29 März, 2021
+06 April, 2021
 
 ## Load packages
 
@@ -69,9 +69,9 @@ table(df$answercode)
 
     ## 
     ##          almostcorrect  backspace_space_enter                correct 
-    ##                    866                     34                   3762 
+    ##                    861                     34                   3762 
     ## first_letter_incorrect                   isna      semantic_relation 
-    ##                    214                    228                    130 
+    ##                    217                    228                    132 
     ##            shift_start        unrelated_other 
     ##                     13                     33
 
@@ -116,17 +116,17 @@ sum(df$answercode == "correct") + sum(df$answercode == "almostcorrect") ==
 (sumna <- sum(is.na(df$correct)))
 ```
 
-    ## [1] 652
+    ## [1] 657
 
 ``` r
 (percentagena <- sum(is.na(df$correct))/nrow(df))
 ```
 
-    ## [1] 0.1234848
+    ## [1] 0.1244318
 
-In a total of 652 participants did not enter anything or entered a
+In a total of 657 participants did not enter anything or entered a
 chunks of characters that were not considered as correct based on the
-preregistered criteria. This is 0.1234848 % of all trials.
+preregistered criteria. This is 0.1244318 % of all trials.
 
 *Trials with missing values per participant:*
 
@@ -204,13 +204,13 @@ for (i in 1:length(unique(df$type))) {
     ## [1] "Amount of trials classified as correct \n        (correct, correct with typos, synonymes"
     ##    subject totaltrials correct percentagecorrect
     ## 1        1         160     155           0.96875
-    ## 2        2         160     152           0.95000
+    ## 2        2         160     151           0.94375
     ## 3        3         160     124           0.77500
     ## 4        4         160     144           0.90000
     ## 5        5         160     141           0.88125
     ## 6        6         160     141           0.88125
     ## 7        7         160     153           0.95625
-    ## 8        8         160     134           0.83750
+    ## 8        8         160     133           0.83125
     ## 9        9         160      66           0.41250
     ## 10      10         160     138           0.86250
     ## 11      11         160     148           0.92500
@@ -228,11 +228,11 @@ for (i in 1:length(unique(df$type))) {
     ## 23      23         160     150           0.93750
     ## 24      24         160     146           0.91250
     ## 25      25         160     140           0.87500
-    ## 26      26         160     137           0.85625
-    ## 27      27         160     146           0.91250
+    ## 26      26         160     136           0.85000
+    ## 27      27         160     145           0.90625
     ## 28      28         160     139           0.86875
     ## 29      29         160     131           0.81875
-    ## 30      30         160     150           0.93750
+    ## 30      30         160     149           0.93125
     ## [1] "replacement data collection: "
     ## [1] "Amount of trials classified as correct \n        (correct, correct with typos, synonymes"
     ##   subject totaltrials correct percentagecorrect

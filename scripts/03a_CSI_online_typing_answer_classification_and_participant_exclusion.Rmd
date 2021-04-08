@@ -34,7 +34,6 @@ df <- read.csv(here::here("data", input))
 answercodes <- read.csv(here::here("data", "answercodes.csv"),sep = ";")
 ```
 
-
 # Check and classify participants' answer behavior
 Assign answer codes to participants' typed naming
 

@@ -87,6 +87,14 @@ round(table(df$correct)/nrow(df),2)
 table(df$correct[df$category != "Filler"])
 ```
 
+Show amount of incorrect trials per ordinal position (excluding fillers):
+
+```{r}
+## How many correct/incorrect non-filler trials per ordinal position?
+table(df$PosOr[df$category != "Filler" & df$correct == 0], 
+      df$correct[df$category != "Filler" & df$correct == 0])
+
+```
 
 Drop incorrect trials: 
 
@@ -127,6 +135,52 @@ huxtable::quick_docx(huxt_word,
 ```
 
 ### RTs by ordinal position
+Boxplot 
+```{r boxplot_rt}
+(means_subject <- df %>% 
+   filter(category != "Filler") %>% 
+   summarySEwithin(.,"timing.01",withinvars = c("subject","PosOr")))
+
+(boxplot <- 
+  ggplot() + 
+
+  ## boxplot
+  geom_boxplot(data=means_subject, aes(x = PosOr,y =timing.01),
+               colour = "grey", width = 0.3,fatten = 1)+
+
+  ### individual means
+  geom_jitter(data=means_subject, aes(x = PosOr,y =timing.01),
+              position = position_dodge(0.6),
+              shape=19,color = "dark grey", size=2)+
+
+  ### group means
+  stat_summary(data=means_subject, aes(x = PosOr,y =timing.01),
+               fun=mean, geom="point",colour = "black", shape=18, size=5)+
+  
+   ### line
+  stat_summary(data=means_subject, aes(x = PosOr,y =timing.01),
+               fun=mean, geom="line",colour = "black", linetype = "longdash", group = 1)+
+
+  ## other stuff
+  scale_y_continuous(breaks = seq(600, 1800, by = 50))+
+  labs(x="Ordinal Position",y ="RTs (ms)")+
+
+  apatheme +
+  theme(
+    axis.title.y = element_text(margin = margin(0,10,0,0)),
+    axis.title.x = element_text(margin = margin(10,0,0,0))) +
+  coord_equal(ratio = 1/100))
+
+filename <- "CSI_online_typing_boxplot.pdf"
+ggsave(boxplot, filename = 
+         here::here("figures", filename),
+       width = 13, height = 18, units = "cm", 
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("figures", filename))
+
+```
+
+Line graph
 
 ```{r plot_rt}
 (plot_rt <- means_final %>% 
@@ -305,6 +359,7 @@ Visually compare fit of both distributions in histogram
 ```{r density-comparison}
 denscomp(list(fit.gamma, fit.normal))
 ```
+
 Visually compare fit of both distributions in Q-Q-plots
 
 ```{r q-q-comparison}
@@ -348,6 +403,58 @@ tab_model(m1,transform = NULL,
 # Plotting before data preprocessing
 # ALL TRIALS
 ### Plot RTs by OrPos
+
+```{r}
+pred <- df_valid %>% mutate(fit = predict(m1))
+
+(means_subject <- pred %>% 
+   summarySEwithin(.,"timing.01",withinvars = c("subject","PosOr")))
+means_subject_pred <- pred %>% 
+   summarySEwithin(.,"fit",withinvars = c("subject","PosOr"))
+(boxplot2 <- 
+  ggplot() + 
+
+  ## boxplot
+  geom_boxplot(data=means_subject, aes(x = PosOr,y =timing.01),
+               colour = "grey", width = 0.3,fatten = 1)+
+
+  ### individual means
+  geom_jitter(data=means_subject, aes(x = PosOr,y =timing.01),
+              position = position_dodge(0.6),
+              shape=19,color = "dark grey", size=2)+
+    
+  ### lmer predict line
+ stat_summary(data=means_subject_pred, aes(x = PosOr,y =fit),
+               fun=mean, geom="line",colour = "blue", linetype = "longdash", group = 1)+
+  
+  ### group means
+  stat_summary(data=means_subject, aes(x = PosOr,y =timing.01),
+               fun=mean, geom="point",colour = "black", shape=18, size=5)+
+  
+   ### line
+  #stat_summary(data=means_subject, aes(x = PosOr,y =timing.01),
+  #             fun=mean, geom="line",colour = "black", linetype = "longdash", group = 1)+  
+    
+  
+  ## other stuff
+  scale_y_continuous(breaks = seq(600, 1800, by = 50))+
+  labs(x="Ordinal Position",y ="RTs (ms)")+
+
+  apatheme +
+  theme(
+    axis.title.y = element_text(margin = margin(0,10,0,0)),
+    axis.title.x = element_text(margin = margin(10,0,0,0))) +
+  coord_equal(ratio = 1/100))
+
+boxplot2
+filename <- "CSI_online_typing_boxplot_regression.pdf"
+ggsave(boxplot2, filename = 
+         here::here("figures", filename),
+       width = 13, height = 18, units = "cm", 
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("figures", filename))
+```
+
 
 ```{r}
 # is.numeric(df$timing.01)

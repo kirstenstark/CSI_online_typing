@@ -37,6 +37,21 @@ Load typing data
 df_typing <- read.csv(here::here("data", "data_long_final.csv"))
 ```
 
+Select classification type (as in script 05)
+
+```{r classification_type}
+classification_type <- "automatic"
+if(classification_type == "automatic") {
+  df_typing$answercode <- df_typing$answer_auto_jaro
+  df_typing$correct <- df_typing$correct_auto_jaro
+} else if(classification_type == "manual") {
+  df_typing$answercode <- df_typing$answercode
+  df_typing$correct <- df_typing$correct_manual
+} else {
+  print("Select a correct type!")
+}
+```
+
 Load verbal data
 
 ```{r load_verbal_data}

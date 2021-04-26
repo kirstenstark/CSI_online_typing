@@ -135,36 +135,64 @@ huxtable::quick_docx(huxt_word,
 ```
 
 ### RTs by ordinal position
-Boxplot 
+Line graph
+
+```{r plot_rt}
+(plot_rt <- means_final %>% 
+    ggplot(., aes(x=PosOr, y=timing.01)) +
+    geom_point(size = 2)+
+    stat_summary(fun=mean,  geom="line", size = 0.5, group = 1, linetype = "dashed") +
+    geom_errorbar(aes(ymin=timing.01-se, ymax=timing.01+se), width =.1) +
+    apatheme+
+    scale_y_continuous(limits = c(1120, 1340), breaks =seq(1120,1340, by = 20)) +
+                       #breaks = c(1100, 1150, 1200, 1250, 1300, 1350)) + 
+    labs(x="Ordinal Position ",y ="RT (ms)") + #+
+  # annotate(geom="text", x=1.5, y=1330, label="n = 30", 
+  #         color="black", size = 8))
+    theme(
+    axis.title.y = element_text(margin = margin(0,10,0,0)),
+    axis.title.x = element_text(margin = margin(10,0,0,0))))
+
+filename <- "CSI_online_typing_plot_rt.pdf"
+ggsave(plot_rt, filename = 
+         here::here("figures", filename),
+       width = 18, height = 13, units = "cm", 
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("figures", filename))
+
+```
+
+
+Normalized boxplot 
+
 ```{r boxplot_rt}
-(means_subject <- df %>% 
+means_subject <- df %>% 
    filter(category != "Filler") %>% 
-   summarySEwithin(.,"timing.01",withinvars = c("subject","PosOr")))
+   summarySEwithin(.,"timing.01",withinvars = c("subject","PosOr"))
+(means_subject <- means_subject %>%
+  group_by(subject) %>%
+  dplyr::mutate(timing.01_norm = timing.01 - first(timing.01)))
 
 (boxplot <- 
   ggplot() + 
-
+  
   ## boxplot
-  geom_boxplot(data=means_subject, aes(x = PosOr,y =timing.01),
+  geom_boxplot(data=means_subject, aes(x = PosOr,y =timing.01_norm),
                colour = "grey", width = 0.3,fatten = 1)+
-
   ### individual means
-  geom_jitter(data=means_subject, aes(x = PosOr,y =timing.01),
+  geom_jitter(data=means_subject, aes(x = PosOr,y =timing.01_norm),
               position = position_dodge(0.6),
               shape=19,color = "dark grey", size=2)+
-
   ### group means
-  stat_summary(data=means_subject, aes(x = PosOr,y =timing.01),
+  stat_summary(data=means_subject, aes(x = PosOr,y =timing.01_norm),
                fun=mean, geom="point",colour = "black", shape=18, size=5)+
-  
-   ### line
-  stat_summary(data=means_subject, aes(x = PosOr,y =timing.01),
+  ### line
+  stat_summary(data=means_subject, aes(x = PosOr,y =timing.01_norm),
                fun=mean, geom="line",colour = "black", linetype = "longdash", group = 1)+
-
+  
   ## other stuff
-  scale_y_continuous(breaks = seq(600, 1800, by = 50))+
-  labs(x="Ordinal Position",y ="RTs (ms)")+
-
+  #scale_y_continuous(breaks = seq(600, 1300, by = 50))+
+  labs(x="Ordinal Position",y ="Normalized RTs (ms)")+
   apatheme +
   theme(
     axis.title.y = element_text(margin = margin(0,10,0,0)),
@@ -180,27 +208,16 @@ embedFonts(file = here::here("figures", filename))
 
 ```
 
-Line graph
+### Export plot grid
 
-```{r plot_rt}
-(plot_rt <- means_final %>% 
-    ggplot(., aes(x=PosOr, y=timing.01)) +
-    stat_summary(fun=mean,  geom="point", size = 2)+
-    stat_summary(fun=mean,  geom="line", size = 1, group = 1) +
-    geom_errorbar(aes(ymin=timing.01-se, ymax=timing.01+se), width =.1) +
-    apatheme+
-    scale_y_continuous(limits = c(1100, 1350), 
-                       breaks = c(1100, 1150, 1200, 1250, 1300, 1350)) + 
-    labs(x="Ordinal Position ",y ="RT (ms)")) #+
-  # annotate(geom="text", x=1.5, y=1330, label="n = 30", 
-  #         color="black", size = 8))
-
-filename <- "CSI_online_typing_plot_rt.pdf"
-ggsave(plot_rt, filename = 
-         here::here("figures", filename),
-       width = 18, height = 13, units = "cm", 
-       dpi = 300, device = cairo_pdf)
-embedFonts(file = here::here("figures", filename))
+```{r plot_grid}
+cowplot::plot_grid(plot_rt, boxplot,
+          nrow = 1, labels = c("A", "B"), label_fontfamily = "Arial") %>%
+  ggsave(filename = here::here("figures",
+                               "CSI_online_typing_RTs_and_normalized_RTs"),
+         width = 18, height = 13, units = "cm", dpi = 300, 
+         device = cairo_pdf)
+#embedFonts(file = here::here("figures", "CSI_online_typing_RTs_and_normalized_RTs"))
 
 ```
 
@@ -399,12 +416,58 @@ tab_model(m1,transform = NULL,
 ```
 
 # ---------------------------------------------
+# Appendix
+Line graph for each participant: 
+
+```{r plot_by_size}
+modeloutput <- coef(m1)$subject
+(means_final_subject <- df_valid %>% 
+   summarySEwithin(.,"timing.01",withinvars = c("subject","PosOr")))
+(means_final<- df_valid %>%  
+   Rmisc::summarySEwithin(.,"timing.01",idvar = "subject",
+                          withinvars = "PosOr", na.rm = T))
+for(i in 1:nrow(means_final_subject)) {
+  means_final_subject$grandmean[i] <- means_final$timing.01[means_final$PosOr == means_final_subject$PosOr[i]] - means_final$timing.01[means_final$PosOr== 1]
+  means_final_subject$normalizedRT[i] <- means_final_subject$timing.01[i] -
+    means_final_subject$timing.01[means_final_subject$subject == means_final_subject$subject[i] & means_final_subject$PosOr == 1]
+  # prepare for ordering
+  means_final_subject$effect[i] <- modeloutput$PosOr.cont[means_final_subject$subject[i]] 
+}
+#means_final_subject$order <-order(means_final_subject$effect)-1
+#means_final_subject$order <- means_final_subject$order %/% 5
+means_final_subject <- means_final_subject[order(desc(means_final_subject$effect)),] 
+means_final_subject$effect <- as.factor(round(means_final_subject$effect, 2))
+means_final_subject$effect <- factor(means_final_subject$effect, levels=rev(levels(means_final_subject$effect )))
+
+(plot_rt <- means_final_subject %>% 
+    ggplot(., aes(x=PosOr,y=normalizedRT, na.rm=T)) +
+    #geom_point(aes(x=PosOr,y=grandmean), size = 0.5, color = 'gray')+
+    geom_line(aes(x=PosOr,y=grandmean), group = 1,size = 0.8, color = 'dark gray', linetype = 3)+
+    geom_point(size =1, color = 'black') +
+    geom_line(group = 1,size = 0.5, color = 'black', linetype = "dashed") +
+    #geom_errorbar(aes(ymin=timing.01-se, ymax=timing.01+se), width =.1) +
+    apatheme+
+    scale_y_continuous(limits = c(-200, 600), 
+                       breaks = c(-200, 0,200,400,600)) + 
+    labs(x="Ordinal Position",y ="Normalized RTs (ms)") +
+    facet_wrap(means_final_subject$effect))
+
+filename <- "CSI_online_typing_effect_by_participant.pdf"
+ggsave(plot_rt, filename = 
+         here::here("figures", filename),
+       width = 13, height = 18, units = "cm", 
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("figures", filename))
+
+```
+
+# ---------------------------------------------
 # Other
-# Plotting before data preprocessing
-# ALL TRIALS
 ### Plot RTs by OrPos
 
-```{r}
+Boxplot with predicted regression line
+
+```{r boxplot_with regression_line}
 pred <- df_valid %>% mutate(fit = predict(m1))
 
 (means_subject <- pred %>% 
@@ -446,7 +509,6 @@ means_subject_pred <- pred %>%
     axis.title.x = element_text(margin = margin(10,0,0,0))) +
   coord_equal(ratio = 1/100))
 
-boxplot2
 filename <- "CSI_online_typing_boxplot_regression.pdf"
 ggsave(boxplot2, filename = 
          here::here("figures", filename),
@@ -455,6 +517,86 @@ ggsave(boxplot2, filename =
 embedFonts(file = here::here("figures", filename))
 ```
 
+
+
+```{r plot_rt_norm_by_participant_mediansplit}
+# modeloutput <- coef(m1)$subject
+# (means_final_subject <- df_valid %>% 
+#    summarySEwithin(.,"timing.01",withinvars = c("subject","PosOr")))
+# (means_final<- df_valid %>%  
+#    Rmisc::summarySEwithin(.,"timing.01",idvar = "subject",
+#                           withinvars = "PosOr", na.rm = T))
+# for(i in 1:nrow(means_final_subject)) {
+#   means_final_subject$grandmean[i] <- means_final$timing.01[means_final$PosOr == means_final_subject$PosOr[i]] - means_final$timing.01[means_final$PosOr== 1]
+#   means_final_subject$normalizedRT[i] <- means_final_subject$timing.01[i] -
+#     means_final_subject$timing.01[means_final_subject$subject == means_final_subject$subject[i] & means_final_subject$PosOr == 1]
+#   # prepare for median split
+#   means_final_subject$effect[i] <- modeloutput$PosOr.cont[means_final_subject$subject[i]] 
+# #means_final_subject$subjectmean[i] <- mean(df_valid$timing.01[df_valid$subject == means_final_subject$subject[i]])
+# }
+# # median split 
+# estimate <- summary(m1)
+# for(i in 1:nrow(means_final_subject)) {
+#   if (means_final_subject$effect[i] <
+#       estimate$coefficients[2,1]) {
+#     means_final_subject$mediansplit[i] <- "lower"
+#   } else if (means_final_subject$effect[i] >
+#                estimate$coefficients[2,1]) {
+#     means_final_subject$mediansplit[i] <- "higher"
+#   } else {
+#     means_final_subject$mediansplit[i] <- "median"
+#     print("onmedian")
+#   
+#   # if (means_final_subject$subjectmean[i] <
+#   #     median(means_final_subject$subjectmean)) {
+#   #   means_final_subject$mediansplit[i] <- "low"
+#   # } else if (means_final_subject$subjectmean[i] >
+#   #              median(means_final_subject$subjectmean)) {
+#   #   means_final_subject$mediansplit[i] <- "high"  
+#   # } else {
+#   #   means_final_subject$mediansplit[i] <- "median" 
+#   #   print("onmedian")
+# }}
+# 
+# # (plot_rt <- means_final_subject %>% 
+# #     ggplot(., aes(x=PosOr,y=normalizedRT)) +
+# #     geom_point(size = 2, aes(group=subject, color=mediansplit, linetype=mediansplit)) +
+# #     geom_line(size = 1, aes(group=subject, color = mediansplit, linetype=mediansplit)) +
+# #     geom_point(aes(x=PosOr,y=grandmean), size = 4)+
+# #     geom_line(aes(x=PosOr,y=grandmean), group = 1,size = 1)+
+# #     #geom_errorbar(aes(ymin=timing.01-se, ymax=timing.01+se), width =.1) +
+# #     apatheme+
+# #     #scale_y_continuous(limits = c(1100, 1350), 
+# #     #                   breaks = c(1100, 1150, 1200, 1250, 1300, 1350)) + 
+# #     labs(x="Ordinal Position ",y ="RT (ms)")) #+
+# #   # annotate(geom="text", x=1.5, y=1330, label="n = 30", 
+# #   #         color="black", size = 8))
+# 
+# median <- median(means_final_subject$effect)
+# (plot_rt <- means_final_subject %>% 
+#     ggplot(., aes(x=PosOr,y=normalizedRT)) +
+#     geom_point(size =1, aes(color = mediansplit)) +
+#     geom_line(size = 1, aes(group =1, color = mediansplit)) +
+#     geom_point(aes(x=PosOr,y=grandmean), size = 1)+
+#     geom_line(aes(x=PosOr,y=grandmean), group = 1,size = 1)+
+#     #geom_errorbar(aes(ymin=timing.01-se, ymax=timing.01+se), width =.1) +
+#     apatheme+
+#     scale_y_continuous(limits = c(-200, 400), 
+#                        breaks = c(-200,0,200,400)) + 
+#     labs(x="Ordinal Position",y ="Normalized RTs (ms)")) +
+#     facet_wrap(means_final_subject$subject)+
+#     guides(color=guide_legend(title="Comparison to effect \nof ordinal position \nin the GLMM"))
+#   # annotate(geom="text", x=1.5, y=1330, label="n = 30", 
+#   #         color="black", size = 8))
+# 
+# filename <- "CSI_online_typing_by_participant_mediansplit.pdf"
+# ggsave(plot_rt, filename = 
+#          here::here("figures", filename),
+#        width = 18, height = 25, units = "cm", 
+#        dpi = 300, device = cairo_pdf)
+# embedFonts(file = here::here("figures", filename))
+
+```
 
 ```{r}
 # is.numeric(df$timing.01)

@@ -1,0 +1,835 @@
+---
+title: "08 CSI online additional analyses: Post-hoc power"
+author: "Kirsten Stark"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load packages
+
+```{r load_packages}
+library(dplyr)
+library(tidyr)
+library(devtools)
+library(MASS)
+library(lme4)
+library(lmerTest)
+library(simr)
+library(pbkrtest)
+library(testthat)
+library(ggplot2)
+
+rm(list = ls())
+```
+
+## Load data
+
+```{r}
+input = "CSI_online_combined.csv"
+df <- read.csv(here::here("data", input))
+
+# factorize columns
+is.numeric(df$RT)
+df$subject <- as.factor(df$subject)
+df$category <- as.factor(df$category)
+df$experiment <- as.factor(df$experiment)
+```
+
+## 1) Set up models - LMM with log-transformed reaction times
+Also the GLMM fit the data better, it doesn't work well with the simr package. 
+Therefore, we fit the power analyses with LMMs instead. 
+LMM with continuous predictor ordinal position and log-transformed RT as a
+dependent variable.
+
+```{r model_CSI_verbal}
+# subset verbal data
+df_verbal <- df %>% filter(experiment == "verbal") %>% droplevels()
+
+# center continuous predictor 
+df_verbal$Pos.cont <- scale(as.numeric(as.character(df_verbal$Pos)), 
+                            center = TRUE, scale = FALSE)
+
+# use log-transformed data because simr can't handle GLMM well
+df_verbal$RT.log <- log(df_verbal$RT)
+
+# fit model 
+m_verbal <- lmer(RT.log ~ Pos.cont +
+               (Pos.cont|subject) +(Pos.cont|category),
+             data = df_verbal,
+            control=lmerControl(optimizer = "bobyqa"))
+#summary(m_verbal)
+```
+
+```{r model_CSI_typing}
+# subset verbal data
+df_typing <- df %>% filter(experiment == "typing") %>% droplevels()
+
+# center continuous predictor 
+df_typing$Pos.cont <- scale(as.numeric(as.character(df_typing$Pos)), 
+                            center = TRUE, scale = FALSE)
+
+# use log-transformed data because simr can't handle GLMM well
+df_typing$RT.log <- log(df_typing$RT)
+
+# fit model 
+m_typing <- lmer(RT.log ~ Pos.cont +
+               (Pos.cont|subject) +(1|category),
+             data = df_typing,
+            control=lmerControl(optimizer = "bobyqa",
+                                 optCtrl = list(maxfun = 2*10^5)))
+#summary(m_typing)
+```
+
+##2) Extend dataset
+We do not need to extend for the post-hoc power analysis, and keep the 30 participants.
+
+```{r extend_verbal_data}
+m_verbal  <- extend(m_verbal, along="subject", n=30)
+#m2_verbal_data <- getData(m2_verbal) 
+### ok, data were indeed extended to n subjects ;-)
+#str(m2_verbal_data)
+#str(df_verbal)
+```
+
+```{r extend_typing_data}
+m_typing  <- extend(m_typing, along="subject", n=30)
+#m2_typing_data <- getData(m2_typing) 
+### ok, data were indeed extended to n subjects ;-)
+#str(m2_typing_data)
+#str(df_typing)
+```
+
+## 3) Specify effect sizes
+As we want to evaluate the post-hoc power for different sample sizes, we do not 
+change the effect sizes
+
+```{r}
+fixef(m_verbal)
+fixef(m_verbal)["Pos.cont"] <- 0.02756341  
+fixef(m_verbal)["(Intercept)"] <- 6.84035775  
+fixef(m_typing)
+fixef(m_typing)["Pos.cont"] <- 0.02961954 
+fixef(m_typing)["(Intercept)"] <- 7.07567744
+
+```
+
+## 4) Run the power analysis
+
+```{r}
+set.seed(99)
+```
+
+We want to run power analyses at different sample sizes and with different trial
+numbers.
+
+#### A) **VERBAL DATA**
+
+*30 participants, 120 trials - The actual post-hoc power :*  
+
+```{r PowerSim_m2_verbal_30}
+(Power_m2_verbal_30 <- powerSim(m_verbal, test=fixed("Pos.cont", method = "t"),
+                                nsim = 1000)) # increase to nsim = 1000 for real test
+results <- summary(Power_m2_verbal_30)
+#lastResult()$warnings
+#lastResult()$errors
+simr_results <- as.data.frame(cbind(rep("verbal_s30_t_around109", 
+                                        times = Power_m2_verbal_30$n),
+                                    rep(30, times =
+                                          Power_m2_verbal_30$n),
+                                    rep(109, times =
+                                          Power_m2_verbal_30$n),
+                                    rep(24, times = Power_m2_verbal_30$n),
+              Power_m2_verbal_30$pval, results$successes,
+              results$mean, results$lower, results$upper))
+colnames(simr_results)<-c("name", "nsubjects", "ntrials", "ncat", "pval",
+                          "successes", "mean", "lower", "upper")
+``` 
+
+Save data frame
+ 
+```{r PowerSim_m2_verbal_30_export_data}
+write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+```
+
+
+*24 participants, 120 trials:*
+
+
+```{r PowerCurve_m2_verbal_24}
+(pc_verbal24 <- powerCurve(m_verbal, test=fixed("Pos.cont", method = "t"),
+                           along = "subject", breaks = c(24), nsim = 1000))
+```
+
+```{r PowerCurve_m2_verbal_24_results}
+#plot(pc_verbal24)
+summary(pc_verbal24)
+pc_verbal24$warnings
+pc_verbal24$errors
+```
+
+```{r PowerCurve_m2_verbal_24_add_to_df}
+results <- summary(pc_verbal24)
+results_df <- as.data.frame(cbind(rep("verbal_s24_t_around109", 
+                                        times= results$trials), 
+                                    rep(24, times = results$trials),
+                                    rep(109, times = results$trials),
+                                  rep(24, times = results$trials),
+              pc_verbal24[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_verbal_24_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+```
+
+
+*16 participants, 120 trials:*
+
+```{r PowerCurve_m2_verbal_16}
+(pc_verbal16 <- powerCurve(m_verbal, test=fixed("Pos.cont", method = "t"),
+                           along = "subject", breaks = c(16), nsim = 1000))
+```
+
+```{r PowerCurve_m2_verbal_16_results}
+#plot(pc_verbal16)
+summary(pc_verbal16)
+pc_verbal16$warnings
+pc_verbal16$errors
+```
+
+```{r PowerCurve_m2_verbal_16_add_to_df}
+results <- summary(pc_verbal16)
+results_df <- as.data.frame(cbind(rep("verbal_s16_t_around109", 
+                                        times= results$trials), 
+                                    rep(16, times = results$trials),
+                                    rep(109, times = results$trials),
+                                rep(24, times = results$trials),
+              pc_verbal16[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_verbal_16_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+```
+
+
+*8 participants, 120 trials:*
+
+```{r PowerCurve_m2_verbal_8}
+(pc_verbal8 <- powerCurve(m_verbal, test=fixed("Pos.cont", method = "t"),
+                           along = "subject", breaks = c(8), nsim = 1000))
+```
+
+```{r PowerCurve_m2_verbal_8_results}
+#plot(pc_verbal8)
+summary(pc_verbal8)
+pc_verbal8$warnings
+pc_verbal8$errors
+```
+
+```{r PowerCurve_m2_verbal_8_add_to_df}
+results <- summary(pc_verbal8)
+results_df <- as.data.frame(cbind(rep("verbal_s8_t_around109", 
+                                        times= results$trials), 
+                                    rep(8, times = results$trials),
+                                    rep(109, times = results$trials),
+                                  rep(24, times = results$trials),
+              pc_verbal8[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat", 
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_verbal_8_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+```
+
+
+*30 participants, 16 categories:*
+
+```{r PowerCurve_m2_verbal_cat16_results}
+(pc_verbal_categories_16 <- powerCurve(m_verbal, test=fixed("Pos.cont", method = "t"),
+                                       along = "category", breaks = c(16),
+                                       nsim = 1000, seed = 99))
+```
+
+```{r PowerCurve_m2_verbal_cat16_results}
+#plot(pc_verbal_categories_16)
+summary(pc_verbal_categories_16)
+pc_verbal_categories_16$warnings
+pc_verbal_categories_16$errors
+```
+
+```{r PowerCurve_m2_verbal_cat16_add_to_df}
+results <- summary(pc_verbal_categories_16)
+results_df <- as.data.frame(cbind(rep("verbal_s30_cat16", 
+                                        times= results$trials), 
+                                    rep(30, times = results$trials),
+                                    rep(73, times = results$trials),
+                                    rep(16, times = results$trials),
+              pc_verbal_categories_16[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_verbal_cat16_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+```
+
+
+*30 participants, 8 categories:*
+
+```{r PowerCurve_m2_verbal_cat8_results}
+(pc_verbal_categories_8 <- powerCurve(m_verbal, test=fixed("Pos.cont", method = "t"),
+                                       along = "category", breaks = c(8),
+                                       nsim = 1000, seed = 99))
+```
+
+```{r PowerCurve_m2_verbal_cat8_results}
+#plot(pc_verbal_categories_8)
+summary(pc_verbal_categories_8)
+pc_verbal_categories_8$warnings
+pc_verbal_categories_8$errors
+```
+
+```{r PowerCurve_m2_verbal_cat8_add_to_df}
+results <- summary(pc_verbal_categories_8)
+results_df <- as.data.frame(cbind(rep("verbal_s30_cat8", 
+                                        times= results$trials), 
+                                    rep(30, times = results$trials),
+                                    rep(37, times = results$trials),
+                                    rep(8, times = results$trials),
+              pc_verbal_categories_8[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_verbal_cat8_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+```
+
+
+*30 participants, 4 categories:*
+
+```{r PowerCurve_m2_verbal_cat4_results}
+(pc_verbal_categories_4 <- powerCurve(m_verbal, test=fixed("Pos.cont", method = "t"),
+                                       along = "category", breaks = c(4),
+                                       nsim = 1000, seed = 99))
+```
+
+```{r PowerCurve_m2_verbal_cat4_results}
+#plot(pc_verbal_categories_4)
+summary(pc_verbal_categories_4)
+pc_verbal_categories_4$warnings
+pc_verbal_categories_4$errors
+```
+
+```{r PowerCurve_m2_verbal_cat4_add_to_df}
+results <- summary(pc_verbal_categories_4)
+results_df <- as.data.frame(cbind(rep("verbal_s30_cat4", 
+                                        times= results$trials), 
+                                    rep(30, times = results$trials),
+                                    rep(19, times = results$trials),
+                                    rep(4, times = results$trials),
+              pc_verbal_categories_4[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_verbal_cat4_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+```
+
+
+
+
+#### A) **TYPING DATA**
+
+*30 participants, 120 trials - The actual post-hoc power:*  
+
+```{r PowerSim_m2_typing_30}
+(Power_m2_typing_30 <- powerSim(m_typing, test=fixed("Pos.cont", method = "t"),
+                                nsim = 1000)) # increase to nsim = 1000 for real test
+results <- summary(Power_m2_typing_30)
+#lastResult()$warnings
+#lastResult()$errors
+simr_results <- as.data.frame(cbind(rep("typing_s30_t_around109", 
+                                        times = Power_m2_typing_30$n),
+                                    rep(30, times =
+                                          Power_m2_typing_30$n),
+                                    rep(109, times =
+                                          Power_m2_typing_30$n),
+                                    rep(24, times = Power_m2_typing_30$n),
+              Power_m2_typing_30$pval, results$successes,
+              results$mean, results$lower, results$upper))
+colnames(simr_results)<-c("name", "nsubjects", "ntrials", "ncat", "pval",
+                          "successes", "mean", "lower", "upper")
+``` 
+
+Save data frame
+ 
+```{r PowerSim_m2_typing_30_export_data}
+write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+```
+
+
+*24 participants, 120 trials:*
+
+
+```{r PowerCurve_m2_typing_24}
+(pc_typing24 <- powerCurve(m_typing, test=fixed("Pos.cont", method = "t"),
+                           along = "subject", breaks = c(24), nsim = 1000))
+```
+
+```{r PowerCurve_m2_typing_24_results}
+#plot(pc_typing24)
+summary(pc_typing24)
+pc_typing24$warnings
+pc_typing24$errors
+```
+
+```{r PowerCurve_m2_typing_24_add_to_df}
+results <- summary(pc_typing24)
+results_df <- as.data.frame(cbind(rep("typing_s24_t_around109", 
+                                        times= results$trials), 
+                                    rep(24, times = results$trials),
+                                    rep(109, times = results$trials),
+                                  rep(24, times = results$trials),
+              pc_typing24[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_typing_24_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+```
+
+
+*16 participants, 120 trials:*
+
+```{r PowerCurve_m2_typing_16}
+(pc_typing16 <- powerCurve(m_typing, test=fixed("Pos.cont", method = "t"),
+                           along = "subject", breaks = c(16), nsim = 1000))
+```
+
+```{r PowerCurve_m2_typing_16_results}
+#plot(pc_typing16)
+summary(pc_typing16)
+pc_typing16$warnings
+pc_typing16$errors
+```
+
+```{r PowerCurve_m2_typing_16_add_to_df}
+results <- summary(pc_typing16)
+results_df <- as.data.frame(cbind(rep("typing_s16_t_around109", 
+                                        times= results$trials), 
+                                    rep(16, times = results$trials),
+                                    rep(109, times = results$trials),
+                                rep(24, times = results$trials),
+              pc_typing16[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_typing_16_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+```
+
+
+*8 participants, 120 trials:*
+
+```{r PowerCurve_m2_typing_8}
+(pc_typing8 <- powerCurve(m_typing, test=fixed("Pos.cont", method = "t"),
+                           along = "subject", breaks = c(8), nsim = 1000))
+```
+
+```{r PowerCurve_m2_typing_8_results}
+#plot(pc_typing8)
+summary(pc_typing8)
+pc_typing8$warnings
+pc_typing8$errors
+```
+
+```{r PowerCurve_m2_typing_8_add_to_df}
+results <- summary(pc_typing8)
+results_df <- as.data.frame(cbind(rep("typing_s8_t_around109", 
+                                        times= results$trials), 
+                                    rep(8, times = results$trials),
+                                    rep(109, times = results$trials),
+                                  rep(24, times = results$trials),
+              pc_typing8[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat", 
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_typing_8_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+```
+
+
+*30 participants, 16 categories:*
+
+```{r PowerCurve_m2_typing_cat16_results}
+(pc_typing_categories_16 <- powerCurve(m_typing, test=fixed("Pos.cont", method = "t"),
+                                       along = "category", breaks = c(16),
+                                       nsim = 1000, seed = 99))
+```
+
+```{r PowerCurve_m2_typing_cat16_results}
+#plot(pc_typing_categories_16)
+summary(pc_typing_categories_16)
+pc_typing_categories_16$warnings
+pc_typing_categories_16$errors
+```
+
+```{r PowerCurve_m2_typing_cat16_add_to_df}
+results <- summary(pc_typing_categories_16)
+results_df <- as.data.frame(cbind(rep("typing_s30_cat16", 
+                                        times= results$trials), 
+                                    rep(30, times = results$trials),
+                                    rep(73, times = results$trials),
+                                    rep(16, times = results$trials),
+              pc_typing_categories_16[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_typing_cat16_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+```
+
+
+*30 participants, 8 categories:*
+
+```{r PowerCurve_m2_typing_cat8_results}
+(pc_typing_categories_8 <- powerCurve(m_typing, test=fixed("Pos.cont", method = "t"),
+                                       along = "category", breaks = c(8),
+                                       nsim = 1000, seed = 99))
+```
+
+```{r PowerCurve_m2_typing_cat8_results}
+#plot(pc_typing_categories_8)
+summary(pc_typing_categories_8)
+pc_typing_categories_8$warnings
+pc_typing_categories_8$errors
+```
+
+```{r PowerCurve_m2_typing_cat8_add_to_df}
+results <- summary(pc_typing_categories_8)
+results_df <- as.data.frame(cbind(rep("typing_s30_cat8", 
+                                        times= results$trials), 
+                                    rep(30, times = results$trials),
+                                    rep(37, times = results$trials),
+                                    rep(8, times = results$trials),
+              pc_typing_categories_8[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_typing_cat8_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+```
+
+
+*30 participants, 4 categories:*
+
+```{r PowerCurve_m2_typing_cat4_results}
+(pc_typing_categories_4 <- powerCurve(m_typing, test=fixed("Pos.cont", method = "t"),
+                                       along = "category", breaks = c(4),
+                                       nsim = 1000, seed = 99))
+```
+
+```{r PowerCurve_m2_typing_cat4_results}
+#plot(pc_typing_categories_4)
+summary(pc_typing_categories_4)
+pc_typing_categories_4$warnings
+pc_typing_categories_4$errors
+```
+
+```{r PowerCurve_m2_typing_cat4_add_to_df}
+results <- summary(pc_typing_categories_4)
+results_df <- as.data.frame(cbind(rep("typing_s30_cat4", 
+                                        times= results$trials), 
+                                    rep(30, times = results$trials),
+                                    rep(19, times = results$trials),
+                                    rep(4, times = results$trials),
+              pc_typing_categories_4[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_typing_cat4_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+```
+
+
+
+
+
+
+```{r}
+# #install.packages("remotes")
+# #remotes::install_github("DejanDraschkow/mixedpower")
+# #library(devtools)
+# 
+# #install_github("SampleSizeShop/invWishartSum")
+# 
+# #install_github("SampleSizeShop/mixedPower")
+#  
+# library(mixedpower)
+```
+
+```{r}
+# # subset verbal data
+# df_verbal <- df %>% filter(experiment == "verbal") %>% droplevels()
+# 
+# # convert subject variable to integer
+# df_verbal$subject <- as.numeric(as.character(df_verbal$subject))
+# 
+# # center continuous predictor 
+# df_verbal$Pos.cont <- scale(as.numeric(as.character(df_verbal$Pos)), 
+#                             center = TRUE, scale = FALSE)
+# df_verbal <- droplevels(df_verbal)
+# 
+# # numeric category variable
+# df_verbal$numcat <- as.numeric(df_verbal$category)
+# 
+# # log-transform RT
+# df_verbal$RT.log <- log(df_verbal$RT)
+# # run GLMM
+# m_verbal <- lmer(RT.log ~ Pos.cont + 
+#                     (Pos.cont|subject) +(Pos.cont|numcat),
+#             data =df_verbal, #family =Gamma(link ="identity"),
+#             control=lmerControl(optimizer = "bobyqa"))
+# summary(m_verbal)
+```
+
+
+
+```{r} 
+# lmm_power_verbal_category <- mixedpower(m_verbal, data = df_verbal,
+#                                         fixed_effects = "Pos.cont",
+#                                         simvar = "numcat",
+#                                         steps = c(8, 12, 16, 20, 24),
+#                                         critical_value = 2,
+#                                         n_sim = 1000)
+# mixedpower_results <- as.data.frame(summary(lmm_power_verbal_category))
+# mixedpower_results$Var1 <- "verbal_category"
+# write.csv(mixedpower_results, 
+#           here::here("data", "posthoc_mixedpower.csv"))
+# # lmm_power <- R2power(model = m_verbal, data = df_verbal, 
+# #   fixed_effects = "Pos.cont", 
+# #   simvar = "subject", steps = c(16, 20, 24, 30),
+# #   R2var = "numcat", R2level = c(20),
+# #   critical_value = 1.96, n_sim = 10, 
+# #   databased = T)
+
+```
+
+```{r} 
+# lmm_power_verbal_subject <- mixedpower(m_verbal, data = df_verbal,
+#                                         fixed_effects = "Pos.cont",
+#                                         simvar = "subject",
+#                                         steps = c(30, 28, 26, 24, 22, 20, 18, 16, 14, 12, 10),
+#                                         critical_value = 2,
+#                                         n_sim = 1000)
+# mixedpower_results2 <- as.data.frame(summary(lmm_power_verbal_subject))
+# mixedpower_results2$Var1 <- "verbal_subject"
+# mixedpower_results<- rbind(mixedpower_results2, mixedpower_results)
+# write.csv(mixedpower_results, 
+#           here::here("data", "posthoc_mixedpower.csv"))
+# # lmm_power <- R2power(model = m_verbal, data = df_verbal, 
+# #   fixed_effects = "Pos.cont", 
+# #   simvar = "subject", steps = c(16, 20, 24, 30),
+# #   R2var = "numcat", R2level = c(20),
+# #   critical_value = 1.96, n_sim = 10, 
+# #   databased = T)
+
+```
+
+
+
+
+```{r}
+# # subset typing data
+# df_typing <- df %>% filter(experiment == "typing") %>% droplevels()
+# 
+# # convert subject variable to integer
+# df_typing$subject <- as.numeric(as.character(df_typing$subject))
+# 
+# # center continuous predictor 
+# df_typing$Pos.cont <- scale(as.numeric(as.character(df_typing$Pos)), 
+#                             center = TRUE, scale = FALSE)
+# df_typing <- droplevels(df_typing)
+# 
+# # numeric category variable
+# df_typing$numcat <- as.numeric(df_typing$category)
+# 
+# # log-transform RT
+# df_typing$RT.log <- log(df_typing$RT)
+# # run GLMM
+# m_typing <- afex::lmer_alt(RT.log ~ Pos.cont + 
+#                     (Pos.cont||subject) +(Pos.cont||numcat),
+#             data =df_typing, #family =Gamma(link ="identity"),
+#             control=lmerControl(optimizer = "bobyqa", 
+#                                 optCtrl = list(maxfun = 2*10^5)))
+# summary(m_typing)
+```
+ 
+ 
+```{r} 
+# lmm_power_typing_category <- mixedpower(m_typing, data = df_typing,
+#                                         fixed_effects = "Pos.cont",
+#                                         simvar = "numcat",
+#                                         steps = c(8, 12, 16, 20, 24),
+#                                         critical_value = 1.96,
+#                                         n_sim = 1000)
+# mixedpower_results2 <- as.data.frame(summary(lmm_power_typing_category))
+# mixedpower_results2$Var1 <- "typing_category"
+# mixedpower_results<- rbind(mixedpower_results2, mixedpower_results)
+# write.csv(mixedpower_results, 
+#           here::here("data", "posthoc_mixedpower.csv"))
+# # lmm_power <- R2power(model = m_verbal, data = df_verbal, 
+# #   fixed_effects = "Pos.cont", 
+# #   simvar = "subject", steps = c(16, 20, 24, 30),
+# #   R2var = "numcat", R2level = c(20),
+# #   critical_value = 1.96, n_sim = 10, 
+# #   databased = T)
+
+```
+
+```{r} 
+# lmm_power_typing_subject <- mixedpower(m_typing, data = df_typing,
+#                                         fixed_effects = "Pos.cont",
+#                                         simvar = "subject",
+#                                         steps = c(30, 28, 26, 24, 22, 20, 18, 16, 14, 12, 10),
+#                                         critical_value = 1.96,
+#                                         n_sim = 1000)
+# mixedpower_results2 <- as.data.frame(summary(lmm_power_typing_subject))
+# mixedpower_results2$Var1 <- "typing_subject"
+# mixedpower_results<- rbind(mixedpower_results2, mixedpower_results)
+# write.csv(mixedpower_results, 
+#           here::here("data", "posthoc_mixedpower.csv"))
+# # lmm_power <- R2power(model = m_verbal, data = df_verbal, 
+# #   fixed_effects = "Pos.cont", 
+# #   simvar = "subject", steps = c(16, 20, 24, 30),
+# #   R2var = "numcat", R2level = c(20),
+# #   critical_value = 1.96, n_sim = 10, 
+# #   databased = T)
+
+```
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+```{r PowerSim_m2_verbal_40}
+# (Power_m2_verbal_40 <- powerSim(m2_verbal, test=fixed("Pos.cont"), nsim = 1000)) # increase to nsim = 1000 for real test
+# lastResult()$warnings
+# lastResult()$errors
+```
+
+```{r PowerCurve_verbal}
+# (pc_m2_verbal <- powerCurve(m2_verbal, along = "subject", 
+#                           breaks = c(20, 22, 24,26,30,32, 36, 40), nsim = 1000))
+# lastResult()$warnings
+# lastResult()$errors
+# plot(pc_m2_verbal)
+```
+
+```{r PowerCurve_typing}
+# (pc_m2_typing <- powerCurve(m2_typing, along = "subject", 
+#                           breaks = c(20, 22, 24,26,30,32, 36, 40), nsim = 1000))
+# lastResult()$warnings
+# lastResult()$errors
+# plot(pc_m2_typing)
+```
+
+
+
+```{r tryout_simulations}
+# m_verbal_glmm <- glmer(RT.log ~ Pos.cont + 
+#                     (Pos.cont|subject) +(Pos.cont|numcat),
+#             data =df_verbal, family =Gamma(link ="identity"),
+#             control=glmerControl(optimizer = "bobyqa"))
+# summary(m_verbal_glmm)
+# 
+# # specify beta_coeffecients (intercept and pos.cont)
+# fixed_effects <- c(fixef(m_verbal_glmm)[1], fixef(m_verbal_glmm)[2])
+# 
+# # set random effects variances
+# output <- summary(m_verbal_glmm)
+# output$residuals
+# 
+# dep <- doSim(m_verbal_glmm)
+# doFit(dep, m_verbal_glmm)
+
+```

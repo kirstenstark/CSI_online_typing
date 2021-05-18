@@ -25,7 +25,7 @@ rm(list = ls())
 options( "encoding" = "UTF-8" )
 
 # input
-input <- "data_long.csv"
+input <- "data_long_final.csv"
 
 # load data
 df <- read.csv(here::here("data", input), sep = ",",  na = "")
@@ -42,7 +42,12 @@ table(df$handedness)/160 ; sum(df$handedness == 2)/nrow(df)
 
 table(df$fingers_l)/160; table(df$fingers_r)/160
 
-
+mean(df$time_wo_outlier)/60 # 21, 37 min = 21 min 22sec
+range(df$time_wo_outlier)/60 # 0.00000 30.21667
+duration <- df %>% select(starts_with("TIME")) %>% select(!time_wo_outlier) %>% select(!TIME_RSI) 
+duration$sum = duration %>% rowSums(na.rm = TRUE)
+mean(duration$sum)/60
+range(duration$sum)/60
 ```
 
 ## Average typing speed

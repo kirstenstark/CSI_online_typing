@@ -123,8 +123,7 @@ fixef(m_typing)["(Intercept)"] <- 7.07567744
 set.seed(99)
 ```
 
-We want to run power analyses at different sample sizes and with different trial
-numbers.
+We want to run power analyses at different sample sizes and with different trial numbers.
 
 #### A) **VERBAL DATA**
 
@@ -133,6 +132,12 @@ numbers.
 ```{r PowerSim_m2_verbal_30}
 (Power_m2_verbal_30 <- powerSim(m_verbal, test=fixed("Pos.cont", method = "t"),
                                 nsim = 1000)) # increase to nsim = 1000 for real test
+
+saveRDS(Power_m2_verbal_30, 
+        file = here::here("results", "power_sim",
+                          "pc_verbal30.RDS"))
+
+
 results <- summary(Power_m2_verbal_30)
 #lastResult()$warnings
 #lastResult()$errors
@@ -149,10 +154,11 @@ colnames(simr_results)<-c("name", "nsubjects", "ntrials", "ncat", "pval",
                           "successes", "mean", "lower", "upper")
 ``` 
 
+
 Save data frame
- 
+
 ```{r PowerSim_m2_verbal_30_export_data}
-write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
 ```
 
 
@@ -162,6 +168,10 @@ write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
 ```{r PowerCurve_m2_verbal_24}
 (pc_verbal24 <- powerCurve(m_verbal, test=fixed("Pos.cont", method = "t"),
                            along = "subject", breaks = c(24), nsim = 1000))
+
+saveRDS(pc_verbal24, 
+        file = here::here("results", "power_sim",
+                          "pc_verbal24.RDS"))
 ```
 
 ```{r PowerCurve_m2_verbal_24_results}
@@ -176,7 +186,7 @@ results <- summary(pc_verbal24)
 results_df <- as.data.frame(cbind(rep("verbal_s24_t_around109", 
                                         times= results$trials), 
                                     rep(24, times = results$trials),
-                                    rep(109, times = results$trials),
+                                    rep(87, times = results$trials),
                                   rep(24, times = results$trials),
               pc_verbal24[["ps"]][[1]]$pval, 
               rep(results$successes, times = results$trials),
@@ -189,7 +199,48 @@ colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
 
 ```{r PowerCurve_m2_verbal_24_export}
 simr_results <- rbind(simr_results, results_df)
-write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
+```
+
+
+*20 participants, 120 trials:*
+
+
+```{r PowerCurve_m2_verbal_20}
+(pc_verbal20 <- powerCurve(m_verbal, test=fixed("Pos.cont", method = "t"),
+                           along = "subject", breaks = c(20), nsim = 1000))
+
+saveRDS(pc_verbal20, 
+        file = here::here("results", "power_sim",
+                          "pc_verbal20.RDS"))
+```
+
+```{r PowerCurve_m2_verbal_20_results}
+#plot(pc_verbal20)
+summary(pc_verbal20)
+pc_verbal20$warnings
+pc_verbal20$errors
+```
+
+```{r PowerCurve_m2_verbal_20_add_to_df}
+results <- summary(pc_verbal20)
+results_df <- as.data.frame(cbind(rep("verbal_s20_t_around109", 
+                                        times= results$trials), 
+                                    rep(24, times = results$trials),
+                                    rep(73, times = results$trials),
+                                  rep(24, times = results$trials),
+              pc_verbal20[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_verbal_20_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
 ```
 
 
@@ -198,6 +249,10 @@ write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
 ```{r PowerCurve_m2_verbal_16}
 (pc_verbal16 <- powerCurve(m_verbal, test=fixed("Pos.cont", method = "t"),
                            along = "subject", breaks = c(16), nsim = 1000))
+
+saveRDS(pc_verbal16, 
+        file = here::here("results", "power_sim",
+                          "pc_verbal16.RDS"))
 ```
 
 ```{r PowerCurve_m2_verbal_16_results}
@@ -225,7 +280,48 @@ colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
 
 ```{r PowerCurve_m2_verbal_16_export}
 simr_results <- rbind(simr_results, results_df)
-write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
+```
+
+
+*10 participants, 120 trials:*
+
+
+```{r PowerCurve_m2_verbal_10}
+(pc_verbal10 <- powerCurve(m_verbal, test=fixed("Pos.cont", method = "t"),
+                           along = "subject", breaks = c(10), nsim = 1000))
+
+saveRDS(pc_verbal10, 
+        file = here::here("results", "power_sim",
+                          "pc_verbal10.RDS"))
+```
+
+```{r PowerCurve_m2_verbal_10_results}
+#plot(pc_verbal10)
+summary(pc_verbal10)
+pc_verbal10$warnings
+pc_verbal10$errors
+```
+
+```{r PowerCurve_m2_verbal_10_add_to_df}
+results <- summary(pc_verbal10)
+results_df <- as.data.frame(cbind(rep("verbal_s10_t_around109", 
+                                        times= results$trials), 
+                                    rep(10, times = results$trials),
+                                    rep(36, times = results$trials),
+                                  rep(24, times = results$trials),
+              pc_verbal10[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_verbal_10_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
 ```
 
 
@@ -234,6 +330,10 @@ write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
 ```{r PowerCurve_m2_verbal_8}
 (pc_verbal8 <- powerCurve(m_verbal, test=fixed("Pos.cont", method = "t"),
                            along = "subject", breaks = c(8), nsim = 1000))
+
+saveRDS(pc_verbal8, 
+        file = here::here("results", "power_sim",
+                          "pc_verbal8.RDS"))
 ```
 
 ```{r PowerCurve_m2_verbal_8_results}
@@ -248,7 +348,7 @@ results <- summary(pc_verbal8)
 results_df <- as.data.frame(cbind(rep("verbal_s8_t_around109", 
                                         times= results$trials), 
                                     rep(8, times = results$trials),
-                                    rep(109, times = results$trials),
+                                    rep(30, times = results$trials),
                                   rep(24, times = results$trials),
               pc_verbal8[["ps"]][[1]]$pval, 
               rep(results$successes, times = results$trials),
@@ -261,7 +361,88 @@ colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
 
 ```{r PowerCurve_m2_verbal_8_export}
 simr_results <- rbind(simr_results, results_df)
-write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
+```
+
+*5 participants, 120 trials:*
+
+
+```{r PowerCurve_m2_verbal_5}
+(pc_verbal5 <- powerCurve(m_verbal, test=fixed("Pos.cont", method = "t"),
+                           along = "subject", breaks = c(5), nsim = 1000))
+
+saveRDS(pc_verbal5, 
+        file = here::here("results", "power_sim",
+                          "pc_verbal5.RDS"))
+```
+
+```{r PowerCurve_m2_verbal_5_results}
+#plot(pc_verbal5)
+summary(pc_verbal5)
+pc_verbal5$warnings
+pc_verbal5$errors
+```
+
+```{r PowerCurve_m2_verbal_5_add_to_df}
+results <- summary(pc_verbal5)
+results_df <- as.data.frame(cbind(rep("verbal_s5_t_around109", 
+                                        times= results$trials), 
+                                    rep(5, times = results$trials),
+                                    rep(72, times = results$trials),
+                                  rep(24, times = results$trials),
+              pc_verbal5[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_verbal_5_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
+```
+
+
+*30 participants, 19 categories:*
+
+```{r PowerCurve_m2_verbal_cat19_results}
+(pc_verbal_categories_19 <- powerCurve(m_verbal, test=fixed("Pos.cont", method = "t"),
+                                       along = "category", breaks = c(19),
+                                       nsim = 1000, seed = 99))
+
+saveRDS(pc_verbal_categories_19, 
+        file = here::here("results", "power_sim",
+                          "pc_verbal_categories_19.RDS"))
+```
+
+```{r PowerCurve_m2_verbal_cat19_results}
+#plot(pc_verbal_categories_19)
+summary(pc_verbal_categories_19)
+pc_verbal_categories_19$warnings
+pc_verbal_categories_19$errors
+```
+
+```{r PowerCurve_m2_verbal_cat19_add_to_df}
+results <- summary(pc_verbal_categories_19)
+results_df <- as.data.frame(cbind(rep("verbal_s30_cat19", 
+                                        times= results$trials), 
+                                    rep(30, times = results$trials),
+                                    rep(87, times = results$trials),
+                                    rep(19, times = results$trials),
+              pc_verbal_categories_19[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_verbal_cat19_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
 ```
 
 
@@ -271,6 +452,10 @@ write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
 (pc_verbal_categories_16 <- powerCurve(m_verbal, test=fixed("Pos.cont", method = "t"),
                                        along = "category", breaks = c(16),
                                        nsim = 1000, seed = 99))
+
+saveRDS(pc_verbal_categories_16, 
+        file = here::here("results", "power_sim",
+                          "pc_verbal_categories_16.RDS"))
 ```
 
 ```{r PowerCurve_m2_verbal_cat16_results}
@@ -298,7 +483,47 @@ colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
 
 ```{r PowerCurve_m2_verbal_cat16_export}
 simr_results <- rbind(simr_results, results_df)
-write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
+```
+
+*30 participants, 13 categories:*
+
+```{r PowerCurve_m2_verbal_cat13_results}
+(pc_verbal_categories_13 <- powerCurve(m_verbal, test=fixed("Pos.cont", method = "t"),
+                                       along = "category", breaks = c(13),
+                                       nsim = 1000, seed = 99))
+
+saveRDS(pc_verbal_categories_13, 
+        file = here::here("results", "power_sim",
+                          "pc_verbal_categories_13.RDS"))
+```
+
+```{r PowerCurve_m2_verbal_cat13_results}
+#plot(pc_verbal_categories_13)
+summary(pc_verbal_categories_13)
+pc_verbal_categories_13$warnings
+pc_verbal_categories_13$errors
+```
+
+```{r PowerCurve_m2_verbal_cat13_add_to_df}
+results <- summary(pc_verbal_categories_13)
+results_df <- as.data.frame(cbind(rep("verbal_s30_cat13", 
+                                        times= results$trials), 
+                                    rep(30, times = results$trials),
+                                    rep(59, times = results$trials),
+                                    rep(13, times = results$trials),
+              pc_verbal_categories_13[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_verbal_cat13_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
 ```
 
 
@@ -308,6 +533,10 @@ write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
 (pc_verbal_categories_8 <- powerCurve(m_verbal, test=fixed("Pos.cont", method = "t"),
                                        along = "category", breaks = c(8),
                                        nsim = 1000, seed = 99))
+
+saveRDS(pc_verbal_categories_8, 
+        file = here::here("results", "power_sim",
+                          "pc_verbal_categories_8.RDS"))
 ```
 
 ```{r PowerCurve_m2_verbal_cat8_results}
@@ -335,8 +564,50 @@ colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
 
 ```{r PowerCurve_m2_verbal_cat8_export}
 simr_results <- rbind(simr_results, results_df)
-write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
 ```
+
+*30 participants, 6 categories:*
+
+```{r PowerCurve_m2_verbal_cat6_results}
+(pc_verbal_categories_6 <- powerCurve(m_verbal, test=fixed("Pos.cont", method = "t"),
+                                       along = "category", breaks = c(6),
+                                       nsim = 1000, seed = 99))
+
+saveRDS(pc_verbal_categories_6, 
+        file = here::here("results", "power_sim",
+                          "pc_verbal_categories_6.RDS"))
+```
+
+```{r PowerCurve_m2_verbal_cat6_results}
+#plot(pc_verbal_categories_6)
+summary(pc_verbal_categories_6)
+pc_verbal_categories_6$warnings
+pc_verbal_categories_6$errors
+```
+
+```{r PowerCurve_m2_verbal_cat6_add_to_df}
+results <- summary(pc_verbal_categories_6)
+results_df <- as.data.frame(cbind(rep("verbal_s30_cat6", 
+                                        times= results$trials), 
+                                    rep(30, times = results$trials),
+                                    rep(27, times = results$trials),
+                                    rep(6, times = results$trials),
+              pc_verbal_categories_6[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_verbal_cat6_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
+```
+
+
 
 
 *30 participants, 4 categories:*
@@ -345,6 +616,10 @@ write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
 (pc_verbal_categories_4 <- powerCurve(m_verbal, test=fixed("Pos.cont", method = "t"),
                                        along = "category", breaks = c(4),
                                        nsim = 1000, seed = 99))
+
+saveRDS(pc_verbal_categories_4, 
+        file = here::here("results", "power_sim",
+                          "pc_verbal_categories_4.RDS"))
 ```
 
 ```{r PowerCurve_m2_verbal_cat4_results}
@@ -372,7 +647,7 @@ colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
 
 ```{r PowerCurve_m2_verbal_cat4_export}
 simr_results <- rbind(simr_results, results_df)
-write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
 ```
 
 
@@ -383,28 +658,47 @@ write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
 *30 participants, 120 trials - The actual post-hoc power:*  
 
 ```{r PowerSim_m2_typing_30}
-(Power_m2_typing_30 <- powerSim(m_typing, test=fixed("Pos.cont", method = "t"),
+(Power_m2_typing_30 <- powerSim(m_typing, 
+                                test=fixed("Pos.cont", method = "t"),
                                 nsim = 1000)) # increase to nsim = 1000 for real test
+
+saveRDS(Power_m2_typing_30, 
+        file = here::here("results", "power_sim",
+                          "pc_typing30.RDS"))
+
+
 results <- summary(Power_m2_typing_30)
-#lastResult()$warnings
-#lastResult()$errors
-simr_results <- as.data.frame(cbind(rep("typing_s30_t_around109", 
-                                        times = Power_m2_typing_30$n),
-                                    rep(30, times =
-                                          Power_m2_typing_30$n),
-                                    rep(109, times =
-                                          Power_m2_typing_30$n),
-                                    rep(24, times = Power_m2_typing_30$n),
-              Power_m2_typing_30$pval, results$successes,
-              results$mean, results$lower, results$upper))
-colnames(simr_results)<-c("name", "nsubjects", "ntrials", "ncat", "pval",
-                          "successes", "mean", "lower", "upper")
+lastResult()$warnings
+lastResult()$errors
+
 ``` 
+
+```{r PowerCurve_m2_typing_subj30_add_to_df}
+
+results_df <- as.data.frame(cbind(rep("typing_s30_t_around109", 
+                                        times= results$trials), 
+                                    rep(30, times = results$trials),
+                                    rep(109, times = results$trials),
+                                    rep(24, times = results$trials),
+              pc_typing_categories_4[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_typing_subj30_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
+```
+
 
 Save data frame
  
 ```{r PowerSim_m2_typing_30_export_data}
-write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
 ```
 
 
@@ -414,6 +708,9 @@ write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
 ```{r PowerCurve_m2_typing_24}
 (pc_typing24 <- powerCurve(m_typing, test=fixed("Pos.cont", method = "t"),
                            along = "subject", breaks = c(24), nsim = 1000))
+saveRDS(pc_typing24, 
+        file = here::here("results", "power_sim",
+                          "pc_typing24.RDS"))
 ```
 
 ```{r PowerCurve_m2_typing_24_results}
@@ -428,7 +725,7 @@ results <- summary(pc_typing24)
 results_df <- as.data.frame(cbind(rep("typing_s24_t_around109", 
                                         times= results$trials), 
                                     rep(24, times = results$trials),
-                                    rep(109, times = results$trials),
+                                    rep(87, times = results$trials),
                                   rep(24, times = results$trials),
               pc_typing24[["ps"]][[1]]$pval, 
               rep(results$successes, times = results$trials),
@@ -441,7 +738,47 @@ colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
 
 ```{r PowerCurve_m2_typing_24_export}
 simr_results <- rbind(simr_results, results_df)
-write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
+```
+
+
+*20 participants, 120 trials:*
+
+
+```{r PowerCurve_m2_typing_20}
+(pc_typing20 <- powerCurve(m_typing, test=fixed("Pos.cont", method = "t"),
+                           along = "subject", breaks = c(20), nsim = 1000))
+saveRDS(pc_typing20, 
+        file = here::here("results", "power_sim",
+                          "pc_typing20.RDS"))
+```
+
+```{r PowerCurve_m2_typing_20_results}
+#plot(pc_typing20)
+summary(pc_typing20)
+pc_typing20$warnings
+pc_typing20$errors
+```
+
+```{r PowerCurve_m2_typing_20_add_to_df}
+results <- summary(pc_typing20)
+results_df <- as.data.frame(cbind(rep("typing_s20_t_around109", 
+                                        times= results$trials), 
+                                    rep(20, times = results$trials),
+                                    rep(73, times = results$trials),
+                                  rep(24, times = results$trials),
+              pc_typing20[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_typing_20_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
 ```
 
 
@@ -450,6 +787,9 @@ write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
 ```{r PowerCurve_m2_typing_16}
 (pc_typing16 <- powerCurve(m_typing, test=fixed("Pos.cont", method = "t"),
                            along = "subject", breaks = c(16), nsim = 1000))
+saveRDS(pc_typing16, 
+        file = here::here("results", "power_sim",
+                          "pc_typing16.RDS"))
 ```
 
 ```{r PowerCurve_m2_typing_16_results}
@@ -464,7 +804,7 @@ results <- summary(pc_typing16)
 results_df <- as.data.frame(cbind(rep("typing_s16_t_around109", 
                                         times= results$trials), 
                                     rep(16, times = results$trials),
-                                    rep(109, times = results$trials),
+                                    rep(58, times = results$trials),
                                 rep(24, times = results$trials),
               pc_typing16[["ps"]][[1]]$pval, 
               rep(results$successes, times = results$trials),
@@ -477,8 +817,49 @@ colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
 
 ```{r PowerCurve_m2_typing_16_export}
 simr_results <- rbind(simr_results, results_df)
-write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
 ```
+
+
+*10 participants, 120 trials:*
+
+
+```{r PowerCurve_m2_typing_10}
+(pc_typing10 <- powerCurve(m_typing, test=fixed("Pos.cont", method = "t"),
+                           along = "subject", breaks = c(10), nsim = 1000))
+saveRDS(pc_typing10, 
+        file = here::here("results", "power_sim",
+                          "pc_typing10.RDS"))
+```
+
+```{r PowerCurve_m2_typing_10_results}
+#plot(pc_typing10)
+summary(pc_typing10)
+pc_typing10$warnings
+pc_typing10$errors
+```
+
+```{r PowerCurve_m2_typing_10_add_to_df}
+results <- summary(pc_typing10)
+results_df <- as.data.frame(cbind(rep("typing_s10_t_around109", 
+                                        times= results$trials), 
+                                    rep(10, times = results$trials),
+                                    rep(36, times = results$trials),
+                                  rep(24, times = results$trials),
+              pc_typing10[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_typing_10_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
+```
+
 
 
 *8 participants, 120 trials:*
@@ -486,6 +867,9 @@ write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
 ```{r PowerCurve_m2_typing_8}
 (pc_typing8 <- powerCurve(m_typing, test=fixed("Pos.cont", method = "t"),
                            along = "subject", breaks = c(8), nsim = 1000))
+saveRDS(pc_typing8, 
+        file = here::here("results", "power_sim",
+                          "pc_typing8.RDS"))
 ```
 
 ```{r PowerCurve_m2_typing_8_results}
@@ -513,7 +897,87 @@ colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
 
 ```{r PowerCurve_m2_typing_8_export}
 simr_results <- rbind(simr_results, results_df)
-write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
+```
+
+
+*5 participants, 120 trials:*
+
+
+```{r PowerCurve_m2_typing_5}
+(pc_typing5 <- powerCurve(m_typing, test=fixed("Pos.cont", method = "t"),
+                           along = "subject", breaks = c(5), nsim = 1000))
+saveRDS(pc_typing5, 
+        file = here::here("results", "power_sim",
+                          "pc_typing5.RDS"))
+```
+
+```{r PowerCurve_m2_typing_5_results}
+#plot(pc_typing5)
+summary(pc_typing5)
+pc_typing5$warnings
+pc_typing5$errors
+```
+
+```{r PowerCurve_m2_typing_5_add_to_df}
+results <- summary(pc_typing5)
+results_df <- as.data.frame(cbind(rep("typing_s5_t_around109", 
+                                        times= results$trials), 
+                                    rep(5, times = results$trials),
+                                    rep(18, times = results$trials),
+                                  rep(24, times = results$trials),
+              pc_typing5[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_typing_5_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
+```
+
+
+*30 participants, 20 categories:*
+
+```{r PowerCurve_m2_typing_cat20_results}
+(pc_typing_categories_20 <- powerCurve(m_typing, test=fixed("Pos.cont", method = "t"),
+                                       along = "category", breaks = c(20),
+                                       nsim = 1000, seed = 99))
+saveRDS(pc_typing_categories_20, 
+        file = here::here("results", "power_sim",
+                          "pc_typing_categories_20.RDS"))
+```
+
+```{r PowerCurve_m2_typing_cat20_results}
+#plot(pc_typing_categories_20)
+summary(pc_typing_categories_20)
+pc_typing_categories_20$warnings
+pc_typing_categories_20$errors
+```
+
+```{r PowerCurve_m2_typing_cat20_add_to_df}
+results <- summary(pc_typing_categories_20)
+results_df <- as.data.frame(cbind(rep("typing_s30_cat20", 
+                                        times= results$trials), 
+                                    rep(30, times = results$trials),
+                                    rep(86, times = results$trials),
+                                    rep(20, times = results$trials),
+              pc_typing_categories_20[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_typing_cat20_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
 ```
 
 
@@ -523,6 +987,9 @@ write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
 (pc_typing_categories_16 <- powerCurve(m_typing, test=fixed("Pos.cont", method = "t"),
                                        along = "category", breaks = c(16),
                                        nsim = 1000, seed = 99))
+saveRDS(pc_typing_categories_16, 
+        file = here::here("results", "power_sim",
+                          "pc_typing_categories_16.RDS"))
 ```
 
 ```{r PowerCurve_m2_typing_cat16_results}
@@ -550,7 +1017,47 @@ colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
 
 ```{r PowerCurve_m2_typing_cat16_export}
 simr_results <- rbind(simr_results, results_df)
-write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
+```
+
+
+*30 participants, 13 categories:*
+
+```{r PowerCurve_m2_typing_cat13_results}
+(pc_typing_categories_13 <- powerCurve(m_typing, test=fixed("Pos.cont", method = "t"),
+                                       along = "category", breaks = c(13),
+                                       nsim = 1000, seed = 99))
+saveRDS(pc_typing_categories_13, 
+        file = here::here("results", "power_sim",
+                          "pc_typing_categories_13.RDS"))
+```
+
+```{r PowerCurve_m2_typing_cat13_results}
+#plot(pc_typing_categories_13)
+summary(pc_typing_categories_13)
+pc_typing_categories_13$warnings
+pc_typing_categories_13$errors
+```
+
+```{r PowerCurve_m2_typing_cat13_add_to_df}
+results <- summary(pc_typing_categories_13)
+results_df <- as.data.frame(cbind(rep("typing_s30_cat13", 
+                                        times= results$trials), 
+                                    rep(30, times = results$trials),
+                                    rep(59, times = results$trials),
+                                    rep(13, times = results$trials),
+              pc_typing_categories_13[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_typing_cat13_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
 ```
 
 
@@ -560,6 +1067,9 @@ write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
 (pc_typing_categories_8 <- powerCurve(m_typing, test=fixed("Pos.cont", method = "t"),
                                        along = "category", breaks = c(8),
                                        nsim = 1000, seed = 99))
+saveRDS(pc_typing_categories_8, 
+        file = here::here("results", "power_sim",
+                          "pc_typing_categories_8.RDS"))
 ```
 
 ```{r PowerCurve_m2_typing_cat8_results}
@@ -587,9 +1097,48 @@ colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
 
 ```{r PowerCurve_m2_typing_cat8_export}
 simr_results <- rbind(simr_results, results_df)
-write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
 ```
 
+
+*30 participants, 6 categories:*
+
+```{r PowerCurve_m2_typing_cat6_results}
+(pc_typing_categories_6 <- powerCurve(m_typing, test=fixed("Pos.cont", method = "t"),
+                                       along = "category", breaks = c(6),
+                                       nsim = 1000, seed = 99))
+saveRDS(pc_typing_categories_6, 
+        file = here::here("results", "power_sim",
+                          "pc_typing_categories_6.RDS"))
+```
+
+```{r PowerCurve_m2_typing_cat6_results}
+#plot(pc_typing_categories_6)
+summary(pc_typing_categories_6)
+pc_typing_categories_6$warnings
+pc_typing_categories_6$errors
+```
+
+```{r PowerCurve_m2_typing_cat6_add_to_df}
+results <- summary(pc_typing_categories_6)
+results_df <- as.data.frame(cbind(rep("typing_s30_cat6", 
+                                        times= results$trials), 
+                                    rep(30, times = results$trials),
+                                    rep(73, times = results$trials),
+                                    rep(27, times = results$trials),
+              pc_typing_categories_6[["ps"]][[1]]$pval, 
+              rep(results$successes, times = results$trials),
+              rep(results$mean,  times = results$trials),
+              rep(results$lower,  times = results$trials),
+              rep(results$upper,  times = results$trials)))
+colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
+                        "pval","successes", "mean", "lower", "upper")
+``` 
+
+```{r PowerCurve_m2_typing_cat6_export}
+simr_results <- rbind(simr_results, results_df)
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
+```
 
 *30 participants, 4 categories:*
 
@@ -597,6 +1146,9 @@ write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
 (pc_typing_categories_4 <- powerCurve(m_typing, test=fixed("Pos.cont", method = "t"),
                                        along = "category", breaks = c(4),
                                        nsim = 1000, seed = 99))
+saveRDS(pc_typing_categories_4, 
+        file = here::here("results", "power_sim",
+                          "pc_typing_categories_4.RDS"))
 ```
 
 ```{r PowerCurve_m2_typing_cat4_results}
@@ -624,7 +1176,7 @@ colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
 
 ```{r PowerCurve_m2_typing_cat4_export}
 simr_results <- rbind(simr_results, results_df)
-write.csv(simr_results, here::here("data", "posthoc_powersim.csv"))
+write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
 ```
 
 

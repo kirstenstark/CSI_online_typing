@@ -1,7 +1,7 @@
 04 CSI online typing: Descriptives
 ================
 Kirsten Stark
-17 März, 2021
+20 Mai, 2021
 
 ## Load packages
 
@@ -32,63 +32,3732 @@ rm(list = ls())
 options( "encoding" = "UTF-8" )
 
 # input
-input <- "data_long.csv"
+input <- "data_long_final.csv"
 
 # load data
 df <- read.csv(here::here("data", input), sep = ",",  na = "")
 ```
 
-## Description of participant pool
+## Duration of the experiment
 
 ``` r
-table(df$gender)/160
+print("Outlier-corrected duration (provided by soscisurvey)")
+```
+
+    ## [1] "Outlier-corrected duration (provided by soscisurvey)"
+
+``` r
+mean(df$time_wo_outlier)/60 # 21, 37 min = 21 min 22sec
+```
+
+    ## [1] 21.37056
+
+``` r
+sd(df$time_wo_outlier)/60
+```
+
+    ## [1] 7.80545
+
+``` r
+range(df$time_wo_outlier)/60 # 0.00000 30.21667
+```
+
+    ## [1]  0.00000 30.21667
+
+``` r
+duration <- df %>% dplyr::select(starts_with("TIME")) %>% 
+  dplyr::select(!"time_wo_outlier") %>% dplyr::select(!"TIME_RSI") 
+print("Outlier-corrected duration (provided by soscisurvey)")
+```
+
+    ## [1] "Outlier-corrected duration (provided by soscisurvey)"
+
+``` r
+duration$sum = duration %>% rowSums(na.rm = TRUE)
+mean(duration$sum)/60
+```
+
+    ## [1] 27.52722
+
+``` r
+sd(duration$sum)/60
+```
+
+    ## [1] 8.245342
+
+``` r
+range(duration$sum)/60
+```
+
+    ## [1] 18.86667 54.78333
+
+## Description of participants
+
+Gender:
+
+``` r
+df <- df %>% mutate(gender_char = case_when(gender == 1 ~ "female", 
+                                     gender == 2 ~ "male"))
+table(df$gender_char)/160 # 1 = female, 2 = male, 3 = diverse
 ```
 
     ## 
-    ##  1  2 
-    ## 10 23
+    ## female   male 
+    ##      9     21
 
 ``` r
-mean(df$age); sd(df$age); range(df$age)
+print("percentage female:")
 ```
 
-    ## [1] 25.87879
+    ## [1] "percentage female:"
 
-    ## [1] 4.584713
+``` r
+sum(df$gender == 1)/nrow(df)
+```
+
+    ## [1] 0.3
+
+Age:
+
+``` r
+print("mean:"); mean(df$age)
+```
+
+    ## [1] "mean:"
+
+    ## [1] 25.43333
+
+``` r
+print("sd:"); sd(df$age)
+```
+
+    ## [1] "sd:"
+
+    ## [1] 4.558862
+
+``` r
+print("range:"); range(df$age)
+```
+
+    ## [1] "range:"
 
     ## [1] 18 35
 
+Handedness:
+
 ``` r
-table(df$handedness)/160 ; sum(df$handedness == 2)/nrow(df)
+# 1 = left handed, 2 = right handed, 3 = ambidexter/both
+df <- df %>% mutate(handedness_char = case_when(handedness == 1 ~ "left-handed", 
+                                     handedness == 2 ~ "right-handed"))
+table(df$handedness_char)/160 
 ```
 
     ## 
-    ##  1  2 
-    ##  4 29
-
-    ## [1] 0.8787879
+    ##  left-handed right-handed 
+    ##            4           26
 
 ``` r
-table(df$fingers_l)/160; table(df$fingers_r)/160
+print("percentage right-handed:")
 ```
+
+    ## [1] "percentage right-handed:"
+
+``` r
+sum(df$handedness == 2)/nrow(df)
+```
+
+    ## [1] 0.8666667
+
+Fingers used for typing:
+
+``` r
+# 1 = 1, 2 = 2, 3 = 3, 4 = 4, 5 = 5, 6 = don't know
+print("left hand: "); table(df$fingers_l)/160
+```
+
+    ## [1] "left hand: "
 
     ## 
     ##  1  2  3  4  5  6 
-    ##  1  4  8  7 11  2
+    ##  1  3  8  5 11  2
+
+``` r
+print("right hand: "); table(df$fingers_r)/160
+```
+
+    ## [1] "right hand: "
 
     ## 
     ## 1 2 3 4 5 6 
-    ## 1 9 4 8 9 2
+    ## 1 8 4 7 8 2
 
-## Average typing speed
+``` r
+df$fingers_l <- ifelse(df$fingers_l == 6, NA, df$fingers_l)
+df$fingers_r <- ifelse(df$fingers_r == 6, NA, df$fingers_r)
 
-## Browser info
+print("Average number of fingers used (both hands combined):") 
+```
+
+    ## [1] "Average number of fingers used (both hands combined):"
+
+``` r
+mean(df$fingers_l+df$fingers_r, na.rm = T); sd(df$fingers_l+df$fingers_r, na.rm = T)
+```
+
+    ## [1] 7.25
+
+    ## [1] 2.324434
+
+Mother tongue (experiment was restricted to native German speakers):
+This seems to have worked
+
+``` r
+table(df$language) # 1 = yes (mother tongue is German), 2 = no
+```
+
+    ## 
+    ##    1 
+    ## 4800
+
+``` r
+table(df$language.test) # 1 = der, 2 = die, 3 = das (das is correct)
+```
+
+    ## 
+    ##    3 
+    ## 4800
+
+## Average typing speed and accuracy
+
+Subset all typing test columns and select one row per particpant only
+
+``` r
+source("automatic_preprocessing_functions.R")
+```
+
+    ## 
+    ## Attaching package: 'stringdist'
+
+    ## The following object is masked from 'package:tidyr':
+    ## 
+    ##     extract
+
+``` r
+dat <- df %>% filter(trial == 1) %>%
+    dplyr::select(c("subject", starts_with("TT")))
+```
+
+``` r
+test1 <- "Der Fuchs ist nah mit Hund und Wolf verwandt. Die Tiere sehen Hunden auch recht ähnlich. Füchse haben jedoch einen längeren Körper und etwas kürzere Beine."
+print("Actual length of characters in test1 (including spaces):")
+```
+
+    ## [1] "Actual length of characters in test1 (including spaces):"
+
+``` r
+nchar(test1)
+```
+
+    ## [1] 155
+
+``` r
+test2 <- "Der Schwanz eines Fuchses ist fast halb so lang wie das ganze Tier. Das Fell ist meist rot oder braun, der Bauch weiß und die Schwanzspitze hell oder dunkel."
+print("Actual length of characters in test2 (including spaces):")
+```
+
+    ## [1] "Actual length of characters in test2 (including spaces):"
+
+``` r
+nchar(test2)
+```
+
+    ## [1] 157
+
+``` r
+test3 <- "Typisch für den Fuchs sind zudem seine aufgestellten Ohren, die ihm auf der Jagd behilflich sind. Füchse hören Mäuse aus hundert Meter Entfernung quieken."
+print("Actual length of characters in test3 (including spaces):")
+```
+
+    ## [1] "Actual length of characters in test3 (including spaces):"
+
+``` r
+nchar(test3)
+```
+
+    ## [1] 154
+
+### Accuracy
+
+Accurary similar as in e.g., Crump (2003), Crump & Logan (2010), Pinet,
+Dubarry, & Alario (2016): Percentage of 5-character words containing no
+error (neither a backspace nor a typographical error). The data from the
+three text subsections will be collapsed.  
+**\!\!\!\!\!\!\!\! CAVE: UNFORTUNATELY, THERE WAS AN ERROR IN THE
+EXPERIMENT AND ONLY THE FIRST 23 SINGLE WORDS ARE RECORDED FOR EACH
+TEXT. THE TOTAL TYPING TIME AND THE ENTIRE TEXT RECORDING ARE STILL
+CORRECT FOR THE WHOLE TEXT\!\!\!\!\!\!\!\!**  
+**7 participants failed to disable caps lock and wrote everything in
+uppercase. Here, the accuracy is estimated in uppercase writing**
+
+``` r
+# Create wordbased df
+fivecharwords <- data.frame(
+  text = c(rep(1, times=26), rep(2, times = 29), rep(3, times = 24)),
+  word_no = c(seq(1,26, by=1), seq(1,29,by=1), seq(1,24, by=1)), 
+  word = c("Der","Fuchs", "ist", "nah", "mit", "Hund", "und", "Wolf",
+              "verwandt", "Die", "Tiere", "sehen", "Hunden", "auch",  "recht",
+              "ähnlich", "Füchse", "haben", "jedoch", "einen", "längeren",
+              "Körper", "und", "etwas", "kürzere", "Beine",
+            
+              "Der", "Schwanz", "eines", "Fuchses", "ist", "fast", "halb", 
+              "so", "lang", "wie", "das", "ganze", "Tier", "Das", "Fell", "ist",
+              "meist", "rot", "oder", "braun", "der", "Bauch", "weiß", "und",
+              "die", "Schwanzspitze", "hell", "oder", "dunkel",
+            
+              "Typisch", "für", "den", "Fuchs", "sind", "zudem", "seine", 
+              "aufgestellten", "Ohren", "die", "ihm", "auf", "der", "Jagd",
+              "behilflich", "sind", "Füchse", "hören", "Mäuse", "aus",
+              "hundert", "Meter", "Entfernung", "quieken"))
+fivecharwords <- fivecharwords %>% 
+                  mutate(nchar=nchar(word)) %>%
+                  filter(nchar == 5)%>% 
+                  filter(word_no <= 23)
+
+# copy actual typed word into the dataframe
+for(i in 1:nrow(fivecharwords)) {
+  if(fivecharwords$word_no[i] <= 23) {
+      for(j in 1:length(dat$subject)) {
+    if(fivecharwords$word_no[i] < 10) {
+      eval(parse(text=paste0("fivecharwords$subject", j, "[", i, "]<-", 
+                             "dat$TT0", fivecharwords$text[i]*3, "_0",
+                             fivecharwords$word_no[i],"[",j,"]")))
+    } else {
+      eval(parse(text=paste0("fivecharwords$subject", j, "[", i, "]<-", 
+                             "dat$TT0", fivecharwords$text[i]*3, "_",
+                             fivecharwords$word_no[i],"[",j,"]")))    
+    }
+  }
+  }
+}
+
+## Manually correct if word count is messed up, and set to NA if word number would have been > 23
+# Necessary updates of word numbers in text 1
+fivecharwords$subject18[1] <- dat$TT03_03[18] #; dat$TT03_02[18]; dat$TT03_03[18]
+fivecharwords$subject19[1] <- dat$TT03_03[19] #; dat$TT03_02[19]; dat$TT03_03[19]; 
+fivecharwords$subject1[2] <- dat$TT03_12[1] #; dat$TT03_11[1]; dat$TT03_12[1]; 
+fivecharwords$subject3[2] <- dat$TT03_12[3] #; dat$TT03_11[3]; dat$TT03_12[3]; 
+fivecharwords$subject6[2] <- dat$TT03_13[6] #;dat$TT03_11[6]; dat$TT03_13[6]; 
+# subject 7 deleted the first nine words and then disabled capslock
+fivecharwords$subject7[2] <- dat$TT03_20[7]  #;dat$TT03_11[7]; dat$TT03_20[7]; 
+fivecharwords$subject8[2] <- dat$TT03_14[8] #; dat$TT03_11[8]; dat$TT03_14[8]; 
+fivecharwords$subject12[2] <- dat$TT03_12[12] #; dat$TT03_11[12]; dat$TT03_12[12]; 
+fivecharwords$subject16[2] <- dat$TT03_13[16] #;dat$TT03_11[16]; dat$TT03_13[16]; 
+fivecharwords$subject18[2] <- dat$TT03_12[18] #; 
+fivecharwords$subject19[2] <- dat$TT03_12[19] #;dat$TT03_11[19]; dat$TT03_12[19]; 
+fivecharwords$subject21[2] <- dat$TT03_10[21]#;dat$TT03_11[21]; dat$TT03_10[21]; 
+fivecharwords$subject25[2] <- dat$TT03_12[25]#;dat$TT03_11[25]; dat$TT03_12[25]; 
+fivecharwords$subject26[2] <- dat$TT03_14[26]#;dat$TT03_11[26]; dat$TT03_14[26]; 
+fivecharwords$subject28[2] <- dat$TT03_13[28]#;dat$TT03_11[28]; dat$TT03_13[28]; 
+
+fivecharwords$subject1[3] <- dat$TT03_13[1]#;dat$TT03_12[1]; dat$TT03_13[1]; 
+fivecharwords$subject3[3] <- dat$TT03_13[3]#;dat$TT03_12[3]; dat$TT03_13[3]; 
+fivecharwords$subject6[3] <- dat$TT03_14[6]#;dat$TT03_12[6]; dat$TT03_14[6]; 
+fivecharwords$subject7[3] <- dat$TT03_21[7] #;dat$TT03_12[7]; dat$TT03_21[7]; 
+fivecharwords$subject8[3] <- dat$TT03_15[8]#;dat$TT03_12[8]; dat$TT03_15[8]; 
+fivecharwords$subject12[3] <- dat$TT03_13[12]#;dat$TT03_12[12]; dat$TT03_13[12]; 
+fivecharwords$subject13[3] <- dat$TT03_13[12]#;dat$TT03_12[13]; dat$TT03_13[13]; 
+fivecharwords$subject16[3] <- dat$TT03_14[16]#;dat$TT03_12[16]; dat$TT03_14[16];
+fivecharwords$subject18[3] <- dat$TT03_13[18]#;dat$TT03_12[18]; dat$TT03_13[18]; 
+fivecharwords$subject19[3] <- dat$TT03_13[19]#;dat$TT03_12[19]; dat$TT03_13[19]; 
+fivecharwords$subject21[3] <- dat$TT03_11[21]#;dat$TT03_12[21]; dat$TT03_11[21];
+fivecharwords$subject25[3] <- dat$TT03_13[25]#;dat$TT03_12[25]; dat$TT03_13[25]; 
+fivecharwords$subject26[3] <- dat$TT03_15[26]#;dat$TT03_12[26]; dat$TT03_15[26]; 
+fivecharwords$subject28[3] <- dat$TT03_14[28]#;dat$TT03_12[28]; dat$TT03_14[28]; 
+
+fivecharwords$subject1[4] <- dat$TT03_16[1]#;dat$TT03_15[1]; dat$TT03_16[1]; 
+fivecharwords$subject3[4] <- dat$TT03_16[3]#;dat$TT03_15[3]; dat$TT03_16[3]; 
+fivecharwords$subject6[4] <- dat$TT03_17[6]#;dat$TT03_15[6]; dat$TT03_17[6]; 
+fivecharwords$subject8[4] <- dat$TT03_18[8]#;dat$TT03_15[8]; dat$TT03_18[8];
+fivecharwords$subject12[4] <- dat$TT03_18[12]#;dat$TT03_15[12]; dat$TT03_18[12]; 
+fivecharwords$subject13[4] <- dat$TT03_18[12]#;dat$TT03_15[13]; dat$TT03_18[13]; 
+fivecharwords$subject16[4] <- dat$TT03_17[16]#;dat$TT03_15[16]; dat$TT03_17[16]; 
+fivecharwords$subject18[4] <- dat$TT03_16[18]#;dat$TT03_15[18]; dat$TT03_16[18];
+fivecharwords$subject19[4] <- dat$TT03_16[19]#;dat$TT03_15[19]; dat$TT03_16[19]; 
+fivecharwords$subject21[4] <- dat$TT03_14[21]#;dat$TT03_15[21]; dat$TT03_14[21]; 
+fivecharwords$subject26[4] <- dat$TT03_18[26]#;dat$TT03_15[26]; dat$TT03_18[26]; 
+fivecharwords$subject28[4] <- dat$TT03_17[28]#;dat$TT03_15[28]; dat$TT03_17[28]; 
+fivecharwords$subject7[4] <- NA
+fivecharwords$subject25[4] <- NA
+
+fivecharwords$subject1[5] <- dat$TT03_19[1]#;dat$TT03_18[1]; dat$TT03_19[1]; 
+fivecharwords$subject3[5] <- dat$TT03_19[3]#;dat$TT03_18[3]; dat$TT03_19[3]; 
+fivecharwords$subject6[5] <- dat$TT03_20[6]#;dat$TT03_18[6]; dat$TT03_20[6]; 
+fivecharwords$subject8[5] <- dat$TT03_21[8]#;dat$TT03_18[8]; dat$TT03_21[8]; 
+fivecharwords$subject12[5] <- dat$TT03_22[12]#;dat$TT03_18[12]; dat$TT03_22[12]; 
+fivecharwords$subject13[5] <- dat$TT03_22[12]#;dat$TT03_18[13]; dat$TT03_22[13]; 
+fivecharwords$subject16[5] <- dat$TT03_20[16]#;dat$TT03_18[16]; dat$TT03_20[16]; 
+fivecharwords$subject18[5] <- dat$TT03_19[18]#;dat$TT03_18[18]; dat$TT03_19[18]; 
+fivecharwords$subject19[5] <- dat$TT03_19[19]#;dat$TT03_18[19]; dat$TT03_19[19]; 
+fivecharwords$subject23[5] <- dat$TT03_19[23]#;dat$TT03_18[23]; dat$TT03_19[23]; 
+fivecharwords$subject26[5] <- dat$TT03_22[26]#;dat$TT03_18[26]; dat$TT03_22[26]; 
+fivecharwords$subject28[5] <- dat$TT03_21[28]#;dat$TT03_18[28]; dat$TT03_21[28]; 
+fivecharwords$subject7[5] <- NA
+fivecharwords$subject25[5] <- NA
+
+fivecharwords$subject1[6] <- dat$TT03_21[1]#;dat$TT03_20[1]; dat$TT03_21[1]; 
+fivecharwords$subject3[6] <- dat$TT03_21[3]#;dat$TT03_20[3]; dat$TT03_21[3]; 
+fivecharwords$subject6[6] <- dat$TT03_22[6]#;dat$TT03_20[6]; dat$TT03_22[6]; 
+fivecharwords$subject8[6] <- dat$TT03_23[8]#;dat$TT03_20[8]; dat$TT03_23[8]; 
+fivecharwords$subject16[6] <- dat$TT03_22[16]#;dat$TT03_20[16]; dat$TT03_22[16]; 
+fivecharwords$subject18[6] <- dat$TT03_21[18]#;dat$TT03_20[18]; dat$TT03_21[18]; 
+fivecharwords$subject19[6] <- dat$TT03_21[19]#;dat$TT03_20[19]; dat$TT03_21[19]; 
+fivecharwords$subject23[6] <- dat$TT03_21[23]#;dat$TT03_20[23]; dat$TT03_21[23]; 
+fivecharwords$subject7[6] <- NA
+fivecharwords$subject25[6] <- NA
+fivecharwords$subject12[6] <- NA
+fivecharwords$subject13[6] <- NA
+fivecharwords$subject26[6] <- NA
+fivecharwords$subject28[6] <- NA
+
+# Necessary updates of word numbers in text 2
+fivecharwords$subject7[7] <- dat$TT06_04[7]#;dat$TT06_03[7]; dat$TT06_04[7]; 
+fivecharwords$subject26[7] <- dat$TT06_05[26]#;dat$TT06_03[26]; dat$TT06_05[26]; 
+
+fivecharwords$subject2[8] <- dat$TT06_13[2]#;dat$TT06_12[2]; dat$TT06_13[2]; 
+fivecharwords$subject7[8] <- dat$TT06_14[7]#;dat$TT06_12[7]; dat$TT06_14[7]; 
+fivecharwords$subject12[8] <- dat$TT06_13[12]#;dat$TT06_12[12]; dat$TT06_13[12]; 
+fivecharwords$subject13[8] <- dat$TT06_13[13]#;dat$TT06_12[13]; dat$TT06_13[13]; 
+fivecharwords$subject17[8] <- dat$TT06_14[17]#;dat$TT06_12[17]; dat$TT06_14[17]; 
+fivecharwords$subject19[8] <- dat$TT06_13[19]#;dat$TT06_12[19]; dat$TT06_13[19]; 
+fivecharwords$subject25[8] <- dat$TT06_13[25]#;dat$TT06_12[25]; dat$TT06_13[25]; 
+fivecharwords$subject26[8] <- dat$TT06_15[26]#;dat$TT06_12[26]; dat$TT06_15[26]; 
+fivecharwords$subject28[8] <- dat$TT06_13[28]#;dat$TT06_12[28]; dat$TT06_13[28]; 
+
+fivecharwords$subject2[9] <- dat$TT06_18[2]#;dat$TT06_17[2]; dat$TT06_18[2]; 
+fivecharwords$subject7[9] <- dat$TT06_18[7]#;dat$TT06_17[7]; dat$TT06_18[7]; 
+fivecharwords$subject8[9] <- dat$TT06_20[8]#;dat$TT06_17[8]; dat$TT06_20[8]; 
+fivecharwords$subject12[9] <- dat$TT06_18[12]#;dat$TT06_17[12]; dat$TT06_18[12]; 
+fivecharwords$subject13[9] <- dat$TT06_18[13]#;dat$TT06_17[13]; dat$TT06_18[13]; 
+fivecharwords$subject17[9] <- dat$TT06_22[17]#;dat$TT06_17[17]; dat$TT06_22[17]; 
+fivecharwords$subject19[9] <- dat$TT06_18[19]#;dat$TT06_17[19]; dat$TT06_18[19]; 
+fivecharwords$subject21[9] <- dat$TT06_18[21]#;dat$TT06_17[21]; dat$TT06_18[21]; 
+fivecharwords$subject23[9] <- dat$TT06_16[23]#;dat$TT06_17[23]; dat$TT06_16[23]; 
+fivecharwords$subject25[9] <- dat$TT06_18[25]#;dat$TT06_17[25]; dat$TT06_18[25]; 
+fivecharwords$subject26[9] <- dat$TT06_20[26]#;dat$TT06_17[26]; dat$TT06_20[26]; 
+fivecharwords$subject28[9] <- dat$TT06_18[28]#;dat$TT06_17[28]; dat$TT06_18[28]; 
+
+fivecharwords$subject2[10] <- dat$TT06_21[2]#;dat$TT06_20[2]; dat$TT06_21[2]; 
+fivecharwords$subject7[10] <- dat$TT06_21[7]#;dat$TT06_20[7]; dat$TT06_21[7]; 
+fivecharwords$subject8[10] <- dat$TT06_23[8]#;dat$TT06_20[8]; dat$TT06_23[8]; 
+fivecharwords$subject12[10] <- dat$TT06_21[12]#;dat$TT06_20[12]; dat$TT06_21[12]; 
+fivecharwords$subject13[10] <- dat$TT06_21[13]#;dat$TT06_20[13]; dat$TT06_21[13]; 
+fivecharwords$subject19[10] <- dat$TT06_21[19]#;dat$TT06_20[19]; dat$TT06_21[19]; 
+fivecharwords$subject21[10] <- dat$TT06_21[21]#;dat$TT06_20[21]; dat$TT06_21[21]; 
+fivecharwords$subject23[10] <- dat$TT06_19[23]#;dat$TT06_20[23]; dat$TT06_19[23]; 
+fivecharwords$subject25[10] <- dat$TT06_21[25]#;dat$TT06_20[25]; dat$TT06_21[25]; 
+fivecharwords$subject26[10] <- dat$TT06_23[26]#;dat$TT06_20[26]; dat$TT06_23[26]; 
+fivecharwords$subject28[10] <- dat$TT06_21[28]#;dat$TT06_20[28]; dat$TT06_21[28]; 
+fivecharwords$subject17[10] <- NA
+
+fivecharwords$subject1[11] <- dat$TT06_23[1]#;dat$TT06_22[1]; dat$TT06_23[1]; 
+fivecharwords$subject2[11] <- dat$TT06_23[2]#;dat$TT06_22[2]; dat$TT06_23[2]; 
+fivecharwords$subject7[11] <- dat$TT06_23[7]#;dat$TT06_22[7]; dat$TT06_23[7]; 
+fivecharwords$subject8[11] <- dat$TT06_23[8]#;dat$TT06_22[8]; dat$TT06_23[8]; 
+fivecharwords$subject11[11] <- dat$TT06_23[11]#;dat$TT06_22[11]; dat$TT06_23[11]; 
+fivecharwords$subject13[11] <- dat$TT06_23[13]#;dat$TT06_22[13]; dat$TT06_23[13]; 
+fivecharwords$subject18[11] <- dat$TT06_23[18]#;dat$TT06_22[18]; dat$TT06_23[18]; 
+fivecharwords$subject19[11] <- dat$TT06_23[19]#;dat$TT06_22[19]; dat$TT06_23[19]; 
+fivecharwords$subject23[11] <- dat$TT06_21[23]#;dat$TT06_22[23]; dat$TT06_21[23]; 
+fivecharwords$subject28[11] <- dat$TT06_23[28]#;dat$TT06_22[28]; dat$TT06_23[28]; 
+fivecharwords$subject8[11] <- NA
+fivecharwords$subject12[11] <- NA
+fivecharwords$subject17[11] <- NA
+fivecharwords$subject21[11] <- NA
+fivecharwords$subject25[11] <- NA
+fivecharwords$subject26[11] <- NA
+
+# Necessary updates of word numbers in text 3
+fivecharwords$subject16[12] <- dat$TT09_05[16]#;dat$TT09_04[16]; dat$TT09_05[16]; 
+fivecharwords$subject27[12] <- dat$TT09_05[27]#;dat$TT09_04[27]; dat$TT09_05[27]; 
+
+fivecharwords$subject7[13] <- dat$TT09_09[7]#;dat$TT09_06[7]; dat$TT09_09[7]; 
+fivecharwords$subject16[13] <- dat$TT09_07[16]#;dat$TT09_06[16]; dat$TT09_07[16]; 
+fivecharwords$subject27[13] <- dat$TT09_07[27]#;dat$TT09_06[27]; dat$TT09_07[27]; 
+fivecharwords$subject28[13] <- dat$TT09_08[28]#;dat$TT09_06[28]; dat$TT09_08[28]; 
+
+fivecharwords$subject7[14] <- dat$TT09_10[7]#;dat$TT09_07[7]; dat$TT09_10[7]; 
+fivecharwords$subject16[14] <- dat$TT09_08[16]#;dat$TT09_07[16]; dat$TT09_08[16]; 
+fivecharwords$subject27[14] <- dat$TT09_08[27]#;dat$TT09_07[27]; dat$TT09_08[27]; 
+fivecharwords$subject28[14] <- dat$TT09_09[28]#;dat$TT09_07[28]; dat$TT09_09[28]; 
+
+fivecharwords$subject7[15] <- dat$TT09_12[7]#;dat$TT09_09[7]; dat$TT09_12[7]; 
+fivecharwords$subject11[15] <- dat$TT09_10[11]#;dat$TT09_09[11]; dat$TT09_10[11]; 
+fivecharwords$subject16[15] <- dat$TT09_10[16]#;dat$TT09_09[16]; dat$TT09_10[16]; 
+fivecharwords$subject27[15] <- dat$TT09_10[27]#;dat$TT09_09[27]; dat$TT09_10[27]; 
+fivecharwords$subject28[15] <- dat$TT09_11[28]#;dat$TT09_09[28]; dat$TT09_11[28]; 
+
+fivecharwords$subject4[16] <- dat$TT09_19[4]#;dat$TT09_18[4]; dat$TT09_19[4]; 
+fivecharwords$subject5[16] <- dat$TT09_19[5]#;dat$TT09_18[5]; dat$TT09_19[5]; 
+fivecharwords$subject7[16] <- dat$TT09_21[7]#;dat$TT09_18[7]; dat$TT09_21[7]; 
+fivecharwords$subject11[16] <- dat$TT09_19[11]#;dat$TT09_18[11]; dat$TT09_19[11]; 
+fivecharwords$subject13[16] <- dat$TT09_19[13]#;dat$TT09_18[13]; dat$TT09_19[13]; 
+fivecharwords$subject16[16] <- dat$TT09_19[16]#;dat$TT09_18[16]; dat$TT09_19[16]; 
+fivecharwords$subject17[16] <- dat$TT09_19[17]#;dat$TT09_18[17]; dat$TT09_19[17]; 
+fivecharwords$subject18[16] <- dat$TT09_21[18]#;dat$TT09_18[18]; dat$TT09_21[18]; 
+fivecharwords$subject21[16] <- dat$TT09_21[21]#;dat$TT09_18[21]; dat$TT09_21[21]; 
+fivecharwords$subject22[16] <- dat$TT09_19[22]#;dat$TT09_18[22]; dat$TT09_19[22]; 
+fivecharwords$subject26[16] <- dat$TT09_19[26]#;dat$TT09_18[26]; dat$TT09_19[26]; 
+fivecharwords$subject27[16] <- dat$TT09_19[27]#;dat$TT09_18[27]; dat$TT09_19[27]; 
+fivecharwords$subject28[16] <- dat$TT09_19[28]#;dat$TT09_18[28]; dat$TT09_19[28]; 
+fivecharwords$subject30[16] <- dat$TT09_19[30]#;dat$TT09_18[30]; dat$TT09_19[30]; 
+fivecharwords$subject12[16] <- NA
+
+fivecharwords$subject1[17] <- dat$TT09_20[1]#;dat$TT09_19[1]; dat$TT09_20[1]; 
+fivecharwords$subject4[17] <- dat$TT09_20[4]#;dat$TT09_19[4]; dat$TT09_20[4];
+fivecharwords$subject5[17] <- dat$TT09_20[5]#;dat$TT09_19[5]; dat$TT09_20[5]; 
+fivecharwords$subject7[17] <- dat$TT09_22[7]#;dat$TT09_19[7]; dat$TT09_22[7]; 
+fivecharwords$subject11[17] <- dat$TT09_20[11]#;dat$TT09_19[11]; dat$TT09_20[11]; 
+fivecharwords$subject13[17] <- dat$TT09_20[13]#;dat$TT09_19[13]; dat$TT09_20[13]; 
+fivecharwords$subject16[17] <- dat$TT09_20[16]#;dat$TT09_19[16]; dat$TT09_20[16]; 
+fivecharwords$subject17[17] <- dat$TT09_20[17]#;dat$TT09_19[17]; dat$TT09_20[17]; 
+fivecharwords$subject18[17] <- dat$TT09_22[18]#;dat$TT09_19[18]; dat$TT09_22[18]; 
+fivecharwords$subject20[17] <- dat$TT09_20[20]#;dat$TT09_19[20]; dat$TT09_20[20]; 
+fivecharwords$subject21[17] <- dat$TT09_22[21]#;dat$TT09_19[21]; dat$TT09_22[21]; 
+fivecharwords$subject22[17] <- dat$TT09_20[22]#;dat$TT09_19[22]; dat$TT09_20[22]; 
+fivecharwords$subject26[17] <- dat$TT09_20[26]#;dat$TT09_19[26]; dat$TT09_20[26]; 
+fivecharwords$subject27[17] <- dat$TT09_20[27]#;dat$TT09_19[27]; dat$TT09_20[27]; 
+fivecharwords$subject28[17] <- dat$TT09_20[28]#;dat$TT09_19[28]; dat$TT09_20[28]; 
+fivecharwords$subject30[17] <- dat$TT09_20[30]#;dat$TT09_19[30]; dat$TT09_20[30]; 
+fivecharwords$subject12[17] <- NA
+
+fivecharwords$subject1[18] <- dat$TT09_23[1]#;dat$TT09_22[1]; dat$TT09_23[1]; 
+fivecharwords$subject4[18] <- dat$TT09_23[4]#;dat$TT09_22[4]; dat$TT09_23[4]; 
+fivecharwords$subject5[18] <- dat$TT09_23[5]#;dat$TT09_22[5]; dat$TT09_23[5]; 
+fivecharwords$subject11[18] <- dat$TT09_23[11]#;dat$TT09_22[11]; dat$TT09_23[11]; 
+fivecharwords$subject13[18] <- dat$TT09_23[13]#;dat$TT09_22[13]; dat$TT09_23[13]; 
+fivecharwords$subject16[18] <- dat$TT09_23[16]#;dat$TT09_22[16]; dat$TT09_23[16]; 
+fivecharwords$subject17[18] <- dat$TT09_23[17]#;dat$TT09_22[17]; dat$TT09_23[17]; 
+fivecharwords$subject20[18] <- dat$TT09_23[20]#;dat$TT09_22[20]; dat$TT09_23[20]; 
+fivecharwords$subject22[18] <- dat$TT09_23[22]#;dat$TT09_22[22]; dat$TT09_23[22];
+fivecharwords$subject26[18] <- dat$TT09_23[26]#;dat$TT09_22[26]; dat$TT09_23[26]; 
+fivecharwords$subject27[18] <- dat$TT09_23[27]#;dat$TT09_22[27]; dat$TT09_23[27]; 
+fivecharwords$subject28[18] <- dat$TT09_23[28]#;dat$TT09_22[28]; dat$TT09_23[28]; 
+fivecharwords$subject30[18] <- dat$TT09_23[30]#;dat$TT09_22[30]; dat$TT09_23[30]; 
+fivecharwords$subject7[18] <- NA
+fivecharwords$subject12[18] <- NA
+fivecharwords$subject18[18] <- NA
+fivecharwords$subject21[18] <- NA
+
+## split typed word and typing (format so far was "WORD : TIMING")
+for(i in 1:nrow(fivecharwords)) {
+  for(j in 5:34) {
+    #print(fivecharwords[i,j])
+    if(!is.na(fivecharwords[i,j])) {
+      x <- strsplit(fivecharwords[i,j], " : ")
+      word<- x[[1]][1]
+      time<- x[[1]][2]
+      eval(parse(text=paste0("fivecharwords$subject", j-4,"[", i, "]<- '", 
+                             as.character(word), "'")))
+      eval(parse(text=paste0("fivecharwords$time_subject", j-4,"[", i, "]<- ",
+                             as.numeric(as.character(time)))))
+    }
+  }
+}
+
+
+## Delete Shift (because it's already applied in the output, e.g. ShiftStuhl) and replace backspace by number
+for(i in 1:nrow(fivecharwords)) {
+  for(j in 5:34) {
+    word <- replace_special_chars(input = fivecharwords[i,j], 
+                          oldnames = c("<br>", "Shift", "SHIFT", 
+                                       "Backspace","BACKSPACE"), 
+                          newnames = c(" ", "", "", "9", "9"))
+    eval(parse(text=paste0("fivecharwords$subject", j-4,"[", i, "]<- '", 
+                           as.character(word), "'")))
+  }}
+```
+
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern 9."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern 9."
+
+``` r
+## Check whether strings were typed correct (if osa > 0, there was some kind of mistake)
+for(i in 1:nrow(fivecharwords)) {
+  for(j in 5:34) {
+    if(fivecharwords[i,j]!="NA") {
+      if(fivecharwords[i,j] == toupper(fivecharwords[i,j])) {
+        accuracy_wordlevel <- stringdist::stringdist(
+        toupper(fivecharwords$word[i]), fivecharwords[i,j], method = "osa", 
+          weight = c(d = 1, i = 1, s = 1, t = 1))[1]
+        } else {
+        accuracy_wordlevel <- stringdist::stringdist(
+        fivecharwords$word[i], fivecharwords[i,j], method = "osa", 
+          weight = c(d = 1, i = 1, s = 1, t = 1))[1]
+        }
+        eval(parse(text=paste0("fivecharwords$accuracy_subject", j-4,"[", i, "]<-", 
+                             as.numeric(as.character(accuracy_wordlevel)))))
+    } else {
+      eval(parse(text=paste0("fivecharwords$accuracy_subject", j-4,"[", i, "]<-", 
+                           NA)))
+    }
+}}
+
+## Calculate accuracy per participant
+accuracy_fiveletterwords <- NA
+for(j in 5:34) {
+    eval(parse(text=paste0("incorrect<-sum(fivecharwords$accuracy_subject", j-4,"!=", 0, ", na.rm=T)")))
+    eval(parse(text=paste0("total<-sum(!is.na(fivecharwords$accuracy_subject", j-4,"))")))
+    # write to accuracy df
+    accuracy_fiveletterwords[j-4]<-1-incorrect/total  
+}
+```
+
+5-character-word based accuracy:
+
+``` r
+## Descriptive statistics: 
+print("Mean Accuracy (5-char words correct)"); round(mean(accuracy_fiveletterwords),2)
+```
+
+    ## [1] "Mean Accuracy (5-char words correct)"
+
+    ## [1] 0.8
+
+``` r
+print("SD Accuracy (5-char words correct)"); round(sd(accuracy_fiveletterwords),2)
+```
+
+    ## [1] "SD Accuracy (5-char words correct)"
+
+    ## [1] 0.1
+
+``` r
+print("Range Accuracy (5-char words correct)"); round(range(accuracy_fiveletterwords),2)
+```
+
+    ## [1] "Range Accuracy (5-char words correct)"
+
+    ## [1] 0.64 0.94
+
+Alternative calculation of accuracy: Character-based accuracy on the
+entire text - Participants typed texts are compared to the entire text
+and the number of insertions, deletions, substitutions and
+transpositions are devided by the total amount of characters in the
+text.
+
+``` r
+# delete endings
+  dat$TT02_01<- delete_ending(dat$TT02_01)
+  dat$TT05_01<-delete_ending(dat$TT05_01)
+  dat$TT08_01<-delete_ending(dat$TT08_01)
+# delete line break at the end
+  dat$TT02_01<-delete_ending(dat$TT02_01, ending = '<br>')
+  dat$TT05_01<-delete_ending(dat$TT05_01, ending = '<br>')
+  dat$TT08_01<-delete_ending(dat$TT08_01, ending = '<br>')
+
+# replace line break (by space), SHIFT (by nothing) and BACKSPACE  (by nothing)
+  # this means that backspace errors are not counted twice, but weighted equally
+  # as raw errors. Replace further special keys by numbers so errors are only 
+  # counted once
+  dat$TT02_01 <- replace_special_chars(input = dat$TT02_01, 
+                        oldnames = c("<br>", "Shift", "SHIFT", "Backspace",
+                                "BACKSPACE", "CapsLock", "CAPSLOCK", "ArrowRight", 
+                                "ArrowUp", "ArrowLeft", "Control", "Delete"), 
+                        newnames = c(" ", "", "", "", "", "", "", "1", "1", "1", "1", "1"))
+```
+
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern ."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern ."
+    ## [1] "The pattern CapsLock has been replaced by the pattern ."
+    ## [1] "The pattern CAPSLOCK has been replaced by the pattern ."
+    ## [1] "The pattern ArrowRight has been replaced by the pattern 1."
+    ## [1] "The pattern ArrowUp has been replaced by the pattern 1."
+    ## [1] "The pattern ArrowLeft has been replaced by the pattern 1."
+    ## [1] "The pattern Control has been replaced by the pattern 1."
+    ## [1] "The pattern Delete has been replaced by the pattern 1."
+
+``` r
+  dat$TT05_01 <- replace_special_chars(input = dat$TT05_01, 
+                        oldnames = c("<br>", "Shift", "SHIFT", "Backspace",
+                                "BACKSPACE", "CapsLock", "CAPSLOCK", "ArrowRight",
+                                "ArrowUp", "ArrowLeft", "Control", "Delete"), 
+                        newnames = c(" ", "", "", "", "", "", "", "1", "1", "1", "1", "1"))
+```
+
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern ."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern ."
+    ## [1] "The pattern CapsLock has been replaced by the pattern ."
+    ## [1] "The pattern CAPSLOCK has been replaced by the pattern ."
+    ## [1] "The pattern ArrowRight has been replaced by the pattern 1."
+    ## [1] "The pattern ArrowUp has been replaced by the pattern 1."
+    ## [1] "The pattern ArrowLeft has been replaced by the pattern 1."
+    ## [1] "The pattern Control has been replaced by the pattern 1."
+    ## [1] "The pattern Delete has been replaced by the pattern 1."
+
+``` r
+  dat$TT08_01 <- replace_special_chars(input = dat$TT08_01, 
+                        oldnames = c("<br>", "Shift", "SHIFT", "Backspace",
+                                "BACKSPACE", "CapsLock", "CAPSLOCK", "ArrowRight", 
+                                "ArrowUp", "ArrowLeft", "Control", "Delete"), 
+                        newnames = c(" ", "", "", "", "", "", "", "1", "1", "1", "1", "1"))
+```
+
+    ## [1] "The pattern <br> has been replaced by the pattern  ."
+    ## [1] "The pattern Shift has been replaced by the pattern ."
+    ## [1] "The pattern SHIFT has been replaced by the pattern ."
+    ## [1] "The pattern Backspace has been replaced by the pattern ."
+    ## [1] "The pattern BACKSPACE has been replaced by the pattern ."
+    ## [1] "The pattern CapsLock has been replaced by the pattern ."
+    ## [1] "The pattern CAPSLOCK has been replaced by the pattern ."
+    ## [1] "The pattern ArrowRight has been replaced by the pattern 1."
+    ## [1] "The pattern ArrowUp has been replaced by the pattern 1."
+    ## [1] "The pattern ArrowLeft has been replaced by the pattern 1."
+    ## [1] "The pattern Control has been replaced by the pattern 1."
+    ## [1] "The pattern Delete has been replaced by the pattern 1."
+
+``` r
+# calculate numbers of errors for each subtext
+   # osa: insertions, deletions, substitutions and transpositions of
+   # adjacent characters are counted and weighted equally
+  # participants were instructed to disable caps lock. However, 
+  # some did not follow the instructions, here the uppercase solution is 
+  # compared to the typed word
+accuracy <- data.frame(subject=seq(1,30, by=1),
+                          test1_capslock=rep(NA, times=30),
+                          test1_raw=rep(NA, times=30),
+                          test2_capslock=rep(NA, times=30),
+                          test2_raw=rep(NA, times=30),
+                          test3_capslock=rep(NA, times=30),
+                          test3_raw=rep(NA, times=30))
+for (i in 1:nrow(dat)){
+  if((dat$TT02_01[dat$subject == i] == toupper(dat$TT02_01[dat$subject == i]) || 
+      i == 19 || i == 22)) {
+    accuracy$test1_capslock[i] <- "yes"
+    # convert : to . and ; to , (this sometimes seems to be a keyboard
+    # problem when using caps lock)
+    dat$TT02_01[dat$subject == i] <- 
+      gsub(":", ".", dat$TT02_01[dat$subject == i], fixed = T)
+    dat$TT02_01[dat$subject == i] <- 
+      gsub(";", ",", dat$TT02_01[dat$subject == i], fixed = T)
+    accuracy$test1_raw[i] <- stringdist::stringdist(
+      toupper(test1),dat$TT02_01[dat$subject == i],method = "osa", 
+      weight = c(d = 1, i = 1, s = 1, t = 1))[1]
+  } else {
+    accuracy$test1_capslock[i] <- "no"
+    accuracy$test1_raw[i] <- stringdist::stringdist(
+      test1, dat$TT02_01[dat$subject == i],method = "osa", 
+      weight = c(d = 1, i = 1, s = 1, t = 1))[1]
+  }
+  
+  if(dat$TT05_01[dat$subject == i] == toupper(dat$TT05_01[dat$subject == i])) {
+    accuracy$test2_capslock[i] <- "yes"
+    # very few participants who had capslock enabled typed '?' instead of 'ß'
+    # (this seems to be a keyboard-related problem)
+    # replace WEI? by WEIß 
+    dat$TT05_01[dat$subject == i] <- 
+      gsub("WEI?", "WEIß", dat$TT05_01[dat$subject == i], fixed = T)
+    # convert : to . and ; to , (this sometimes seems to be a keyboard
+    # problem when using capslock)
+    dat$TT05_01[dat$subject == i] <- 
+      gsub(":", ".", dat$TT05_01[dat$subject == i], fixed = T)
+    dat$TT05_01[dat$subject == i] <- 
+      gsub(";", ",", dat$TT05_01[dat$subject == i], fixed = T)
+    
+    accuracy$test2_raw[i] <- stringdist::stringdist(
+      toupper(test2), dat$TT05_01[dat$subject == i], method = "osa", 
+      weight = c(d = 1, i = 1, s = 1, t = 1))[1]
+  } else {
+    accuracy$test2_capslock[i] <- "no"
+    accuracy$test2_raw[i] <- stringdist::stringdist(
+      test2,  dat$TT05_01[dat$subject == i], method = "osa", 
+       weight = c(d = 1, i = 1, s = 1, t = 1))[1]
+  }
+  
+  if((dat$TT08_01[dat$subject == i] == toupper(dat$TT08_01[dat$subject == i]) ||
+      i == 14)) {
+    accuracy$test3_capslock[i] <- "yes"
+    # convert : to . and ; to , (this sometimes seems to be a keyboard
+    # problem when using capslock)
+    dat$TT08_01[dat$subject == i] <- 
+      gsub(":", ".", dat$TT08_01[dat$subject == i], fixed = T)
+    dat$TT08_01[dat$subject == i] <- 
+      gsub(";", ",", dat$TT08_01[dat$subject == i], fixed = T)
+    
+    accuracy$test3_raw[i] <- stringdist::stringdist(
+      toupper(test3), dat$TT08_01[dat$subject == i],method = "osa", 
+      weight = c(d = 1, i = 1, s = 1, t = 1))[1]
+  } else {
+    accuracy$test3_capslock[i] <- "no"
+    accuracy$test3_raw[i] <- stringdist::stringdist(
+      test3, dat$TT08_01[dat$subject == i], method = "osa", 
+      weight = c(d = 1, i = 1, s = 1, t = 1))[1]
+  }
+}
+
+# calculate accuracy for each subtext
+accuracy$test1_raw <- 1-accuracy$test1_raw/nchar(test1)
+accuracy$test2_raw<- 1-accuracy$test2_raw/nchar(test2)
+accuracy$test3_raw <- 1-accuracy$test3_raw/nchar(test3)
+```
+
+Text-based accuracy:
+
+``` r
+accuracy_raw <- (accuracy$test1_raw + accuracy$test2_raw + accuracy$test3_raw)/3
+print("Mean Accuracy (entire text)");round(mean(accuracy_raw),2)
+```
+
+    ## [1] "Mean Accuracy (entire text)"
+
+    ## [1] 0.9
+
+``` r
+print("Sd Accuracy (entire text)");round(sd(accuracy_raw), 2)
+```
+
+    ## [1] "Sd Accuracy (entire text)"
+
+    ## [1] 0.06
+
+``` r
+print("Range Accuracy (entire text)");round(range(accuracy_raw),2)
+```
+
+    ## [1] "Range Accuracy (entire text)"
+
+    ## [1] 0.72 0.97
+
+``` r
+cor.test(accuracy_raw, accuracy_fiveletterwords)
+```
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  accuracy_raw and accuracy_fiveletterwords
+    ## t = 0.68055, df = 28, p-value = 0.5017
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.2439175  0.4663966
+    ## sample estimates:
+    ##       cor 
+    ## 0.1275613
+
+### Speed
+
+Words per minute: Defined as the number of words correctly typed divided
+by the total time of all words (similar to Pinet et al., 2016; Crump &
+Logan 2010)
+
+``` r
+wpm <- NA
+for (i in 1:30) {
+  eval(parse(text=paste0(
+  "x<- fivecharwords %>% filter(!is.na(accuracy_subject",i,"))")))
+  # calculate no of words correctly typed
+  eval(parse(text=paste0(
+  "number_of_words <- sum(x$accuracy_subject", i,"!=", 0, ", na.rm=T)")))
+  # calculate total time need to type all fiveletter words
+  eval(parse(text=paste0(
+  "total_time_fiveletter <- sum(x$time_subject", i,", na.rm=T)")))
+  # convert time to seconds
+  total_time_fiveletter <- total_time_fiveletter/1000/60
+  #calculate word per minutes
+  wpm[i] <-number_of_words/total_time_fiveletter 
+}
+```
+
+Speed in 5-character words per minute:
+
+``` r
+## Descriptive statistics: 
+print("Mean Speed (5-char words correct)"); round(mean(wpm),2)
+```
+
+    ## [1] "Mean Speed (5-char words correct)"
+
+    ## [1] 15.33
+
+``` r
+print("SD Speed (5-char words correct)"); round(sd(wpm),2)
+```
+
+    ## [1] "SD Speed (5-char words correct)"
+
+    ## [1] 7.52
+
+``` r
+print("Range Speed (5-char words correct)"); round(range(wpm),2)
+```
+
+    ## [1] "Range Speed (5-char words correct)"
+
+    ## [1]  4.02 34.10
+
+Alternative speed measurement: Characters per minute, based on the
+length of the text, not the actual number of characters typed.
+
+``` r
+speed1 <- nchar(test1)/(dat$TT02_02/100/60)
+speed2 <- nchar(test2)/(dat$TT05_02/100/60)
+speed3 <- nchar(test3)/(dat$TT08_02/100/60)
+```
+
+``` r
+cor.test(speed1, speed2)
+```
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  speed1 and speed2
+    ## t = 8.3331, df = 28, p-value = 4.574e-09
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  0.6954103 0.9235650
+    ## sample estimates:
+    ##       cor 
+    ## 0.8441824
+
+``` r
+cor.test(speed1, speed3)
+```
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  speed1 and speed3
+    ## t = 6.776, df = 28, p-value = 2.33e-07
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  0.5975590 0.8944466
+    ## sample estimates:
+    ##      cor 
+    ## 0.788153
+
+``` r
+cor.test(speed2, speed3)
+```
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  speed2 and speed3
+    ## t = 13.282, df = 28, p-value = 1.309e-13
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  0.8548241 0.9659660
+    ## sample estimates:
+    ##      cor 
+    ## 0.928994
+
+``` r
+speedperppt <- (speed1+speed2+speed3)/3
+cor.test(speedperppt, wpm)
+```
+
+    ## 
+    ##  Pearson's product-moment correlation
+    ## 
+    ## data:  speedperppt and wpm
+    ## t = 1.5985, df = 28, p-value = 0.1212
+    ## alternative hypothesis: true correlation is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -0.07935422  0.58817363
+    ## sample estimates:
+    ##       cor 
+    ## 0.2891824
+
+``` r
+print("mean characters per minute:"); round(mean(speedperppt),2); 
+```
+
+    ## [1] "mean characters per minute:"
+
+    ## [1] 26.66
+
+``` r
+print("SD characters per minute:"); round(sd(speedperppt),2); 
+```
+
+    ## [1] "SD characters per minute:"
+
+    ## [1] 7.49
+
+``` r
+print("range characters per minute:"); round(range(speedperppt),2);
+```
+
+    ## [1] "range characters per minute:"
+
+    ## [1] 15.15 50.88
+
+## System info (indicated by participants)
+
+Browser:
+
+``` r
+df <- df %>% mutate(browser_char = case_when(browser == 1 ~ "Chrome",
+                                             browser == 2 ~ "Coast",
+                                             browser == 3 ~ "Firefox",
+                                             browser == 4 ~ "Internet Explorer",
+                                             browser == 5 ~ "Opera",
+                                             browser == 6 ~ "Safari", 
+                                             browser == 8 ~ "Microsoft Edge",
+                                             browser == 7 ~ browser_other))
+
+table(df$browser_char)
+```
+
+    ## 
+    ##          Brave         Chrome        Firefox Microsoft Edge 
+    ##            320           2720           1440            320
+
+Operating system:
+
+``` r
+df <- df %>% mutate(operator_system_char = case_when(operator_system == 1 ~ "MacOSX",
+                                             operator_system == 2 ~ "Linux",
+                                             operator_system == 3 ~ "Windows10",
+                                             operator_system == 4 ~ "Windows8",
+                                             operator_system == 5 ~ "Windows7",
+                                             operator_system == 6 ~ "WindowsVista", 
+                                             operator_system == 8 ~ "WindowsNT",
+                                             operator_system == -1 ~ "don't know", 
+                                             operator_system == -9 ~ "NA",
+                                             operator_system == 7 ~ operator_system_other))
+table(df$operator_system_char)
+```
+
+    ## 
+    ##  ChromeOS     Linux    MacOSX Windows10  Windows7  Windows8 
+    ##       160       320       160      3840       160       160
+
+System:
+
+``` r
+df <- df %>% mutate(system_char = case_when(system == 1 ~ "Computer(PC)",
+                                             system == 2 ~ "Laptop",
+                                             system == 3 ~ "TV",
+                                             system == 4 ~ "Tablet",
+                                             system == 5 ~ "Phone",
+                                             system == -1 ~ "don't know", 
+                                             system == -9 ~ "NA",
+                                             system == 7 ~ "other"))
+table(df$system_char)
+```
+
+    ## 
+    ## Computer(PC)       Laptop 
+    ##         2560         2240
 
 ## Attention checks
 
-1)  Item vs. non-item
-
-<!-- end list -->
+*1) Item vs. non-item*
 
 ``` r
 ## Item vs. non-item
@@ -114,7 +3783,7 @@ table(df$itemvsnonitem1)/160
 
     ## 
     ##  1  2 
-    ##  6 27
+    ##  6 24
 
 ``` r
 table(df$itemvsnonitem2)/160
@@ -122,7 +3791,7 @@ table(df$itemvsnonitem2)/160
 
     ## 
     ##  2 
-    ## 33
+    ## 30
 
 ``` r
 # attcheck <- data.frame(subject = unique(df$subject))
@@ -146,12 +3815,125 @@ table(df$itemvsnonitem2)/160
 # inspect <- data.frame(df$subject, df$word, df$fam_typed)
 ```
 
-2)  Cheating
+(Six persons made one mistake after the familiarization, but all were
+100 % after the main experiment, which was the crucial part and thus the
+relevant criterion)
 
-## Mother tongue
+*2) Cheating*
 
-## Keyboard
+``` r
+df <- df %>% mutate(CH03 = case_when(CH03 == 1 ~ 
+                                       " Ja, ich habe alles bis zum Ende bearbeitet.",
+                                             CH03 == 2 ~ 
+                                       "Nein, ich habe zwischendurch aufgehoert oder geschummelt."))
+table(df$CH03)/160
+```
+
+    ## 
+    ##               Ja, ich habe alles bis zum Ende bearbeitet. 
+    ##                                                        29 
+    ## Nein, ich habe zwischendurch aufgehoert oder geschummelt. 
+    ##                                                         1
+
+One person indicated that he/she cheated, but in a comment explained
+that during the familiarization, he/she took a break to briefly open the
+door
+
+``` r
+#table(df$comments[df$CH03 == "Nein, ich habe zwischendurch aufgehoert oder geschummelt."])
+```
+
+*3) Keyboard Check*
+
+``` r
+# self-indicated keyboard type
+df <- df %>% mutate(keyboard_type = case_when(keyboard_type == 1 ~ "QWERTY",
+                                             keyboard_type == 2 ~ "QWERTZ",
+                                             keyboard_type == 3 ~ "QÜERTY",
+                                             keyboard_type == 4 ~ "ÄWERTY",
+                                             keyboard_type == 5 ~ "AZERTY",
+                                             keyboard_type == 6 ~ "QZERTY", 
+                                             keyboard_type == 7 ~ "other"))
+
+table(df$keyboard_type)/160
+```
+
+    ## 
+    ## QWERTZ 
+    ##     30
+
+``` r
+# keyboard test
+table(df$KB02_01)/160
+```
+
+    ## 
+    ## ägyptisch 
+    ##        30
+
+``` r
+table(df$KB03_01)/160 # code ä is Quote
+```
+
+    ## 
+    ## Quote 
+    ##    30
+
+``` r
+table(df$KB03_02)/160 # code y is KeyZ
+```
+
+    ## 
+    ## KeyZ 
+    ##   30
+
+``` r
+table(df$KB03_03)/160 # code p is KeyP
+```
+
+    ## 
+    ## KeyP 
+    ##   30
+
+(The keyboard screening worked well for all participants)
 
 ## Comments
 
-## Fully anonymize data
+Comments don’t indicate any problems that should lead to participant
+exclusion:
+
+``` r
+#table(df$comments)/160
+```
+
+## Fully anonymize data and reduce data frame
+
+``` r
+df_a <- df %>% dplyr::select(!"gender" & !"age" & !starts_with("language") & 
+                               !starts_with("TIME") & !starts_with("handedness") &
+                               !starts_with("fingers") & !starts_with("browser") & 
+                               !starts_with("operator_system") & !starts_with("system") &
+                               !"keyboard_type" & !starts_with("KB") &
+                               !starts_with("CH0") & !starts_with("X.") & !"X" &
+                               !starts_with("screen") & !starts_with("os") &
+                               !starts_with("questionnaire") & !"OR01_01" & 
+                               !starts_with("TT0") & !"comments" & !"FINISHED" & !"Q_VIEWER" & 
+                               !"LASTPAGE" & !"MAXPAGE" & !"DEG_TIME"& !"type" & !"fam_typed" & 
+                               !"gender_char" & !"itemvsnonitem1" & !"itemvsnonitem2")
+```
+
+Reduce data frame to columns needed for data analyses or useful to
+understand the data (this df will be shared online). Interkeystroke
+intervals could be shared as well, but might only lead to confusion
+because the data frame will still be very wide.
+
+``` r
+df_a <- df_a %>% dplyr::select(c("subject", "trial", "item", "category", "supercategory", "PosOr", 
+                        "answercode", "correct", "correct_manual",
+                        "answer_auto_jaro", "correct_auto_jaro", 
+                        "word", "word.c", "letters.01", "timing.01"))
+```
+
+``` r
+write.csv(df_a, here::here("data","data_long_anonymous.csv"))
+```

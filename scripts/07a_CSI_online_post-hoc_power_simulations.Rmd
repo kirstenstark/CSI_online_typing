@@ -1,5 +1,5 @@
 ---
-title: "08 CSI online additional analyses: Post-hoc power"
+title: "07a CSI online additional analyses: Post-hoc power"
 author: "Kirsten Stark"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: html_document

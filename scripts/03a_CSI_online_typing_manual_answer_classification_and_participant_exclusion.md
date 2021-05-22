@@ -1,7 +1,8 @@
-03 CSI online typing: Answer classification and participant exclusion
+03 CSI online typing: Manual answer classification and participant
+exclusion
 ================
 Kirsten Stark
-06 April, 2021
+22 Mai, 2021
 
 ## Load packages
 
@@ -32,10 +33,10 @@ options( "encoding" = "UTF-8" )
 input = "data_long.csv"
 
 # load data
-df <- read.csv(here::here("data", input))
+df <- read.csv(here::here("data", "transient_data_files", input))
 
 # load answer codes
-answercodes <- read.csv(here::here("data", "answercodes.csv"),sep = ";")
+answercodes <- read.csv(here::here("data", "supplementary_info", "answercodes.csv"),sep = ";")
 ```
 
 # Check and classify participants’ answer behavior
@@ -124,9 +125,9 @@ sum(df$answercode == "correct") + sum(df$answercode == "almostcorrect") ==
 
     ## [1] 0.1244318
 
-In a total of 657 participants did not enter anything or entered a
-chunks of characters that were not considered as correct based on the
-preregistered criteria. This is 0.1244318 % of all trials.
+In a total of 657 trials participants did not enter anything or entered
+a chunks of characters that were not considered as correct based on the
+preregistered criteria. This is 0.12 % of all trials.
 
 *Trials with missing values per participant:*
 
@@ -457,6 +458,10 @@ table(df$KB03_03)
     ## KeyP 
     ## 5280
 
+The keyboard screening worked well for all participants.
+
+### Exclude participants and export final data frame
+
 ``` r
 df2 <- df %>% 
   filter(!((df$subject == 3 | df$subject == 9 | 
@@ -475,5 +480,5 @@ table(df2$subject)
     ## 160 160 160 160 160 160 160 160 160 160
 
 ``` r
-write.csv(df2, here::here("data", "data_long_final.csv"))
+write.csv(df2, here::here("data", "transient_data_files", "data_long_final.csv"))
 ```

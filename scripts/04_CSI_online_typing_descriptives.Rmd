@@ -1,8 +1,10 @@
 ---
-title: "04 CSI online typing: Descriptives"
+title: '04 CSI online typing: Descriptives'
 author: "Kirsten Stark"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: github_document
+output:
+  github_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -28,7 +30,7 @@ options( "encoding" = "UTF-8" )
 input <- "data_long_final.csv"
 
 # load data
-df <- read.csv(here::here("data", input), sep = ",",  na = "")
+df <- read.csv(here::here("data", "transient_data_files", input), sep = ",",  na = "")
 ```
 
 ## Duration of the experiment
@@ -133,7 +135,7 @@ Accurary similar as in e.g., Crump (2003), Crump & Logan (2010), Pinet, Dubarry,
 **!!!!!!!! CAVE: UNFORTUNATELY, THERE WAS AN ERROR IN THE EXPERIMENT AND ONLY THE FIRST 23 SINGLE WORDS ARE RECORDED FOR EACH TEXT. THE TOTAL TYPING TIME AND THE ENTIRE TEXT RECORDING ARE STILL CORRECT FOR THE WHOLE TEXT!!!!!!!!**  
 **7 participants failed to disable caps lock and wrote everything in uppercase. Here, the accuracy is estimated in uppercase writing** 
 
-```{r fiveletterword_accuracy}
+```{r fiveletterword_accuracy, echo=FALSE,results=FALSE}
 
 # Create wordbased df
 fivecharwords <- data.frame(
@@ -446,14 +448,14 @@ for(j in 5:34) {
 
 ```{r}
 ## Descriptive statistics: 
-print("Mean Accuracy (5-char words correct)"); round(mean(accuracy_fiveletterwords),2)
-print("SD Accuracy (5-char words correct)"); round(sd(accuracy_fiveletterwords),2)
-print("Range Accuracy (5-char words correct)"); round(range(accuracy_fiveletterwords),2)
+print("Mean Accuracy (5-char words correct)"); round(mean(accuracy_fiveletterwords),4)*100
+print("SD Accuracy (5-char words correct)"); round(sd(accuracy_fiveletterwords),4)*100
+print("Range Accuracy (5-char words correct)"); round(range(accuracy_fiveletterwords),4)*100
 ```
 
 Alternative calculation of accuracy: Character-based accuracy on the entire text - Participants typed texts are compared to the entire text and the number of insertions, deletions, substitutions and transpositions are devided by the total amount of characters in the text. 
 
-```{r raw_accuracy}
+```{r raw_accuracy, echo=FALSE,results=FALSE}
 # delete endings
   dat$TT02_01<- delete_ending(dat$TT02_01)
   dat$TT05_01<-delete_ending(dat$TT05_01)
@@ -572,9 +574,9 @@ Text-based accuracy:
 
 ```{r text-based accuracy}
 accuracy_raw <- (accuracy$test1_raw + accuracy$test2_raw + accuracy$test3_raw)/3
-print("Mean Accuracy (entire text)");round(mean(accuracy_raw),2)
-print("Sd Accuracy (entire text)");round(sd(accuracy_raw), 2)
-print("Range Accuracy (entire text)");round(range(accuracy_raw),2)
+print("Mean Accuracy (entire text)");round(mean(accuracy_raw),4)*100
+print("Sd Accuracy (entire text)");round(sd(accuracy_raw),4)*100
+print("Range Accuracy (entire text)");round(range(accuracy_raw),4)*100
 
 cor.test(accuracy_raw, accuracy_fiveletterwords)
 ```

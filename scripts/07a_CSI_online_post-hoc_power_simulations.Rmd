@@ -2,7 +2,7 @@
 title: "07a CSI online additional analyses: Post-hoc power"
 author: "Kirsten Stark"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -63,7 +63,7 @@ m_verbal <- lmer(RT.log ~ Pos.cont +
                (Pos.cont|subject) +(Pos.cont|category),
              data = df_verbal,
             control=lmerControl(optimizer = "bobyqa"))
-#summary(m_verbal)
+summary(m_verbal)
 ```
 
 ```{r model_CSI_typing}
@@ -83,7 +83,7 @@ m_typing <- lmer(RT.log ~ Pos.cont +
              data = df_typing,
             control=lmerControl(optimizer = "bobyqa",
                                  optCtrl = list(maxfun = 2*10^5)))
-#summary(m_typing)
+summary(m_typing)
 ```
 
 ##2) Extend dataset
@@ -380,44 +380,44 @@ simr_results <- rbind(simr_results, results_df)
 write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
 ```
 
-*5 participants, 120 trials:*
+*6 participants, 120 trials:*
 
 
-```{r PowerCurve_m2_verbal_5,results="hide", cache = TRUE}
-(pc_verbal5 <- powerCurve(m_verbal, test=fixed("Pos.cont", method = "t"),
-                           along = "subject", breaks = c(5), nsim = 1000))
+```{r PowerCurve_m2_verbal_6,results="hide", cache = TRUE}
+(pc_verbal6 <- powerCurve(m_verbal, test=fixed("Pos.cont", method = "t"),
+                           along = "subject", breaks = c(6), nsim = 1000))
 
-saveRDS(pc_verbal5, 
+saveRDS(pc_verbal6, 
         file = here::here("results", "power_sim",
-                          "pc_verbal5.RDS"))
+                          "pc_verbal6.RDS"))
 ```
 
-```{r PowerCurve_m2_verbal_5_results}
+```{r PowerCurve_m2_verbal_6_results}
 #plot(pc_verbal5)
-summary(pc_verbal5)
-pc_verbal5$warnings
-pc_verbal5$errors
+summary(pc_verbal6)
+pc_verbal6$warnings
+pc_verbal6$errors
 ```
 
-```{r PowerCurve_m2_verbal_5_add_to_df}
-results <- summary(pc_verbal5)
-results_df <- as.data.frame(cbind(rep("verbal_s5_t_around109", 
+```{r PowerCurve_m2_verbal_6_add_to_df}
+results <- summary(pc_verbal6)
+results_df <- as.data.frame(cbind(rep("verbal_s6_t_around109", 
                                         times= results$trials), 
-                                    rep(5, times = results$trials),
+                                    rep(6, times = results$trials),
                                     rep(72, times = results$trials),
                                   rep(24, times = results$trials),
-              pc_verbal5[["ps"]][[1]]$pval, 
+              pc_verbal6[["ps"]][[1]]$pval, 
               rep(results$successes, times = results$trials),
               rep(results$mean,  times = results$trials),
               rep(results$lower,  times = results$trials),
               rep(results$upper,  times = results$trials),
-              rep(nrow(pc_verbal5$warnings), 
+              rep(nrow(pc_verbal6$warnings), 
                   times = results$trials)))
 colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
                         "pval","successes", "mean", "lower", "upper", "warnings")
 ``` 
 
-```{r PowerCurve_m2_verbal_5_export}
+```{r PowerCurve_m2_verbal_6_export}
 simr_results <- rbind(simr_results, results_df)
 write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
 ```
@@ -933,43 +933,43 @@ write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.cs
 ```
 
 
-*5 participants, 120 trials:*
+*6 participants, 120 trials:*
 
 
-```{r PowerCurve_m2_typing_5,results="hide", cache = TRUE}
-(pc_typing5 <- powerCurve(m_typing, test=fixed("Pos.cont", method = "t"),
-                           along = "subject", breaks = c(5), nsim = 1000))
-saveRDS(pc_typing5, 
+```{r PowerCurve_m2_typing_6,results="hide", cache = TRUE}
+(pc_typing6 <- powerCurve(m_typing, test=fixed("Pos.cont", method = "t"),
+                           along = "subject", breaks = c(6), nsim = 1000))
+saveRDS(pc_typing6, 
         file = here::here("results", "power_sim",
-                          "pc_typing5.RDS"))
+                          "pc_typing6.RDS"))
 ```
 
-```{r PowerCurve_m2_typing_5_summary}
-#plot(pc_typing5)
-summary(pc_typing5)
-pc_typing5$warnings
-pc_typing5$errors
+```{r PowerCurve_m2_typing_6_summary}
+#plot(pc_typing6)
+summary(pc_typing6)
+pc_typing6$warnings
+pc_typing6$errors
 ```
 
-```{r PowerCurve_m2_typing_5_add_to_df}
-results <- summary(pc_typing5)
-results_df <- as.data.frame(cbind(rep("typing_s5_t_around109", 
+```{r PowerCurve_m2_typing_6_add_to_df}
+results <- summary(pc_typing6)
+results_df <- as.data.frame(cbind(rep("typing_s6_t_around109", 
                                         times= results$trials), 
-                                    rep(5, times = results$trials),
+                                    rep(6, times = results$trials),
                                     rep(18, times = results$trials),
                                   rep(24, times = results$trials),
-              pc_typing5[["ps"]][[1]]$pval, 
+              pc_typing6[["ps"]][[1]]$pval, 
               rep(results$successes, times = results$trials),
               rep(results$mean,  times = results$trials),
               rep(results$lower,  times = results$trials),
               rep(results$upper,  times = results$trials),
-              rep(nrow(pc_typing5$warnings), 
+              rep(nrow(pc_typing6$warnings), 
                   times = results$trials)))
 colnames(results_df)<-c("name", "nsubjects", "ntrials", "ncat",
                         "pval","successes", "mean", "lower", "upper", "warnings")
 ``` 
 
-```{r PowerCurve_m2_typing_5_export}
+```{r PowerCurve_m2_typing_6_export}
 simr_results <- rbind(simr_results, results_df)
 write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.csv"))
 ```
@@ -983,7 +983,7 @@ write.csv(simr_results, here::here("results", "power_sim",  "posthoc_powersim.cs
                                        nsim = 1000, seed = 99))
 saveRDS(pc_typing_categories_19, 
         file = here::here("results", "power_sim",
-                          "pc_typing_categories_20.RDS"))
+                          "pc_typing_categories_19.RDS"))
 ```
 
 ```{r PowerCurve_m2_typing_cat19_summary}

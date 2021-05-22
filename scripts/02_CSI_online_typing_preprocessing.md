@@ -1,7 +1,7 @@
 02 CSI online typing: Preprocessing
 ================
 Kirsten Stark
-17 März, 2021
+22 Mai, 2021
 
 ## Load packages
 
@@ -59,7 +59,7 @@ for(i in 1:length(input)) {
    #dataname = paste("data",type[i],sep = "_")
    #assign(dataname, 
    #      read.csv(here::here("data", input[i]), sep = ";",  na = ""))
-   datafiles[[i]] <- read.csv(here::here("data", input[i]), sep = ";", 
+   datafiles[[i]] <- read.csv(here::here("data", "raw", input[i]), sep = ";", 
                               na = "")
 } 
 
@@ -360,7 +360,7 @@ for (i in 1:length(input)) {
   
   # export prolific IDs
   filename <- paste(approve, "_",type[i], ".csv", sep = "")
-  write.csv(include, here::here("data", filename), row.names = FALSE)
+  write.csv(include, here::here("data", "transient_data_files", filename), row.names = FALSE)
 
   # delete prolific ids ton anonymize data frame
   datafiles[[i]] <- datafiles[[i]] %>% 
@@ -372,7 +372,7 @@ for (i in 1:length(input)) {
 
 ``` r
 # load arrays
-arrays <- read.csv(here::here("data", arrays), 
+arrays <- read.csv(here::here("data", "supplementary_info", arrays), 
     sep = ";", na = "NA")
 
 for (i in 1:length(input)) {
@@ -420,5 +420,5 @@ df <- bind_rows(datafiles)
 # Export prepared data frame
 
 ``` r
-write.csv(df, here::here("data", output), row.names = FALSE)
+write.csv(df, here::here("data", "transient_data_files", output), row.names = FALSE)
 ```

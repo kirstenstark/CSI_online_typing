@@ -2,7 +2,7 @@
 title: '03b CSI online typing: Automatic answer classification'
 author: "Kirsten Stark"
 date: "3/30/2021"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -32,10 +32,10 @@ input = "data_long_final.csv"
 alternatives = "naming_alternatives.csv"
 
 # load data
-df <- read.csv(here::here("data", input))
+df <- read.csv(here::here("data", "transient_data_files", input))
 
 # load alternatives
-alternatives <- read.csv(here::here("data", alternatives), 
+alternatives <- read.csv(here::here("data", "supplementary_info", alternatives), 
                          sep = ";")
 ```
 
@@ -280,7 +280,7 @@ case_character_type <- function(word, item, wordcorrected,
 ### 1) Clean word ending 
 By deleting the last character(s) of typed words if those are space or enter keys. (Alternatively, the function also takes custom endings that should be deleted.)  
 As entries, the delete_ending function takes the column with the word entries and, optionally, a custom ending.
-We can repeat applying this function if we want to keep deleting if Enter or space is repeated several times at the end of the word. The while loops stops as soon as none of the words has a spce or Enter (or custom ending) at the end. (In our case, this changes only the ending of three words)
+We can repeat applying this function if we want to keep deleting if Enter or space is repeated several times at the end of the word. The while loops stops as soon as none of the words has a space or Enter (or custom ending) at the end. (In our case, this changes only the ending of three words)
 
 ```{r clean_word_ending}
 #df2 <- df %>% mutate(word.c = delete_ending(df$word))
@@ -317,7 +317,7 @@ df$word.c <- replace_backspace(df$word.c, backspace = "6")
 ```
 
 ### 4) Compute stringdist between word entries and items/alternatives
-a) Compute Jaro distance 
+Compute Jaro distance 
 
 ```{r calculate_stringdist_jaro}
 #stringdist(toupper(df$word.c2[1:200]), toupper(df$item[1:200]), method = "jw")
@@ -332,76 +332,12 @@ df$bestmatch_jaro <- output[,2]
 #df$jaro[1:200]
 ```
 
-b) Compute Jaro-Winkler distance with p = 0.1
-
-
-```{r calculate_stringdist_jw}
-tictoc::tic()
-output <- calculate_stringdist(word = df$word.c, stims = df$item, 
-                               alternatives = alternatives, 
-                               method = "jw", p = 0.1,
-                               firstlettercorrect = TRUE)
-tictoc::toc()
-df$jw <- output[,1]
-df$bestmatch_jw <- output[,2]
-```
-
-c) Compute Levenshtein distance with equally weighted operations
-
-
-```{r calculate_stringdist_lv}
-tictoc::tic()
-output <- calculate_stringdist(word = df$word.c, stims = df$item, 
-                               alternatives = alternatives, 
-                               method = "lv", weight = c(1,1,1),
-                               firstlettercorrect = TRUE)
-df$lv <- output[,1]
-df$bestmatch_lv <- output[,2]
-tictoc::toc()
-```
-
-d) Compute restricted Damerau Levenshtein distance (optimal string alignment) with equally weighted operations
-
-
-```{r calculate_stringdist_osa}
-tictoc::tic()
-output <- calculate_stringdist(word = df$word.c, stims = df$item, 
-                               alternatives = alternatives, 
-                               method = "osa", weight = c(1,1,1,1),
-                               firstlettercorrect = TRUE)
-df$osa <- output[,1]
-df$bestmatch_osa <- output[,2]
-tictoc::toc()
-```
-
-e) Compute distance based on Bi-gram (Jaccard)
-
-
-```{r calculate_stringdist_jaccard}
-tictoc::tic()
-output <- calculate_stringdist(word = df$word.c, stims = df$item, 
-                               alternatives = alternatives, 
-                               method = "jaccard", q = 2,
-                               firstlettercorrect = TRUE)
-df$jaccard <- output[,1]
-df$bestmatch_jaccard <- output[,2]
-tictoc::toc()
-```
-
 ### 5) Classify word entries
 
 ```{r classify_entries}
 df2 <- df %>% 
   mutate(answer_auto_jaro = case_character_type(word, item, 
-          word.c, jaro, bestmatch_jaro, d = 0.3)) %>%
-  mutate(answer_auto_jw = case_character_type(word, item, 
-          word.c, jw, bestmatch_jw, d = 0.3)) %>%
-  mutate(answer_auto_lv = case_character_type(word, item, 
-          word.c, osa, bestmatch_lv, d = 3)) %>%
-  mutate(answer_auto_osa = case_character_type(word, item, 
-          word.c, osa, bestmatch_osa, d = 4)) %>%
-  mutate(answer_auto_jaccard = case_character_type(word, item,
-          word.c, jaccard, bestmatch_jaccard, d = 0.8))
+          word.c, jaro, bestmatch_jaro, d = 0.3))
 ```
 
 ```{r classify_as_correct}
@@ -414,42 +350,9 @@ df2 <- df2 %>%
     answer_auto_jaro == "alternative_corrected" ~ 1,
     answer_auto_jaro == "approx_alternative" ~ 1,
     TRUE ~ 0)) %>%
-  mutate(correct_auto_jw = case_when(
-    answer_auto_jw == "correct" ~ 1,
-    answer_auto_jw == "correctedtocorrect" ~ 1,
-    answer_auto_jw == "approx_correct" ~ 1,
-    answer_auto_jw == "alternative" ~ 1,
-    answer_auto_jw == "alternative_corrected" ~ 1,
-    answer_auto_jw == "approx_alternative" ~ 1,
-    TRUE ~ 0)) %>%
-  mutate(correct_auto_lv = case_when(
-    answer_auto_lv == "correct" ~ 1,
-    answer_auto_lv == "correctedtocorrect" ~ 1,
-    answer_auto_lv == "approx_correct" ~ 1,
-    answer_auto_lv == "alternative" ~ 1,
-    answer_auto_lv == "alternative_corrected" ~ 1,
-    answer_auto_lv == "approx_alternative" ~ 1,
-    TRUE ~ 0)) %>%
-  mutate(correct_auto_osa = case_when(
-    answer_auto_osa == "correct" ~ 1,
-    answer_auto_osa == "correctedtocorrect" ~ 1,
-    answer_auto_osa == "approx_correct" ~ 1,
-    answer_auto_osa == "alternative" ~ 1,
-    answer_auto_osa == "alternative_corrected" ~ 1,
-    answer_auto_osa == "approx_alternative" ~ 1,
-    TRUE ~ 0)) %>%
-  mutate(correct_auto_jaccard = case_when(
-    answer_auto_jaccard == "correct" ~ 1,
-    answer_auto_jaccard == "correctedtocorrect" ~ 1,
-    answer_auto_jaccard == "approx_correct" ~ 1,
-    answer_auto_jaccard == "alternative" ~ 1,
-    answer_auto_jaccard == "alternative_corrected" ~ 1,
-    answer_auto_jaccard == "approx_alternative" ~ 1,
-    TRUE ~ 0)) %>%
   mutate(correct_manual = case_when(correct == 1 ~ 1,
                                     is.na(correct) ~ 0))
 ```
-
 
 
 ### Inspect results
@@ -457,64 +360,20 @@ df2 <- df2 %>%
 ```{r}
 new_correct <- df2 %>% 
   filter(correct_manual == 0 &
-           (correct_auto_jw == 1 | correct_auto_jaro == 1 |
-              correct_auto_lv == 1 |
-             correct_auto_osa == 1 | correct_auto_jaccard == 1)) %>%
-  select(item, word, word.c, bestmatch_jaccard, bestmatch_jaro, bestmatch_osa, bestmatch_osa, answercode, answer_auto_jaro, answer_auto_jw, answer_auto_osa, answer_auto_jaccard )
+           (correct_auto_jaro == 1)) %>%
+  select(item, word, word.c, bestmatch_jaro, answercode, answer_auto_jaro)
 
 new_incorrect <- df2 %>% 
   filter(correct_manual == 1 &
-           (correct_auto_jaro == 0 | correct_auto_jw == 0 |
-              correct_auto_lv == 0 |
-              correct_auto_osa == 0 | correct_auto_jaccard == 0)) %>%
-  select(item, word, word.c, bestmatch_jaccard, bestmatch_jaro, bestmatch_lv, bestmatch_osa, answercode, answer_auto_jaro, answer_auto_jw, answer_auto_osa, answer_auto_jaccard )
+           (correct_auto_jaro == 0)) %>%
+  select(item, word, word.c, bestmatch_jaro, answercode, answer_auto_jaro)
 
-new_incorrect <- df2 %>% 
-  filter(correct_manual == 1 & correct_auto_jaro == 1 & correct_auto_osa == 0) %>%
-  select(item, word, word.c, bestmatch_osa, osa, bestmatch_jaro, jaro, answercode, answer_auto_osa, answer_auto_jaro)
+both_incorrect <- df2 %>% 
+  filter(correct_manual == 1 & correct_auto_jaro == 1) %>%
+  select(item, word, word.c,bestmatch_jaro, jaro, answercode,answer_auto_jaro)
                                   
-
 print("Jaro vs. manual: ");
 table(df2$correct_auto_jaro, df2$correct_manual);
-print("JW vs. manual: ")
-table(df2$correct_auto_jw, df2$correct_manual); 
-# Jaro and JW classify the same items as incorrect, but JW classifies six more as correct
-df2 %>% filter(correct_manual == 0 & correct_auto_jaro == 0 &
-                 correct_auto_jw == 1) %>%
-  select(item, word, word.c, bestmatch_jaro, jaro, bestmatch_jw,
-         jw, answer_auto_jaro, answer_auto_jw, answercode)
-df2 %>% filter(correct_manual == 1 & (correct_auto_jaro == 0 |
-                 correct_auto_jw == 0)) %>%
-  select(item, word, word.c, bestmatch_jaro, jaro, bestmatch_jw,
-         jw, answer_auto_jaro, answer_auto_jw, answercode)
-# Jaro fits better
-
-print("LV vs. manual: ")
-table(df2$correct_auto_lv, df2$correct_manual);
-# LV only classifies one new word as correct
-df2 %>% filter(correct_manual == 1 & correct_auto_lv == 0) %>%
-  select(item, word, word.c, bestmatch_lv, lv, 
-         answer_auto_lv, answercode)
-#table(df2$correct_auto_lv, df2$correct_auto_jaro)
-
-
-print("Osa vs. manual: ")
-table(df2$correct_auto_osa, df2$correct_manual);
-df2 %>% filter(correct_manual == 0 & correct_auto_jaro == 1 &
-                 correct_auto_osa == 0) %>%
-  select(item, word, word.c, bestmatch_jaro, jaro, bestmatch_osa,
-         osa, answer_auto_jaro, answer_auto_osa, answercode)
-df2 %>% filter(correct_manual == 1 & correct_auto_jaro == 0 &
-                 correct_auto_osa == 1) %>%
-  select(item, word, word.c, bestmatch_jaro, jaro, bestmatch_osa,
-         osa, answer_auto_jaro, answer_auto_osa, answercode)
-df2 %>% filter(correct_manual == 1 & correct_auto_jaro == 1 &
-                 correct_auto_osa == 0) %>%
-  select(item, word, word.c, bestmatch_jaro, jaro, bestmatch_osa,
-         osa, answer_auto_jaro, answer_auto_osa, answercode)
-
-print("Jaccard vs. manual: ")
-table(df2$correct_auto_jaccard, df2$correct_manual)
 ```
 
 ## Comparison manual and automatic classification (Jaro distance)
@@ -528,8 +387,8 @@ print("The new correct trials:")
 print("Amount of trials additionally considered as correct: ");
 sum(df2$correct_manual == 0 & df2$correct_auto_jaro == 1);
 print("In percent: ");
-sum(df2$correct_manual == 0 & df2$correct_auto_jaro == 1)/
-        nrow(df2)*100
+round(sum(df2$correct_manual == 0 & df2$correct_auto_jaro == 1)/
+        nrow(df2)*100,2)
 
 print("The new incorrect trials:")
 (new_incorrect <- df2 %>% filter(correct_manual == 1 & correct_auto_jaro == 0) %>%
@@ -538,18 +397,21 @@ print("The new incorrect trials:")
 print("Amount of trials additionally considered as incorrect: ");
 sum(df2$correct_manual == 1 & df2$correct_auto_jaro == 0);
 print("In percent: ");
-sum(df2$correct_manual == 1 & df2$correct_auto_jaro == 0)/
-        nrow(df2)*100
-
-print("Total amount of trials classified differently (in percent):")
-((sum(df2$correct_manual == 0 & df2$correct_auto_jaro == 1)+ sum(df2$correct_manual == 1 & df2$correct_auto_jaro == 0))/
-  nrow(df2))*100
+round(sum(df2$correct_manual == 1 & df2$correct_auto_jaro == 0)/
+        nrow(df2)*100,2)
 ```
 
-Correlation between manual and automatic classification:
+**Total amount of trials classified differently (in percent):**
+
+```{r total_difference}
+round(((sum(df2$correct_manual == 0 & df2$correct_auto_jaro == 1)+ sum(df2$correct_manual == 1 & df2$correct_auto_jaro == 0))/
+  nrow(df2))*100,2)
+```
+
+**Correlation between manual and automatic classification:**
 
 ```{r correlation_manual_automatic}
-cor(df2$correct_manual, df2$correct_auto_jaro)
+round(cor(df2$correct_manual, df2$correct_auto_jaro),2)
 ```
 
 ## Typing error analyses based on automatic classification
@@ -599,5 +461,5 @@ print(as.data.frame(table(
 
 ## Write data file for statistical analyses
 ```{r}
-write.csv(df2, here::here("data","data_long_final.csv"))
+write.csv(df2, here::here("data","transient_data_files", "data_long_final.csv"))
 ```

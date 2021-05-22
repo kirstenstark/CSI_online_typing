@@ -26,6 +26,9 @@ rm(list = ls())
 ```
 
 
+# CAVE
+Later on, we realized that the data frame from the verbal online experiment used in this a priori power analysis contained an error. Better refer to the post hoc power analysis also in this folder.
+
 # load data from online verbal CSI experiment
 
 ```{r load data online}
@@ -33,7 +36,7 @@ today <- Sys.Date()
 today <- format(today, format="%d%m%y")
 
 # load data
-load(here::here("data_for_power_analysis","df.RData"))
+load(here::here("data", "data_for_a_priori_power_analysis","df.RData"))
 df_online <- df
 
 # subset the relevant columns
@@ -56,7 +59,7 @@ df_online$category <- as.factor(df_online$subcat)
 
 ```{r load data lab}
 # load data 
-load(here::here("data_for_power_analysis","CSI_model_df.RData"))
+load(here::here("data", "data_for_a_priori_power_analysis","CSI_model_df.RData"))
 df_lab <- model_df
 
 # subset relevant columns

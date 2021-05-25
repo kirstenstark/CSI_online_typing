@@ -23,13 +23,6 @@
       "Repository": "CRAN",
       "Hash": "5f09ea90a07218b11c6430b7ca71fee7"
     },
-    "DBI": {
-      "Package": "DBI",
-      "Version": "1.1.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "030aaec5bc6553f35347cbb1e70b1a17"
-    },
     "DT": {
       "Package": "DT",
       "Version": "0.14",
@@ -163,13 +156,6 @@
       "Repository": "CRAN",
       "Hash": "0ae44a9cee07cf7af8af200557daf204"
     },
-    "blob": {
-      "Package": "blob",
-      "Version": "1.2.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "9addc7e2c5954eca5719928131fed98c"
-    },
     "boot": {
       "Package": "boot",
       "Version": "1.3-25",
@@ -232,13 +218,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "08cf4045c149a0f0eaf405324c7495bd"
-    },
-    "codetools": {
-      "Package": "codetools",
-      "Version": "0.2-16",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "89cf4b8207269ccf82fbeb6473fd662b"
     },
     "colorspace": {
       "Package": "colorspace",
@@ -303,13 +282,6 @@
       "Repository": "CRAN",
       "Hash": "d1b8b1a821ee564a3515fa6c6d5c52dc"
     },
-    "dbplyr": {
-      "Package": "dbplyr",
-      "Version": "2.1.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "f30247ffeeebe8d9842dc68fe63e043b"
-    },
     "desc": {
       "Package": "desc",
       "Version": "1.2.0",
@@ -330,13 +302,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "a0cbe758a531d054b537d16dff4d58a1"
-    },
-    "doParallel": {
-      "Package": "doParallel",
-      "Version": "1.0.16",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "2dc413572eb42475179bfe0afabd2adf"
     },
     "dplyr": {
       "Package": "dplyr",
@@ -414,13 +379,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "1cb4279e697650f0bd78cd3601ee7576"
-    },
-    "foreach": {
-      "Package": "foreach",
-      "Version": "1.5.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "e32cfc0973caba11b65b1fa691b4d8c9"
     },
     "foreign": {
       "Package": "foreign",
@@ -548,13 +506,6 @@
       "Repository": "CRAN",
       "Hash": "be37eec356a71f62f209dd04d94122ed"
     },
-    "influence.ME": {
-      "Package": "influence.ME",
-      "Version": "0.9-9",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "c401bf453f9c50366e6da1da7959b4f4"
-    },
     "ini": {
       "Package": "ini",
       "Version": "0.3.1",
@@ -646,13 +597,6 @@
       "Repository": "CRAN",
       "Hash": "88e045628eada40f6cda13f553f25869"
     },
-    "lubridate": {
-      "Package": "lubridate",
-      "Version": "1.7.10",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "1ebfdc8a3cfe8fe19184f5481972b092"
-    },
     "magrittr": {
       "Package": "magrittr",
       "Version": "2.0.1",
@@ -701,18 +645,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "eaee7d2a6f3ed4491df868611cb064cc"
-    },
-    "mixedpower": {
-      "Package": "mixedpower",
-      "Version": "0.1.0",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteRepo": "mixedpower",
-      "RemoteUsername": "DejanDraschkow",
-      "RemoteRef": "master",
-      "RemoteSha": "58b5a99f88a41da99ee318bb2be757b33a176b1f",
-      "Hash": "5c4dddbcad506c453a78574d9246468b"
     },
     "modelr": {
       "Package": "modelr",
@@ -952,13 +884,6 @@
       "Repository": "CRAN",
       "Hash": "b5510c50c7f31d453c385c7b460af2b9"
     },
-    "reprex": {
-      "Package": "reprex",
-      "Version": "1.0.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "cb4d6f77f163b8d685833f2a59e7cb4c"
-    },
     "reshape2": {
       "Package": "reshape2",
       "Version": "1.4.4",
@@ -1022,26 +947,12 @@
       "Repository": "CRAN",
       "Hash": "0ec41191f744d0f5afad8c6f35cc36e4"
     },
-    "rvest": {
-      "Package": "rvest",
-      "Version": "1.0.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "74b905b0076e1de6e27f540c95ba68d5"
-    },
     "scales": {
       "Package": "scales",
       "Version": "1.1.1",
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "6f76f71042411426ec8df6c54f34e6dd"
-    },
-    "selectr": {
-      "Package": "selectr",
-      "Version": "0.4-2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "3838071b66e0c566d55cc26bd6e27bf4"
     },
     "sessioninfo": {
       "Package": "sessioninfo",
@@ -1175,13 +1086,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "6ea435c354e8448819627cf686f66e0a"
-    },
-    "tidyverse": {
-      "Package": "tidyverse",
-      "Version": "1.3.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "bd51be662f359fa99021f3d51e911490"
     },
     "tinytex": {
       "Package": "tinytex",

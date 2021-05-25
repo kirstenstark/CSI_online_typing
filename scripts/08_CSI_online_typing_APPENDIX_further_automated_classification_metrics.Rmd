@@ -1,0 +1,448 @@
+---
+title: '08 CSI online typing APPENDIX: Automatic answer classification with alternative metrices'
+author: "Kirsten Stark"
+date: "3/30/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load packages
+
+```{r load_packages}
+rm(list = ls())
+
+library(tidyr)
+library(dplyr)
+library(stringr)
+library(stringdist)
+
+options( "encoding" = "UTF-8" )
+set.seed(99)
+```
+
+## Load data
+
+```{r load_data}
+# input 
+input = "data_long_anonymous.csv"
+
+# input synonym/alternative naming list
+alternatives = "naming_alternatives.csv"
+
+# load data
+df <- read.csv(here::here("data", input))
+
+# load alternatives
+alternatives <- read.csv(here::here("data", "supplementary_info", alternatives), 
+                         sep = ";")
+```
+
+## Load functions
+Functions from https://github.com/KirstenStark/stringmatch_typed_naming (Stark,2021)
+
+```{r load_functions}
+source("automatic_preprocessing_functions.R")
+```
+
+
+## Preprocess data, applying functions
+### 1) Clean word ending 
+By deleting the last character(s) of typed words if those are space or enter keys. 
+(Alternatively, the function also takes custom endings that should be deleted.)  
+As entries, the delete_ending function takes the column with the word entries and, optionally, a custom ending.
+We can repeat applying this function if we want to keep deleting if Enter or space is repeated several times at the end of the word. The while loops stops as soon as none of the words has a space or Enter (or custom ending) at the end. (In our case, this changes only the ending of three words)
+
+```{r clean_word_ending}
+isnotequal <- 1
+df$word.c = currentupdate = df$word
+while (isnotequal > 0) {
+  df <- df %>% mutate(word.c = delete_ending(df$word.c))
+  isnotequal <- sum(currentupdate != df$word.c, na.rm = TRUE)
+  currentupdate <- df$word.c
+}
+```
+
+### 2) Replace special characters
+Special characters such as Enter and Backspace are written as entire words. We want to replace these with identifiable numbers.
+
+```{r replace_special_chars}
+oldnames <- c("Enter", "CapsLock", "Shift", "ArrowLeft", "ArrowRight", "Backspace", "Control")
+newnames <- c("1", "2", "3", "4", "5", "6", "7")
+df$word.c <- replace_special_chars(input = df$word.c, oldnames = oldnames, newnames = newnames)
+```
+
+### 3) Compute finally submitted words by applying all backspaces
+Function takes as input the word entries and, optionally, the backspace identifier. 
+
+```{r replace_backspace}
+df$word.c <- replace_backspace(df$word.c, backspace = "6")
+```
+
+### 4) Compute stringdist between word entries and items/alternatives
+a) Compute Jaro distance, the metrics we used for the main analyses
+
+```{r calculate_stringdist_jaro}
+tictoc::tic()
+output <- calculate_stringdist(word = df$word.c, stims = df$item, 
+                               alternatives = alternatives, 
+                               method = "jw", p = 0,
+                               firstlettercorrect = TRUE)
+tictoc::toc()
+df$jaro <- output[,1]
+df$bestmatch_jaro <- output[,2]
+```
+
+b) Compute Jaro-Winkler distance with p = 0.1
+
+
+```{r calculate_stringdist_jw}
+tictoc::tic()
+output <- calculate_stringdist(word = df$word.c, stims = df$item, 
+                               alternatives = alternatives, 
+                               method = "jw", p = 0.1,
+                               firstlettercorrect = TRUE)
+tictoc::toc()
+df$jw <- output[,1]
+df$bestmatch_jw <- output[,2]
+```
+
+c) Compute Levenshtein distance with equally weighted operations
+
+
+```{r calculate_stringdist_lv}
+tictoc::tic()
+output <- calculate_stringdist(word = df$word.c, stims = df$item, 
+                               alternatives = alternatives, 
+                               method = "lv", weight = c(1,1,1),
+                               firstlettercorrect = TRUE)
+df$lv <- output[,1]
+df$bestmatch_lv <- output[,2]
+tictoc::toc()
+```
+
+d) Compute optimal string alignment (restricted Damerau Levenshtein distance) with equally weighted operations
+
+```{r calculate_stringdist_osa}
+tictoc::tic()
+output <- calculate_stringdist(word = df$word.c, stims = df$item, 
+                               alternatives = alternatives, 
+                               method = "osa", weight = c(1,1,1,1),
+                               firstlettercorrect = TRUE)
+df$osa <- output[,1]
+df$bestmatch_osa <- output[,2]
+tictoc::toc()
+```
+
+e) Compute distance based on Bi-gram (Jaccard)
+
+```{r calculate_stringdist_jaccard}
+tictoc::tic()
+output <- calculate_stringdist(word = df$word.c, stims = df$item, 
+                               alternatives = alternatives, 
+                               method = "jaccard", q = 2,
+                               firstlettercorrect = TRUE)
+df$jaccard <- output[,1]
+df$bestmatch_jaccard <- output[,2]
+tictoc::toc()
+```
+
+### 5) Classify word entries using different answercodes
+
+```{r classify_entries}
+df <- df %>% 
+  mutate(answer_auto_jaro = case_character_type(word, item, 
+          word.c, jaro, bestmatch_jaro, d = 0.3)) %>%
+  mutate(answer_auto_jw = case_character_type(word, item, 
+          word.c, jw, bestmatch_jw, d = 0.3)) %>%
+  mutate(answer_auto_lv = case_character_type(word, item, 
+          word.c, osa, bestmatch_lv, d = 3)) %>%
+  mutate(answer_auto_osa = case_character_type(word, item, 
+          word.c, osa, bestmatch_osa, d = 4)) %>%
+  mutate(answer_auto_jaccard = case_character_type(word, item,
+          word.c, jaccard, bestmatch_jaccard, d = 0.8))
+
+# The different classifications are
+levels(as.factor(df$answer_auto_jaro))
+```
+
+Classify answers as correct or incorrect based on the answercodes.  
+correct = 1, incorrect = 0 
+
+```{r classify_as_correct}
+df <- df %>% 
+  mutate(correct_auto_jaro = case_when(
+    answer_auto_jaro == "correct" ~ 1,
+    answer_auto_jaro == "correctedtocorrect" ~ 1,
+    answer_auto_jaro == "approx_correct" ~ 1,
+    answer_auto_jaro == "alternative" ~ 1,
+    answer_auto_jaro == "alternative_corrected" ~ 1,
+    answer_auto_jaro == "approx_alternative" ~ 1,
+    TRUE ~ 0)) %>%
+  mutate(correct_auto_jw = case_when(
+    answer_auto_jw == "correct" ~ 1,
+    answer_auto_jw == "correctedtocorrect" ~ 1,
+    answer_auto_jw == "approx_correct" ~ 1,
+    answer_auto_jw == "alternative" ~ 1,
+    answer_auto_jw == "alternative_corrected" ~ 1,
+    answer_auto_jw == "approx_alternative" ~ 1,
+    TRUE ~ 0)) %>%
+  mutate(correct_auto_lv = case_when(
+    answer_auto_lv == "correct" ~ 1,
+    answer_auto_lv == "correctedtocorrect" ~ 1,
+    answer_auto_lv == "approx_correct" ~ 1,
+    answer_auto_lv == "alternative" ~ 1,
+    answer_auto_lv == "alternative_corrected" ~ 1,
+    answer_auto_lv == "approx_alternative" ~ 1,
+    TRUE ~ 0)) %>%
+  mutate(correct_auto_osa = case_when(
+    answer_auto_osa == "correct" ~ 1,
+    answer_auto_osa == "correctedtocorrect" ~ 1,
+    answer_auto_osa == "approx_correct" ~ 1,
+    answer_auto_osa == "alternative" ~ 1,
+    answer_auto_osa == "alternative_corrected" ~ 1,
+    answer_auto_osa == "approx_alternative" ~ 1,
+    TRUE ~ 0)) %>%
+  mutate(correct_auto_jaccard = case_when(
+    answer_auto_jaccard == "correct" ~ 1,
+    answer_auto_jaccard == "correctedtocorrect" ~ 1,
+    answer_auto_jaccard == "approx_correct" ~ 1,
+    answer_auto_jaccard == "alternative" ~ 1,
+    answer_auto_jaccard == "alternative_corrected" ~ 1,
+    answer_auto_jaccard == "approx_alternative" ~ 1,
+    TRUE ~ 0)) %>%
+  mutate(correct_manual = case_when(correct == 1 ~ 1,
+                                    is.na(correct) ~ 0))
+```
+
+
+## Inspect results
+
+### Create data frame
+
+```{r create_overview_table}
+overview <- data.frame(name = rep(NA, times=5), correlation=rep(NA, times=5), 
+                       newcorrect =rep(NA, times=5), 
+                        newcorrect_partialname=rep(NA, times=5),newcorrect_orthosim=rep(NA, times=5),
+                        newcorrect_losely_related=rep(NA, times=5),
+                       newincorrect = rep(NA, times=5),
+                        newincorrect_firstletter_backspace=rep(NA, times=5), 
+                        newincorrect_phon_firstletter=rep(NA, times=5),
+                        newincorrect_distance_based=rep(NA, times=5),
+                        newincorrect_other=rep(NA, times=5))
+overview$name <- c("Jaro", "Jaro-Winkler", "Levenshtein", "Optimal string alignment", "Bi-Gram (Jaccard)")
+```
+
+#### Jaro distance
+Correlation with manual classification
+
+```{r cor_manual_jaro}
+(cor_jaro <- cor.test(df$correct_manual, df$correct_auto_jaro))
+overview$correlation[overview$name=="Jaro"]<- cor_jaro$estimate
+```
+
+**"New correct" classifications:** 
+partialname: when they typed only parts of the picture name  
+orthosim: when they typed orthographically similar word
+losely_related: losely_related, non-accepted alternative with orthographical similarities
+
+```{r new_correct_jaro}
+(new_correct <- df %>% 
+  filter(correct_manual == 0 &
+           correct_auto_jaro == 1) %>%
+  dplyr::select(item, word, word.c, bestmatch_jaro,answer_auto_jaro, answercode))
+overview$newcorrect[overview$name=="Jaro"]<- nrow(new_correct)
+overview$newcorrect_partialname[overview$name=="Jaro"]<- 5
+overview$newcorrect_orthosim[overview$name=="Jaro"]<- 2
+overview$newcorrect_losely_related[overview$name=="Jaro"]<- 1
+``` 
+
+**"New incorrect" classifications:**
+Firstletter_backspace: when participants backspace-corrected an accepted alternative, changing the first character of the word entry  
+Phon_firstletter:when they misspelled the beginning of a word with a phonologically similar phoneme  
+Distance-based: Distance greater cut-off  
+
+```{r new_incorrect_jaro}
+(new_incorrect <- df %>% 
+  filter(correct_manual == 1 &
+           correct_auto_jaro == 0) %>%
+  dplyr::select(item, word, word.c, bestmatch_jaro,answer_auto_jaro, answercode))
+overview$newincorrect[overview$name=="Jaro"]<- nrow(new_incorrect)
+overview$newincorrect_firstletter_backspace[overview$name=="Jaro"]<- 13
+overview$newincorrect_phon_firstletter[overview$name=="Jaro"]<- 6
+overview$newincorrect_distance_based[overview$name=="Jaro"]<- 1
+overview$newincorrect_other[overview$name=="Jaro"]<- 1
+``` 
+
+
+#### Jaro-Winkler distance
+Correlation with manual classification
+
+```{r cor_manual_jw}
+(cor_jw <- cor.test(df$correct_manual, df$correct_auto_jw))
+overview$correlation[overview$name=="Jaro-Winkler"]<- cor_jw$estimate
+```
+
+**"New correct" classifications:** 
+partialname: when they typed only parts of the picture name  
+orthosim: when they typed orthographically similar word
+losely_related: losely_related, non-accepted alternative with orthographical similarities
+
+```{r new_correct_jw}
+(new_correct <- df %>% 
+  filter(correct_manual == 0 &
+           correct_auto_jw == 1) %>%
+  dplyr::select(item, word, word.c, bestmatch_jw,answer_auto_jw, answercode))
+overview$newcorrect[overview$name=="Jaro-Winkler"]<- nrow(new_correct)
+overview$newcorrect_partialname[overview$name=="Jaro-Winkler"]<- 5
+overview$newcorrect_orthosim[overview$name=="Jaro-Winkler"]<- 2
+overview$newcorrect_losely_related[overview$name=="Jaro-Winkler"]<- 6
+``` 
+
+**"New incorrect" classifications:**
+Firstletter_backspace: when participants backspace-corrected an accepted alternative, changing the first character of the word entry  
+Phon_firstletter:when they misspelled the beginning of a word with a phonologically similar phoneme  
+Distance-based: Distance greater cut-off  
+
+```{r new_incorrect_jw}
+(new_incorrect <- df %>% 
+  filter(correct_manual == 1 &
+           correct_auto_jw == 0) %>%
+  dplyr::select(item, word, word.c, bestmatch_jw,answer_auto_jw, answercode))
+overview$newincorrect[overview$name=="Jaro-Winkler"]<- nrow(new_incorrect)
+overview$newincorrect_firstletter_backspace[overview$name=="Jaro-Winkler"]<- 14
+overview$newincorrect_phon_firstletter[overview$name=="Jaro-Winkler"]<- 6
+overview$newincorrect_distance_based[overview$name=="Jaro-Winkler"]<- 1
+overview$newincorrect_other[overview$name=="Jaro-Winkler"]<- 0
+``` 
+
+#### Levenshtein distance
+Correlation with manual classification
+
+```{r cor_manual_lv}
+(cor_lv <- cor.test(df$correct_manual, df$correct_auto_lv))
+overview$correlation[overview$name=="Levenshtein"]<- cor_lv$estimate
+```
+
+**"New correct" classifications:** 
+partialname: when they typed only parts of the picture name  
+orthosim: when they typed orthographically similar word
+losely_related: losely_related, non-accepted alternative with orthographical similarities
+
+```{r new_correct_lv}
+(new_correct <- df %>% 
+  filter(correct_manual == 0 &
+           correct_auto_lv == 1) %>%
+  dplyr::select(item, word, word.c, bestmatch_lv,answer_auto_lv, answercode))
+overview$newcorrect[overview$name=="Levenshtein"]<- nrow(new_correct)
+overview$newcorrect_partialname[overview$name=="Levenshtein"]<- 0
+overview$newcorrect_orthosim[overview$name=="Levenshtein"]<- 0
+overview$newcorrect_losely_related[overview$name=="Levenshtein"]<- 1
+``` 
+
+**"New incorrect" classifications:**
+Firstletter_backspace: when participants backspace-corrected an accepted alternative, changing the first character of the word entry  
+Phon_firstletter:when they misspelled the beginning of a word with a phonologically similar phoneme  
+Distance-based: Distance greater cut-off  
+
+```{r new_incorrect_lv}
+(new_incorrect <- df %>% 
+  filter(correct_manual == 1 &
+           correct_auto_lv == 0) %>%
+  dplyr::select(item, word, word.c, bestmatch_lv,answer_auto_lv, answercode))
+overview$newincorrect[overview$name=="Levenshtein"]<- nrow(new_incorrect)
+overview$newincorrect_firstletter_backspace[overview$name=="Levenshtein"]<- 14
+overview$newincorrect_phon_firstletter[overview$name=="Levenshtein"]<- 6
+overview$newincorrect_distance_based[overview$name=="Levenshtein"]<- 6
+overview$newincorrect_other[overview$name=="Levenshtein"]<- 0
+``` 
+
+#### Optimal string alignment (restricted Damereau-Levenshtein)
+Correlation with manual classification
+
+```{r cor_manual_osa}
+(cor_osa <- cor.test(df$correct_manual, df$correct_auto_osa))
+overview$correlation[overview$name=="Optimal string alignment"]<- cor_osa$estimate
+```
+
+**"New correct" classifications:** 
+partialname: when they typed only parts of the picture name  
+orthosim: when they typed orthographically similar word
+losely_related: losely_related, non-accepted alternative with orthographical similarities
+
+```{r new_correct_osa}
+(new_correct <- df %>% 
+  filter(correct_manual == 0 &
+           correct_auto_osa == 1) %>%
+  dplyr::select(item, word, word.c, bestmatch_osa,answer_auto_osa, answercode))
+overview$newcorrect[overview$name=="Optimal string alignment"]<- nrow(new_correct)
+overview$newcorrect_partialname[overview$name=="Optimal string alignment"]<- 0
+overview$newcorrect_orthosim[overview$name=="Optimal string alignment"]<- 1
+overview$newcorrect_losely_related[overview$name=="Optimal string alignment"]<- 1
+``` 
+
+**"New incorrect" classifications:**
+Firstletter_backspace: when participants backspace-corrected an accepted alternative, changing the first character of the word entry  
+Phon_firstletter:when they misspelled the beginning of a word with a phonologically similar phoneme  
+Distance-based: Distance greater cut-off  
+
+```{r new_incorrect_osa}
+(new_incorrect <- df %>% 
+  filter(correct_manual == 1 &
+           correct_auto_osa == 0) %>%
+  dplyr::select(item, word, word.c, bestmatch_osa,answer_auto_osa, answercode))
+overview$newincorrect[overview$name=="Optimal string alignment"]<- nrow(new_incorrect)
+overview$newincorrect_firstletter_backspace[overview$name=="Optimal string alignment"]<- 14
+overview$newincorrect_phon_firstletter[overview$name=="Optimal string alignment"]<- 6
+overview$newincorrect_distance_based[overview$name=="Optimal string alignment"]<- 5
+overview$newincorrect_other[overview$name=="Optimal string alignment"]<- 0
+``` 
+
+#### Jaccard Bi-gram frequency
+Correlation with manual classification
+
+```{r cor_manual_jaccard}
+(cor_jaccard <- cor.test(df$correct_manual, df$correct_auto_jaccard))
+overview$correlation[overview$name=="Bi-Gram (Jaccard)"]<- cor_jaccard$estimate
+```
+
+**"New correct" classifications:** 
+partialname: when they typed only parts of the picture name  
+orthosim: when they typed orthographically similar word
+losely_related: losely_related, non-accepted alternative with orthographical similarities
+
+```{r new_correct_jaccard}
+(new_correct_jaccard <- df %>% 
+  filter(correct_manual == 0 &
+           correct_auto_jaccard == 1) %>%
+  dplyr::select(item, word, word.c, bestmatch_jaccard,answer_auto_jaccard, answercode))
+overview$newcorrect[overview$name=="Bi-Gram (Jaccard)"]<- nrow(new_correct)
+overview$newcorrect_partialname[overview$name=="Bi-Gram (Jaccard)"]<- 4
+overview$newcorrect_orthosim[overview$name=="Bi-Gram (Jaccard)"]<- 2
+overview$newcorrect_losely_related[overview$name=="Bi-Gram (Jaccard)"]<- 1
+``` 
+
+**"New incorrect" classifications:**
+Firstletter_backspace: when participants backspace-corrected an accepted alternative, changing the first character of the word entry  
+Phon_firstletter:when they misspelled the beginning of a word with a phonologically similar phoneme  
+Distance-based: Distance greater cut-off  
+
+```{r new_incorrect_jaccard}
+(new_incorrect <- df %>% 
+  filter(correct_manual == 1 &
+           correct_auto_jaccard == 0) %>%
+  dplyr::select(item, word, word.c, bestmatch_jaccard,answer_auto_jaccard, answercode))
+overview$newincorrect[overview$name=="Bi-Gram (Jaccard)"]<- nrow(new_incorrect)
+overview$newincorrect_firstletter_backspace[overview$name=="Bi-Gram (Jaccard)"]<- 15
+overview$newincorrect_phon_firstletter[overview$name=="Bi-Gram (Jaccard)"]<- 6
+overview$newincorrect_distance_based[overview$name=="Bi-Gram (Jaccard)"]<- 4
+overview$newincorrect_other[overview$name=="Bi-Gram (Jaccard)"]<- 2
+``` 
+
+#### Display overview table
+
+```{r print_overview_table}
+overview
+```

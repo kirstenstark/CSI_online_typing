@@ -2,7 +2,7 @@
 title: "06 CSI online typing: Comparison to verbal naming"
 author: "Kirsten Stark"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -26,6 +26,7 @@ options(scipen=999)
 
 rm(list = ls())
 options( "encoding" = "UTF-8" )
+set.seed(99)
 ```
 
 # Load data
@@ -34,7 +35,7 @@ Load data from both the verbal online CSI experiment and the typing online CSI e
 Load typing data
 
 ```{r load_typing_data}
-df_typing <- read.csv(here::here("data", "data_long_final.csv"))
+df_typing <- read.csv(here::here("data", "data_long_anonymous.csv"))
 ```
 
 Select classification type (as in script 05)
@@ -80,7 +81,6 @@ df_verbal <- df_verbal %>%
 df_typing <- df_typing %>% mutate(subject = subject + 200)
 df_verbal <- df_verbal %>% mutate(subject = subject + 100)
 ```
-
 
 3) Put columns into correct format 
 
@@ -183,11 +183,12 @@ Plot RTs by ordinal position for both experiments
 
 filename <- "CSI_online_exp_comparison_plot_rt.pdf"
 ggsave(plot, filename = 
-         here::here("figures", filename),
+         here::here("results", "figures", filename),
        width = 18, height = 12, units = "cm", 
        dpi = 300, device = cairo_pdf)
-embedFonts(file = here::here("figures", filename))
+embedFonts(file = here::here("results", "figures", filename))
 ```
+
 # Set contrasts and convert continuous predictor variable
 
 1) Set contrasts: Sliding difference contrast for factor experiment  
@@ -260,11 +261,11 @@ gofstat(list(fit.gamma, fit.normal),
 # Interferential statistics: GLMM with predictors Pos.cont and experiment
 
 ```{r glmm_cont}
-m1 <- glmer(RT ~ Pos.cont*experiment +
-               (Pos.cont|subject) +(Pos.cont*experiment|category),
+m1 <- afex::lmer_alt(RT ~ Pos.cont*experiment +
+               (Pos.cont||subject) +(Pos.cont*experiment||category),
              data = df,
             family =Gamma(link ="identity"),
-            control=glmerControl(optimizer = "bobyqa"))
+            control=glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 2e5)))
 summary(m1)
 
 # save model output
@@ -278,338 +279,6 @@ tab_model(m1,transform = NULL,
           dv.labels = "Typing Onset Latency",
           #string.pred = "",
           string.stat = "t-Value",
-          file = here::here("tables",
-                            "CSI_online_experiment_comp_glmm_cont.html"))
-```
-
-## Follow-up on the interaction with a nested model
-
-```{r glmm_cont_nested}
-m1.nested <- glmer(RT ~ experiment/Pos.cont +
-               (Pos.cont|subject) +(Pos.cont*experiment|category),
-             data = df,
-            family =Gamma(link ="identity"),
-            control=glmerControl(optimizer = "bobyqa"))
-summary(m1.nested)
-
-# save model output
-tab_model(m1.nested,transform = NULL,
-          show.re.var = F, show.stat = T,show.r2 = F,show.icc = F,
-          title = 
-            "Nested GLMM (Gamma distribution)",
-          pred.labels = c("(Intercept)", "Experiment", 
-                          "Verbal: Ordinal Position", 
-                          "Typing: Ordinal Position"),
-          wrap.labels = 10,
-          dv.labels = "Typing Onset Latency",
-          #string.pred = "",
-          string.stat = "t-Value",
-          file = here::here("tables",
-                            "CSI_online_experiment_comp_nested_glmm.html"))
-```
-
-# Further exploring the interaction
-Run the model again but setting the fourth ordinal position to NA
-
-```{r GLMM_wo_4th_position}
-df_red <- df %>% filter(Pos != 4)
-df_red$Pos.cont <- scale(as.numeric(as.character(df_red$Pos)),
-                       center = T, scale = F)
-table(df_red$Pos.cont)
-
-# m1.red <- glmer(RT ~ Pos.cont*experiment +
-#                (Pos.cont|subject) +(Pos.cont*experiment|category),
-#              data = df_red,
-#             family =Gamma(link ="identity"),
-#             control=glmerControl(optimizer = "bobyqa"))
-# # Model fails to converge -> increase iterations
-
-# m1.red <- glmer(RT ~ Pos.cont*experiment +
-#                (Pos.cont|subject) +(Pos.cont*experiment|category),
-#              data = df_red,
-#             family =Gamma(link ="identity"),
-#             control=glmerControl(optimizer = "bobyqa",  
-#                                  optCtrl = list(maxfun = 2*10^5)))
-# # Model fails to converge -> exclude correlation parameters
-
-m1.red <- afex::lmer_alt(RT ~ Pos.cont*experiment +
-               (Pos.cont||subject) + (Pos.cont*experiment||category),
-             data = df_red,
-            family =Gamma(link ="identity"),
-            control=glmerControl(optimizer = "bobyqa",  
-                                 optCtrl = list(maxfun = 2*10^5)))
-summary(m1.red)
-
-# save model output
-tab_model(m1.red, transform = NULL,
-          show.re.var = F, show.stat = T,show.r2 = F,show.icc = F,
-          title = 
-            "GLMM (Gamma distribution; 4th position set to NA)",
-          pred.labels = c("(Intercept)", "Experiment", 
-                          "Verbal: Ordinal Position", 
-                          "Typing: Ordinal Position"),
-          wrap.labels = 10,
-          dv.labels = "Typing Onset Latency",
-          #string.pred = "",
-          string.stat = "t-Value",
-          file = here::here("tables",
-                            "CSI_online_experiment_comp_nested_glmm.html"))
-```
-
-
-### ----------------------------------------------------------------
-### Old version of scripts
-
-```{r GLMM_wo_4th_position_different_centering}
-# df_red <- df
-# df_red$Pos.cont[df_red$Pos == 4] <-  NA
-# 
-# m1.red <- glmer(RT ~ Pos.cont*experiment +
-#                (Pos.cont|subject) +(Pos.cont*experiment|category),
-#              data = df_red,
-#             family =Gamma(link ="identity"),
-#             control=glmerControl(optimizer = "bobyqa"))
-# summary(m1.red)
-```
-
-```{r}
-# m1.verbal <- glmer(RT ~ Pos.cont +
-#                (Pos.cont|subject) +(Pos.cont|category),
-#              data = df[df$experiment == "verbal",],
-#             family =Gamma(link ="identity"),
-#             control=glmerControl(optimizer = "bobyqa"))
-# summary(m1.verbal)
-# 
-# 
-# tab_model(m1.verbal,transform = NULL,
-#           show.re.var = F, show.stat = T,show.r2 = F,show.icc = F,
-#           title = "GLMM (Gamma distribution) with continuous predictor",
-#           pred.labels = c("(Intercept)", "Ordinal Position", 
-#                           "Experiment", "(Ordinal Position) x 
-#                           \n (Experiment)"),
-#           wrap.labels = 10,
-#           dv.labels = "Typing Onset Latency",
-#           #string.pred = "",
-#           string.stat = "t-Value",
-#           file = here::here("tables",
-#                             "CSI_online_verbal_glmm_cont.html"))
-```
-
-```{r}
-# m1.verbal.log <- lmer(log(RT) ~ Pos.cont +
-#                (Pos.cont|subject) +(Pos.cont|category),
-#              data = df[df$experiment == "verbal",],
-#             control=lmerControl(optimizer = "bobyqa",
-#                                 optCtrl = list(maxfun = 2*10^5)))
-# summary(m1.verbal.log)
-# 
-# tab_model(m1.verbal,transform = NULL,
-#           show.re.var = F, show.stat = T,show.r2 = F,show.icc = F,
-#           title = "LMM with continuous predictor",
-#           pred.labels = c("(Intercept)", "Ordinal Position", 
-#                           "Experiment", "(Ordinal Position) x 
-#                           \n (Experiment)"),
-#           wrap.labels = 10,
-#           dv.labels = "Typing Onset Latency",
-#           #string.pred = "",
-#           string.stat = "t-Value",
-#           file = here::here("tables",
-#                             "CSI_online_verbal_lmm_log_cont.html"))
-```
-```{r}
-# anova(m1.verbal, m1.verbal.log)
-```
-
-### ----------------------------------------------------------------
-
-### Full GLMM with polynomial contrasts (linear trend only)
-
-```{r glmm_poly_lin}
-
-# # define model
-# m1 <- glmer(RT ~ Pos.L*experiment +
-#                        (Pos.L|subject) + (Pos.L*experiment|category),
-#             data = df,
-#             family =Gamma(link ="identity"),
-#             control=glmerControl(optimizer = "bobyqa"))
-# summary(m1)
-```
-
-### Full GLMM with polynomial contrasts (all contrasts included):
-
-```{r glmm_poly}
-# m2 <- afex::lmer_alt(RT ~ Pos*experiment +
-#                        (Pos||subject) + (Pos*experiment||category),
-#             data = df,
-#             family =Gamma(link ="identity"),
-#             control=glmerControl(optimizer = "bobyqa",
-#                                    optCtrl = list(maxfun = 2*10^5)))
-# summary(m2)
-```
-
-
-Verbal data only
-
-```{r}
-# qq_raw <- ggplot2::ggplot(data=df[df$experiment == "verbal",], ggplot2::aes(sample = RT)) +
-#   ggplot2::stat_qq() +
-#   ggplot2::stat_qq_line(colour="red") +
-#   labs(x = "theoretical raw") + apatheme +
-#    theme(plot.margin = unit(c(1,0.5,0,0),"cm"))+ # top right bottom left
-#     scale_y_continuous(breaks = c(0,1000,2000,3000,4000,5000))+
-#   theme(axis.title.y = element_text(margin = margin(0,20,0,20)))+
-#   theme(axis.title.x = element_text(margin = margin(20,0,20,0)))
-# 
-# qq_log <- ggplot2::ggplot(data=df[df$experiment == "verbal",], ggplot2::aes(sample = log(RT))) +
-#   ggplot2::stat_qq() +
-#   ggplot2::stat_qq_line(colour="red") +
-#   labs(x = "theoretical raw") + apatheme +
-#    theme(plot.margin = unit(c(1,0.5,0,0),"cm"))+ # top right bottom left
-#     scale_y_continuous(breaks = c(0,1000,2000,3000,4000,5000))+
-#   theme(axis.title.y = element_text(margin = margin(0,20,0,20)))+
-#   theme(axis.title.x = element_text(margin = margin(20,0,20,0)))
-# 
-# 
-# params <- as.list(MASS::fitdistr(df$RT[df$experiment == "verbal"], "gamma")$estimate)
-# qq_gamma <- ggplot(df[df$experiment == "verbal",], aes(sample = RT)) +
-#   stat_qq(distribution = qgamma, dparams = params)+
-#   #stat_qq_line(colour="red")+
-#   geom_abline(colour = "red") +
-#   scale_y_continuous(breaks = c(0,1000,2000,3000,4000,5000))+
-#  # scale_x_continuous(breaks = c(500,750,1000,1250,1500),labels = c("-4","-2","0","2","4"))+
-#   labs(x = "gamma") + apatheme +
-#    theme(plot.margin = unit(c(1,0.5,0,0),"cm"))+ # top right bottom left
-#   theme(axis.title.y = element_text(margin = margin(0,20,0,20)))+
-#   theme(axis.title.x = element_text(margin = margin(20,0,20,0)))
-# 
-# params2 <- as.list(MASS::fitdistr(1/df$RT[df$experiment == "verbal"], "gamma")$estimate)
-# qq_invgamma <- ggplot(df[df$experiment == "verbal",], aes(sample = RT)) +
-#   stat_qq(distribution = qgamma, dparams = params2)+
-#   #stat_qq_line(colour="red")+
-#   scale_y_continuous(breaks = c(0,1000,2000,3000,4000,5000))+
-#   scale_x_continuous(breaks = c(0.0005,0.0010,0.0015,0.0020,0.0025))+
-#   labs(x = "inv_gamma") + apatheme +
-#    theme(plot.margin = unit(c(1,0.5,0,0),"cm"))+ # top right bottom left
-#   theme(axis.title.y = element_text(margin = margin(0,20,0,20)))+
-#   theme(axis.title.x = element_text(margin = margin(20,0,20,0))) +
-#   geom_abline(colour = "red")
-# qq_raw;qq_log;qq_gamma;qq_invgamma
-# #ggpubr::ggarrange(qq_raw, qq_gamma, labels = c("A", "B"), hjust = -1,font.label = list(size = 22, family = "Arial"))
-```
-
-```{r}
-# library(fitdistrplus)
-# fit.gamma <- fitdist(df$RT[df$experiment == "verbal"], distr = "gamma", method = "mle")
-# summary(fit.gamma)
-# plot(fit.gamma)
-# logLik(fit.gamma)
-# 
-# fit.log <- fitdist(df$RT[df$experiment == "verbal"], distr = "lnorm", method = "mle")
-# summary(fit.log)
-# plot(fit.log)
-# 
-# fit.normal<- fitdist(df$RT[df$experiment == "verbal"], distr = "norm", method = "mle")
-# summary(fit.normal)
-# plot(fit.normal)
-# 
-# fit.Weibull <- fitdist(df$RT[df$experiment == "verbal"], distr = "weibull", method = "mle")
-# summary(fit.Weibull)
-# plot(fit.Weibull)
-# 
-# fit.cauchy<- fitdist(df$RT[df$experiment == "verbal"], distr = "cauchy", method = "mle")
-# 
-# # fit.invgaussian <- fitdist(df$RT[df$experiment == "verbal"], distr = "invgaussian", start = list(mean = 5, shape = 1), method = "mle")
-# # propagate:::dinvgauss(df$RT)
-# 
-# gofstat(list(fit.gamma, fit.log, fit.normal, fit.Weibull, fit.cauchy),
-#         fitnames = c("Gamma", "Lognormal", "Normal", "Weibull", "Cauchy"))
-# denscomp(list(fit.gamma, fit.log, fit.normal, fit.Weibull))
-# qqcomp(list(fit.gamma, fit.log, fit.normal, fit.Weibull))
-# ```
-
-
-#All data
-
-# library(fitdistrplus)
-# fit.gamma <- fitdist(df$RT, distr = "gamma", method = "mle")
-# summary(fit.gamma)
-# plot(fit.gamma)
-# logLik(fit.gamma)
-# 
-# fit.log <- fitdist(df$RT, distr = "lnorm", method = "mle")
-# summary(fit.log)
-# plot(fit.log)
-# 
-# fit.normal<- fitdist(df$RT, distr = "norm", method = "mle")
-# summary(fit.normal)
-# plot(fit.normal)
-# 
-# fit.Weibull <- fitdist(df$RT, distr = "weibull", method = "mle")
-# summary(fit.Weibull)
-# plot(fit.Weibull)
-# 
-# fit.cauchy<- fitdist(df$RT, distr = "cauchy", method = "mle")
-# 
-# 
-# gofstat(list(fit.gamma, fit.log, fit.normal, fit.Weibull, fit.cauchy),
-#         fitnames = c("Gamma", "Lognormal", "Normal", "Weibull", "Cauchy"))
-# denscomp(list(fit.gamma, fit.log, fit.normal, fit.Weibull))
-# qqcomp(list(fit.gamma, fit.log, fit.normal, fit.Weibull))
-```
-
-
-```{r}
-# m1.log <- lmer(log(RT) ~ Pos.cont*experiment +
-#                (Pos.cont|subject) +(Pos.cont*experiment|category),
-#              data = df,
-#             control=lmerControl(optimizer = "bobyqa",
-#                                 optCtrl = list(maxfun = 2*10^5)))
-# summary(m1.log)
-# tab_model(m1.log,transform = "exp",
-#           show.re.var = F, show.stat = T,show.r2 = F,show.icc = F,
-#           title = "LMM with continuous predictor",
-#           pred.labels = c("(Intercept)", "Ordinal Position", 
-#                           "Experiment", "(Ordinal Position) x 
-#                           \n (Experiment)"),
-#           wrap.labels = 10,
-#           dv.labels = "Typing Onset Latency",
-#           #string.pred = "",
-#           string.stat = "t-Value",
-#           file = here::here("tables",
-#                             "CSI_online_experiment_comp_lmm_log_cont.html"))
-```
-
-```{r}
-# anova(m1, m1.log)
-
-```
-
-
-```{r}
-# m1.lognormal <- afex::lmer_alt(RT ~ Pos.cont*experiment +
-#                (Pos.cont|subject) +(Pos.cont*experiment|category),
-#              data = df,
-#             family = gaussian(link="log"),
-#             control=glmerControl(optimizer = "bobyqa",
-#                                 optCtrl = list(maxfun = 2*10^5)))
-# summary(m1.lognormal)
-# 
-# tab_model(m1.lognormal,transform = NULL,
-#           show.re.var = F, show.stat = T,show.r2 = F,show.icc = F,
-#           title = "GLMM (Lognormal distribution) with continuous predictor",
-#           pred.labels = c("(Intercept)", "Ordinal Position", 
-#                           "Experiment", "(Ordinal Position) x 
-#                           \n (Experiment)"),
-#           wrap.labels = 10,
-#           dv.labels = "Typing Onset Latency",
-#           #string.pred = "",
-#           string.stat = "t-Value",
-#           file = here::here("tables",
-#                             "CSI_online_experiment_comp_lmm_lognormal_cont.html"))
-
-```
-
-
-```{r}
-# anova(m1.log, m1.lognormal)
+          file = here::here("results", "tables",
+                            "CSI_online_experiment_comparison_glmm_cont.html"))
 ```

@@ -1,0 +1,316 @@
+---
+title: '05 CSI online typing APPENDIX: Plotting and analysis with manual classification'
+author: "Kirsten Stark"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load packages
+```{r load_packages}
+library(dplyr)
+library(tidyr)
+library(lme4)
+library(lmerTest)
+library(Rmisc)
+library(Cairo)
+#library(strengejacke)
+library(ggplot2)
+library(sjPlot)
+
+options(scipen=999)
+
+rm(list = ls())
+options( "encoding" = "UTF-8" )
+set.seed(99)
+```
+
+
+## Load and preprocess data
+
+```{r load_data}
+# input 
+#input = "data_long_final.csv"
+input = "data_long_anonymous.csv"
+classification_type = "manual" # select "manual" or "automatic"
+
+# load data
+df <- read.csv(here::here("data", input))
+
+```
+
+Check amount of participants and trials
+
+```{r checks}
+# no. of participants: 
+length(unique(df$subject))
+
+# no. of trials is 160 per participant? 
+nrow(df) == 160 * length(unique(df$subject))
+```
+
+Factorize columns
+
+```{r transform_variables}
+# factorize columns
+is.numeric(df$timing.01)
+df$PosOr <- as.factor(df$PosOr)
+df$subject <- as.factor(df$subject)
+```
+
+# Select correct classification column
+
+```{r classification_type}
+if(classification_type == "automatic") {
+  df$answercode <- df$answer_auto_jaro
+  df$correct <- df$correct_auto_jaro
+} else if(classification_type == "manual") {
+  df$answercode <- df$answercode
+  df$correct <- df$correct_manual
+} else {
+  print("Select a correct type!")
+}
+```
+
+```{r answercode_table}
+as.data.frame(table(df$correct, df$answercode)) %>% filter(Freq != 0) 
+as.data.frame(table(df$correct, df$answercode)) %>% filter(Freq != 0) %>% 
+  mutate(Percentage = case_when(Var1 == 1 ~ Freq/sum(df$correct == 1),
+                                Var1 == 0 ~ Freq/sum(df$correct == 0)))
+```
+
+```{r table_correctness}
+# raw
+table(df$correct)
+# in percent
+round(table(df$correct)/nrow(df)*100,2)
+
+## How many correct/incorrect non-filler trials?
+table(df$correct[df$category != "Filler"])
+```
+
+Show amount of incorrect trials per ordinal position (excluding fillers):
+
+```{r}
+## How many correct/incorrect non-filler trials per ordinal position?
+table(df$PosOr[df$category != "Filler" & df$correct == 0], 
+      df$correct[df$category != "Filler" & df$correct == 0])
+
+```
+
+Drop incorrect trials: 
+
+```{r}
+df <- df %>% filter(df$correct == 1)
+```
+
+
+# Plotting
+
+Make plots suitable for APA format, font sizes can be adjusted
+
+```{r apatheme}
+apatheme <- theme_bw()+
+  theme(plot.title=element_text(family="Arial",size=22,hjust = .5),
+        panel.grid.major=element_blank(), panel.grid.minor=element_blank(),
+        panel.border=element_blank(),axis.line=element_line(),
+        text=element_text(family="Arial",size=16))
+```
+
+### Descriptives
+
+```{r descriptives}
+(means_final<- df %>% 
+   filter(category != "Filler") %>% 
+   Rmisc::summarySEwithin(.,"timing.01",idvar = "subject",
+                          withinvars = "PosOr", na.rm = T))
+
+# Export as word file
+library(flextable)
+huxt_word <- huxtable::huxtable(means_final)
+huxt_word <- huxtable::set_number_format(huxt_word, round(2))
+huxtable::quick_docx(huxt_word, 
+                     file = here::here("results", "tables",
+                                       "CSI_online_typing__APPENDIX_RT_summary.docx"), 
+                                       open = FALSE)
+
+```
+
+### RTs by ordinal position
+Line graph (only correct trials, without fillers)
+
+```{r plot_rt}
+(plot_rt <- means_final %>% 
+    ggplot(., aes(x=PosOr, y=timing.01)) +
+    geom_point(size = 2)+
+    stat_summary(fun=mean,  geom="line", size = 0.5, group = 1, linetype = "dashed") +
+    geom_errorbar(aes(ymin=timing.01-se, ymax=timing.01+se), width =.1) +
+    apatheme+
+    scale_y_continuous(limits = c(1120, 1340), breaks =seq(1120,1340, by = 20)) +
+                       #breaks = c(1100, 1150, 1200, 1250, 1300, 1350)) + 
+    labs(x="Ordinal Position ",y ="RT (ms)") +
+    theme(
+    axis.title.y = element_text(margin = margin(0,10,0,0)),
+    axis.title.x = element_text(margin = margin(10,0,0,0))))
+```
+
+
+Normalized boxplot 
+
+```{r boxplot_rt}
+means_subject <- df %>% 
+   filter(category != "Filler") %>% 
+   summarySEwithin(.,"timing.01",withinvars = c("subject","PosOr"))
+(means_subject <- means_subject %>%
+  group_by(subject) %>%
+  dplyr::mutate(timing.01_norm = timing.01 - first(timing.01)))
+
+(boxplot <- 
+  ggplot() + 
+  
+  ## boxplot
+  geom_boxplot(data=means_subject, aes(x = PosOr,y =timing.01_norm),
+               colour = "grey", width = 0.3,fatten = 1)+
+  ### individual means
+  geom_jitter(data=means_subject, aes(x = PosOr,y =timing.01_norm),
+              position = position_dodge(0.6),
+              shape=19,color = "dark grey", size=2)+
+  ### group means
+  stat_summary(data=means_subject, aes(x = PosOr,y =timing.01_norm),
+               fun=mean, geom="point",colour = "black", shape=18, size=5)+
+  ### line
+  stat_summary(data=means_subject, aes(x = PosOr,y =timing.01_norm),
+               fun=mean, geom="line",colour = "black", linetype = "longdash", group = 1)+
+  
+  ## other stuff
+  #scale_y_continuous(breaks = seq(600, 1300, by = 50))+
+  labs(x="Ordinal Position",y ="Normalized RTs (ms)")+
+  apatheme +
+  theme(
+    axis.title.y = element_text(margin = margin(0,10,0,0)),
+    axis.title.x = element_text(margin = margin(10,0,0,0))) +
+  coord_equal(ratio = 1/100))
+
+```
+
+
+### CONTROL: with fillers
+
+```{r plot_rt_fillers}
+
+(plot_rt_fillers <- df %>% 
+    mutate(kind = case_when(category == "Filler" ~"Filler",
+                          category != "Filler" ~"Experimental")) %>%
+    ggplot(., aes(x=PosOr, y=timing.01, group=kind, color=kind)) +
+    stat_summary(fun=mean,  geom="point", size = 2)+
+    stat_summary(fun=mean,  geom="line", size = 1) +
+    apatheme+
+    labs(x="Ordinal Position ",y ="RT (ms)", color = "Trial type")+
+  annotate(geom="text", x=1.5, y=1350, label="n = 30", 
+           color="black", size = 8))
+```
+  
+### Control: Plot RTs accross the experiment
+All correct trials (including fillers)
+
+```{r plot_RTs_all}
+(plot_RTs_all <- ggplot(data=df, aes(x=trial, y=timing.01)) +
+  stat_summary(fun=mean,  geom="point", size = 2)+
+  stat_summary(fun=mean,  geom="line", size = 1) +
+  apatheme+
+  labs(x="Trial ",y ="RT (ms)")+
+  annotate(geom="text", x=20, y=1570, label="n = 30", 
+           color="black", size = 8))
+```
+
+# Check distribution of data
+Are the data normally distributed or does a gamma distribution fit the data better?  
+*Subset data to correct trials only and exclude fillers*
+
+```{r final_data}
+df_valid <- df %>% filter(category != "Filler") %>% 
+  filter(correct == 1) %>% droplevels()
+```
+
+*Center predictor variable*
+
+```{r}
+df_valid$PosOr.cont <- scale(as.numeric(as.character(df_valid$PosOr)),
+                                        center = T, scale = F)
+# table(df_valid$PosOr.cont)
+# mean(df_valid$PosOr.cont)
+```
+
+*Histogram of the reaction time data*
+
+```{r RT_hist}
+hist(df_valid$timing.01)
+```
+
+*Check fit of normal vs gamma distribution in histograms, q-q-plots and using objective criteria:*  
+1) Fit normal and gamma distributions to the reaction time data
+
+```{r load_fitdistrplus}
+library(fitdistrplus)
+```
+
+```{r fit.normal}
+fit.normal<- fitdist(df_valid$timing.01, distr = "norm", method = "mle")
+summary(fit.normal)
+#plot(fit.normal)
+```
+
+```{r fit.gamma}
+fit.gamma <- fitdist(df_valid$timing.01, distr = "gamma", method = "mle")
+summary(fit.gamma)
+#plot(fit.gamma)
+```
+
+2) Compare the fit of the two distributions  
+Visually compare fit of both distributions in histogram
+
+```{r density-comparison}
+denscomp(list(fit.gamma, fit.normal))
+```
+
+Visually compare fit of both distributions in Q-Q-plots
+
+```{r q-q-comparison}
+qqcomp(list(fit.gamma, fit.normal))
+```
+
+Compare information criteria
+
+```{r fit_criteria-comparison}
+gofstat(list(fit.gamma, fit.normal),
+        fitnames = c("Gamma", "Normal"))
+```
+
+**Conclusion:** Both the visual inspection and the objective criteria suggest that a gamma distribution fits the data better (although not that well). Therefore, we fit a Gamma distribution in a GLMM with the continuous predictor ordinal position (Pos.cont), the factorial predictor (experiment), and their interaction. We compute the maximal random effects structure.
+
+
+# Inferential analyses: GLMM (Gamma distribution) with ordinal position as a continuous predictor
+
+
+```{r GLMM_cont}
+m1 <- glmer(timing.01 ~ PosOr.cont + 
+               (PosOr.cont|subject) +(PosOr.cont|category),
+             data = df_valid, 
+            family =Gamma(link ="identity"), 
+            control=glmerControl(optimizer = "bobyqa"))
+summary(m1)
+
+# save model output
+tab_model(m1,transform = NULL,
+          show.re.var = F, show.stat = T,show.r2 = F,show.icc = F,
+          title = "GLMM (Gamma distribution) with continuous predictor",
+          pred.labels = c("(Intercept)", "Ordinal Position"),
+          dv.labels = "Typing Onset Latency",
+          #string.pred = "",
+          string.stat = "t-Value",
+          file = here::here("results", "tables", "CSI_online_typing_APPENDIX_glmm_cont.html"))
+```
+

@@ -8,8 +8,8 @@ data/data_for_a_priori_power_analysis/
 results/
 *.csv
 scripts/old
-scripts/10_CSI_online_typing_additional_code_bits_that_might_be_useful_some_time.Rmd
-scripts/01_CSI_online_typing_power_analysis_based_on_verbalCSI_online.html
+scripts/code/10_CSI_online_typing_additional_code_bits_that_might_be_useful_some_time.Rmd
+scripts/github/01_CSI_online_typing_power_analysis_based_on_verbalCSI_online.html
 .DS_Store
 */.DS_Store
 

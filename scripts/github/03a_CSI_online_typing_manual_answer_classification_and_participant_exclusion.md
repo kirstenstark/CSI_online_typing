@@ -283,40 +283,6 @@ will be excluded from the data analyses.**
 as.data.frame(table(df$type, df$subject, df$comments)) %>% filter(Freq != 0)
 ```
 
-    ##           Var1 Var2
-    ## 1         main   13
-    ## 2         main    5
-    ## 3         main   19
-    ## 4         main   20
-    ## 5  replacement    2
-    ## 6         main   30
-    ## 7         main   16
-    ## 8         main   25
-    ## 9         main   14
-    ## 10        main   21
-    ##                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        Var3
-    ## 1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          Alles in Ordnung
-    ## 2                                                                                 Beim Benennen der Bilder habe ich versucht es zu korrigieren, wenn ich mich vertippt habe, was manchmal aber nicht ganz möglich war, da das Bild dann schon gewechselt hatte. Und für den Bohrer war ein anderer Begriff genannt in der Vorstellungsrunde, der mir aber partout nicht einfällt, da ich auch Schlagbohrer (was auf dem Bild gezeigt wurde) auch immer nur Bohrer nenne. Schraubenzieher ist mir auch eher als Schraubendreher bekannt, aber das kann am Dialekt liegen. Ich hoffe das beeinträchtigt das Experiment nicht.
-    ## 3                                                                                                                                                                                                         Der Grund, weshalb ich angegeben habe, dass ich das Experiment nicht zu Ende bearbeitet habe, ist, dass es in der Phase VOR der Übung geklingelt hat. Sollten Sie die Tippzeit gemessen haben, dass muss ein Wort deutlich zu lange (2min geschätzt) gebraucht haben (Ohr oder Schrank, meine ich). Die übrigen Aufgaben habe ich in Ruhe und ohne Unterbrechung bearbeitet. Vezeihen Sie die Unannehmlichkeiten.
-    ## 4                                 Die einzige Anmerkung, die vielleicht hilfreich wäre, ist dass ich seit einigen Jahren in England lebe und da ich eine Thesis auf Englisch schreibe, mein Tippen im Englischen schneller ist und ich manchmal automatisch bei den Bildern an das Wort im Englischen gedacht habe und z.B. anstatt Schokolade zuerst Schocolade geschrieben habe, also ein Gemisch aus den beiden Sprachen, aber weder die eine, noch die andere. Aus diesem Grund benutze ich auch ü, ö und ä im Alltag nicht besonders häufig. Ob das wichtig ist, weiß ich nicht, ich wollte es aber dennoch erwähnen. 
-    ## 5  Ich habe ein wirklich miserables Kurzzeitgedächnis und wusste bei Gegenständen mit mehreren synonymen Namen oft nicht mehr, wie sie im ersten Teil der Aufgabe benannt wurden - habe dadurch viel Zeit verloren ("Stand da nun gerade Schraubendreher oder Schraubenzieher? Sofa oder Couch? Wie war das noch mal?"). Außerdem ist mein Laptop recht neu und ich habe mich oft vertippt, da mein "Muskelgedächns" noch Tastengrößen/Abstände der vorherigen Tastatur eingespeichert hat und ich beim Tippen eher auf den Bildschirm als auf die Tastatur achte. Hoffe, das ist kein Problem für die Auswertung der Daten
-    ## 6                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               Ich habe keine Anmerkungen.
-    ## 7                                                                                                                                                                                                          Ich hatte 2-3 mal das Problem, dass ich beim schnellen eintippen zu spät auf das Wort gekommen bin und dann nur die hälfte des Wortes eintippen konnte, bevor es automatisch weiter ging. Somit habe ich den rest vom Wort zu dem nächsten Bild geschrieben und war teilweise so schnell, dass ich die Eingabe auch bestätigt habe. Somit steht bei mir öfters ein halbes falsches Wort bei einem anderen Bild. 
-    ## 8                                                                                                                                                                                                                                                                                                                                                                                                                                                                 Manchmal kamen Bilder die mir nicht bekannt vorkamen und mich aus dem Konzept gebracht haben, weshalb ich 2 Bilder hintereinander nicht benennen konnte. 
-    ## 9                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       Mir ist nichts besonderes aufgefallen, war alles soweit in Ordnung.
-    ## 10                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         Nein hat alles gut funktioniert.
-    ##    Freq
-    ## 1   160
-    ## 2   160
-    ## 3   160
-    ## 4   160
-    ## 5   160
-    ## 6   160
-    ## 7   160
-    ## 8   160
-    ## 9   160
-    ## 10  160
-
 We will exclude one participant, the participant with the subject no.
 20, who indicated that she has been living in England for several years
 and is writing usually in English and therefore at first only remembered
@@ -327,8 +293,6 @@ times.
 ``` r
 unique(df$comments[df$subject == 20 & df$type == "main"])
 ```
-
-    ## [1] "Die einzige Anmerkung, die vielleicht hilfreich wäre, ist dass ich seit einigen Jahren in England lebe und da ich eine Thesis auf Englisch schreibe, mein Tippen im Englischen schneller ist und ich manchmal automatisch bei den Bildern an das Wort im Englischen gedacht habe und z.B. anstatt Schokolade zuerst Schocolade geschrieben habe, also ein Gemisch aus den beiden Sprachen, aber weder die eine, noch die andere. Aus diesem Grund benutze ich auch ü, ö und ä im Alltag nicht besonders häufig. Ob das wichtig ist, weiß ich nicht, ich wollte es aber dennoch erwähnen. "
 
 ## Attention checks
 

@@ -8,6 +8,7 @@ data/CSI_online_combined.csv
 results/
 scripts/old
 scripts/code/10_CSI_online_typing_additional_code_bits_that_might_be_useful_some_time.Rmd
+scripts/code/01_CSI_online_typing_power_analysis_based_on_verbalCSI_online.Rmd
 scripts/github/01_CSI_online_typing_power_analysis_based_on_verbalCSI_online.html
 .DS_Store
 */.DS_Store

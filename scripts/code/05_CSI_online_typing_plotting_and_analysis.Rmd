@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(dplyr)
 library(tidyr)
 library(lme4)
-library(lmerTest)
+#library(lmerTest)
 library(Rmisc)
 library(Cairo)
 #library(strengejacke)
@@ -127,6 +127,10 @@ apatheme <- theme_bw()+
    filter(category != "Filler") %>% 
    Rmisc::summarySEwithin(.,"timing.01",idvar = "subject",
                           withinvars = "PosOr", na.rm = T))
+(means_final_cat<- df %>% 
+   filter(category != "Filler") %>% 
+   Rmisc::summarySEwithin(.,"timing.01",idvar = "category",
+                          withinvars = "PosOr", na.rm = T))
 
 # Export as word file
 library(flextable)
@@ -217,7 +221,7 @@ embedFonts(file = here::here("results", "figures", filename))
 
 ```{r plot_grid}
 cowplot::plot_grid(plot_rt, boxplot,
-          nrow = 1, labels = c("A", "B"), label_fontfamily = "Arial") %>%
+          nrow = 1, labels = c("A", "B")) %>%
   ggsave(filename = here::here("results", "figures",
                                "CSI_online_typing_RTs_and_normalized_RTs"),
          width = 18, height = 13, units = "cm", dpi = 300, 
@@ -250,44 +254,46 @@ embedFonts(file = here::here("results", "figures", filename))
 ```
   
 ### Plot by subcategory
+See nicer plot below 
 
 ```{r plot_rt_by_cat}
-(plot_rt_by_cat <- df %>%  
-   filter(category != "Filler") %>% 
-    ggplot(., aes(x=PosOr, y=timing.01)) +
-    stat_summary(fun=mean,  geom="point", size = 2)+
-    stat_summary(fun=mean,  geom="line", size = 1) +
-    facet_wrap(~category) +
-    apatheme+
-    labs(x="Ordinal Position ",y ="RT (ms)"))
-
-filename <- "CSI_online_typing_plot_rt_by_category.pdf"
-ggsave(plot_rt_by_cat, filename = 
-         here::here("results", "figures", filename),
-       width = 18, height = 19, units = "cm", 
-       dpi = 300, device = cairo_pdf)
-embedFonts(file = here::here("results", "figures", filename))
+# (plot_rt_by_cat <- df %>%  
+#    filter(category != "Filler") %>% 
+#     ggplot(., aes(x=PosOr, y=timing.01)) +
+#     stat_summary(fun=mean,  geom="point", size = 2)+
+#     stat_summary(fun=mean,  geom="line", size = 1) +
+#     facet_wrap(~category) +
+#     apatheme+
+#     labs(x="Ordinal Position ",y ="RT (ms)"))
+# 
+# filename <- "CSI_online_typing_plot_rt_by_category.pdf"
+# ggsave(plot_rt_by_cat, filename = 
+#          here::here("results", "figures", filename),
+#        width = 18, height = 19, units = "cm", 
+#        dpi = 300, device = cairo_pdf)
+# embedFonts(file = here::here("results", "figures", filename))
 
 ```
 
 ### Plot by subject
+See nicer plot below 
 
 ```{r plot_by_subject}
-(plot_rt_by_subject <- df %>% 
-   filter(category != "Filler") %>% 
-    ggplot(., aes(x=PosOr, y=timing.01)) +
-    stat_summary(fun=mean,  geom="point", size = 2) +  
-    stat_summary(fun=mean,  geom="line", size = 1) +  
-    facet_wrap(~subject) +
-    apatheme+
-    labs(x="Ordinal Position ",y ="RT (ms)"))
-
-filename <- "CSI_online_typing_plot_rt_by_subject.pdf"
-ggsave(plot_rt_by_subject, filename = 
-         here::here("results", "figures", filename),
-       width = 18, height = 19, units = "cm", 
-       dpi = 300, device = cairo_pdf)
-embedFonts(file = here::here("results", "figures", filename))
+# (plot_rt_by_subject <- df %>% 
+#    filter(category != "Filler") %>% 
+#     ggplot(., aes(x=PosOr, y=timing.01)) +
+#     stat_summary(fun=mean,  geom="point", size = 2) +  
+#     stat_summary(fun=mean,  geom="line", size = 1) +  
+#     facet_wrap(~subject) +
+#     apatheme+
+#     labs(x="Ordinal Position ",y ="RT (ms)"))
+# 
+# filename <- "CSI_online_typing_plot_rt_by_subject.pdf"
+# ggsave(plot_rt_by_subject, filename = 
+#          here::here("results", "figures", filename),
+#        width = 18, height = 19, units = "cm", 
+#        dpi = 300, device = cairo_pdf)
+# embedFonts(file = here::here("results", "figures", filename))
 
 ```
 
@@ -400,7 +406,6 @@ gofstat(list(fit.gamma, fit.normal),
 
 # Inferential analyses: GLMM (Gamma distribution) with ordinal position as a continuous predictor
 
-
 ```{r GLMM_cont}
 m1 <- glmer(timing.01 ~ PosOr.cont + 
                (PosOr.cont|subject) +(PosOr.cont|category),
@@ -420,7 +425,29 @@ tab_model(m1,transform = NULL,
           file = here::here("results", "tables", "CSI_online_typing_glmm_cont.html"))
 ```
 
+Additionally, as the p-value based on the Wald-Z statistic is only partly reliable, we estimate the significance using likelikood ratio tests
 
+```{r}
+# Step 1: Compute a reduced model without the fixed predictor variable PosOr.cont,
+#         the random effects structure being kept identical
+m1_red <- glmer(timing.01 ~ 1 + 
+               (PosOr.cont|subject) +(PosOr.cont|category),
+             data = df_valid, 
+            family =Gamma(link ="identity"), 
+            control=glmerControl(optimizer = "bobyqa"))
+summary(m1_red)
+(tab <- tab_model(m1_red,transform = NULL,
+          show.re.var = F, show.stat = T,show.r2 = F,show.icc = F,
+          title = "GLMM (Gamma distribution) with continuous predictor",
+          pred.labels = c("(Intercept)"),
+          dv.labels = "Typing Onset Latency",
+          #string.pred = "",
+          string.stat = "t-Value"))
+
+# Step 2: Compare the two models using LRT based on the Chi^2 statistic
+anova(m1, m1_red)
+
+```
 
 # ---------------------------------------------
 # Appendix
@@ -446,24 +473,205 @@ means_final_subject <- means_final_subject[order(desc(means_final_subject$effect
 means_final_subject$effect <- as.factor(round(means_final_subject$effect, 2))
 means_final_subject$effect <- factor(means_final_subject$effect, levels=rev(levels(means_final_subject$effect )))
 
-(plot_rt <- means_final_subject %>% 
+# add participant number
+means_final_subject <- means_final_subject %>% 
+  mutate(subject_en = paste0("Participant ",subject,"\n(",effect,")",sep=''))  %>%
+  mutate(subject_en = case_when(subject_en=="Participant 23\n(25.1)" ~
+                                    "Participant 23\n(25.10)",
+                                  subject_en=="Participant 19\n(37.5)" ~
+                                    "Participant 19\n(37.50)",
+                                  subject_en=="Participant 12\n(38.3)" ~
+                                    "Participant 12\n(38.30)",
+                                  TRUE~subject_en)) %>%
+  mutate(subject_en=factor(subject_en,levels=c(
+    "Participant 11\n(71.37)","Participant 28\n(70.41)", 
+    "Participant 1\n(56.04)","Participant 21\n(55.09)",
+    "Participant 14\n(55.06)","Participant 29\n(54.91)",
+    "Participant 16\n(54.29)","Participant 3\n(53.68)",
+    "Participant 27\n(49.37)","Participant 15\n(48.38)",
+    "Participant 10\n(46.53)","Participant 18\n(46.51)",
+    "Participant 22\n(46.37)","Participant 5\n(44.74)",
+    "Participant 7\n(40.82)","Participant 8\n(39.19)",
+    "Participant 12\n(38.30)","Participant 20\n(37.62)",
+    "Participant 19\n(37.50)","Participant 30\n(36.06)",
+    "Participant 9\n(35.98)","Participant 17\n(34.92)",
+    "Participant 24\n(31.38)","Participant 6\n(28.33)",
+    "Participant 4\n(27.29)","Participant 13\n(26.25)",
+    "Participant 25\n(25.26)","Participant 23\n(25.10)",
+    "Participant 26\n(24.38)","Participant 2\n(14.57)")))
+
+# Plotting
+(plot_rt_subject <- means_final_subject %>% 
     ggplot(., aes(x=PosOr,y=normalizedRT, na.rm=T)) +
-    #geom_point(aes(x=PosOr,y=grandmean), size = 0.5, color = 'gray')+
-    geom_line(aes(x=PosOr,y=grandmean), group = 1,size = 0.8, color = 'dark gray', linetype = 3)+
     geom_point(size =1, color = 'black') +
-    geom_line(group = 1,size = 0.5, color = 'black', linetype = "dashed") +
-    #geom_errorbar(aes(ymin=timing.01-se, ymax=timing.01+se), width =.1) +
+    geom_line(aes(x=PosOr,y=normalizedRT, color="a", linetype="c"),
+              group = 1,size = 0.5) +
+    geom_line(aes(x=PosOr,y=grandmean, color="b", linetype="d"), 
+              group = 1,size = 0.8)+
+    geom_errorbar(aes(ymin=normalizedRT-se, ymax=normalizedRT+se), width =.1) +
+    scale_color_manual(name="",values=c("a"="black","b"="dark gray"),
+                       labels=c("Participant mean", "Mean across participants"))+
+    scale_linetype_manual(name="",values=c("c"="dashed","d"="dotted"),
+                          labels=c("Participant mean", 
+                                   "Mean across participants"))+
     apatheme+
-    scale_y_continuous(limits = c(-200, 600), 
-                       breaks = c(-200, 0,200,400,600)) + 
     labs(x="Ordinal Position",y ="Normalized RTs (ms)") +
-    facet_wrap(means_final_subject$effect))
+    facet_wrap(means_final_subject$subject_en, scales='free', ncol=6)+
+    scale_y_continuous(limits = c(-400, 700), 
+                       breaks = c(-400,-200,0,200,400,600)) + 
+    scale_x_discrete(breaks=c(1,2,3,4,5))+
+    theme(legend.position = "bottom"))
+#plot_rt <- lemon::reposition_legend(plot_rt, "bott1.1.om right",panel='panel-5-5')
 
 filename <- "CSI_online_typing_effect_by_participant.pdf"
-ggsave(plot_rt, filename = 
+ggsave(plot_rt_subject, filename = 
          here::here("results", "figures", filename),
-       width = 13, height = 18, units = "cm", 
+       width = 26, height = 21.5, units = "cm", 
        dpi = 300, device = cairo_pdf)
 embedFonts(file = here::here("results", "figures", filename))
 
+```
+
+Line graph for each category: 
+
+```{r plot_by_size_category}
+modeloutput <- coef(m1)$category
+(means_final_category <- df_valid %>% 
+   summarySEwithin(.,"timing.01",withinvars = c("category","PosOr")))
+(means_final<- df_valid %>%  
+   Rmisc::summarySEwithin(.,"timing.01",idvar = "category",
+                          withinvars = "PosOr", na.rm = T))
+for(i in 1:nrow(means_final_category)) {
+  means_final_category$grandmean[i] <- means_final$timing.01[means_final$PosOr == means_final_category$PosOr[i]] - means_final$timing.01[means_final$PosOr== 1]
+  means_final_category$normalizedRT[i] <- means_final_category$timing.01[i] -
+    means_final_category$timing.01[means_final_category$category == means_final_category$category[i] & means_final_category$PosOr == 1]
+  # prepare for ordering
+  means_final_category$effect[i] <- modeloutput$PosOr.cont[means_final_category$category[i]] 
+}
+#means_final_category$order <-order(means_final_category$effect)-1
+#means_final_category$order <- means_final_category$order %/% 5
+means_final_category <- means_final_category[
+  order(desc(means_final_category$effect)),] 
+means_final_category$effect <- as.factor(
+  round(means_final_category$effect, 2))
+means_final_category$effect <- factor(
+  means_final_category$effect, levels=rev(levels(means_final_category$effect )))
+
+# order category levels by effect size
+means_final_category$category <- factor(
+  means_final_category$category, levels=c(
+    "Gebäude","Schmuck","Raubtiere","Sitzen","Jacken",
+    "Blumen","Huftiere","Wasser","Trinkgefässe","Küche",
+    "Insekten","Büro","Bauernhof","Strasse","Kochen",
+    "Gemüse","Körperteile","Fische","Heimwerker","Aufbewahrung",
+    "Obst","Vögel","Instrumente","Süssigkeiten"))
+# give categories English names and combine with effect size
+means_final_category <- means_final_category %>% 
+  mutate(category_en = case_when(
+    category == "Aufbewahrung" ~ paste0(
+      "Storage\n\n(", effect, ")", sep=''), 
+    category == "Bauernhof" ~ paste0(
+      "Farming\ntools\n(", effect, ")", sep=''), 
+    category == "Blumen" ~ paste0(
+      "Flowers\n\n(", effect, ")", sep=''),
+    category == "Büro" ~ paste0(
+      "Office\ntools\n(", effect, ")", sep=''),
+    category == "Fische" ~ paste0(
+      "Fish\n\n(", effect, ")", sep=''),
+    category == "Gebäude" ~ paste0(
+      "Buildings\n\n(", effect, ")", sep=''),
+    category == "Gemüse" ~ paste0(
+      "Vegetables\n\n(", effect, ")", sep=''),
+    category == "Heimwerker" ~ paste0(
+      "Carpenter.s\ntools\n(", effect, ")", sep=''),
+    category == "Huftiere" ~ paste0(
+      "Hoofed\nanimals\n(", effect, ")", sep=''),
+    category == "Insekten" ~ paste0(
+      "Insects\n\n(", effect, ")", sep=''),
+    category == "Instrumente" ~ paste0(
+      "Instruments\n\n(", effect, ")", sep=''),
+    category == "Jacken" ~ paste0(
+      "Jackets\n\n(", effect, ")", sep=''),
+    category == "Kochen" ~ paste0(
+      "Cooking\nequipment\n(", effect, ")", sep=''),
+    category == "Körperteile" ~ paste0(
+      "Body parts\n\n(", effect, ")", sep=''),
+    category == "Küche" ~ paste0(
+      "Kitchen\nfurniture\n(", effect, ")", sep=''),
+    category == "Obst" ~ paste0(
+      "Fruits\n\n(", effect, ")", sep=''),
+    category == "Raubtiere" ~ paste0(
+      "Predators\n\n(", effect, ")", sep=''),
+    category == "Schmuck" ~ paste0(
+      "Jewelry\n\n(", effect, ")", sep=''),
+    category == "Sitzen" ~ paste0(
+      "Seating\nfurniture\n(", effect, ")", sep=''),
+    category == "Strasse" ~ paste0(
+      "Street\nvehicles\n(", effect, ")", sep=''),
+    category == "Süssigkeiten" ~ paste0(
+      "Sweets\n\n(", effect, ")", sep=''),
+    category == "Trinkgefässe" ~ paste0(
+      "Drinking\nvessels\n(", effect, ")", sep=''),
+    category == "Vögel" ~ paste0(
+      "Birds\n\n(", effect, ")", sep=''),
+    category == "Wasser" ~ paste0(
+      "Water\nvehicles\n(", effect, ")", sep=''))) %>%
+  mutate(category_en = case_when(category_en=="Instruments\n\n(18.3)" ~
+                                    "Instruments\n\n(18.30)",
+                                  category_en=="Body parts\n\n(35.4)" ~
+                                    "Body parts\n\n(35.40)",
+                                  TRUE~category_en)) %>%
+  mutate(category_en=factor(category_en,levels=c(
+    "Buildings\n\n(62.56)","Jewelry\n\n(58.25)","Predators\n\n(57.34)",
+    "Seating\nfurniture\n(52.51)","Jackets\n\n(49.58)","Flowers\n\n(49.31)",
+    "Hoofed\nanimals\n(48.91)","Water\nvehicles\n(48.51)",
+    "Drinking\nvessels\n(48.06)",
+    "Kitchen\nfurniture\n(44.31)","Insects\n\n(41.84)","Office\ntools\n(41.73)",
+    "Farming\ntools\n(41.72)","Street\nvehicles\n(39.31)",
+    "Cooking\nequipment\n(38.79)",
+    "Vegetables\n\n(37.66)","Body parts\n\n(35.40)","Fish\n\n(29.99)",
+    "Carpenter.s\ntools\n(28.45)","Storage\n\n(27.63)","Fruits\n\n(25.41)",
+    "Birds\n\n(24.35)","Instruments\n\n(18.30)","Sweets\n\n(17.98)")))
+
+# Plotting
+(plot_rt_category <- means_final_category %>% 
+    ggplot(., aes(x=PosOr,y=normalizedRT, na.rm=T)) +
+    geom_point(size =1, color = 'black') +
+    geom_line(aes(x=PosOr,y=normalizedRT, color="a", linetype="c"),
+              group = 1,size = 0.5) +
+    geom_line(aes(x=PosOr,y=grandmean, color="b", linetype="d"), 
+              group = 1,size = 0.8)+
+    geom_errorbar(aes(ymin=normalizedRT-se, ymax=normalizedRT+se), width =.1) +
+    scale_color_manual(name="",values=c("a"="black","b"="dark gray"),
+                       labels=c("Category mean", "Mean across categories"))+
+    scale_linetype_manual(name="",values=c("c"="dashed","d"="dotted"),
+                          labels=c("Category mean", "Mean across categories"))+
+    apatheme+
+    labs(x="Ordinal Position",y ="Normalized RTs (ms)") +
+    facet_wrap(means_final_category$category_en, scales='free', ncol=6)+
+    scale_y_continuous(limits = c(-400, 700), 
+                       breaks = c(-400, -200, 0,200,400,600)) + 
+    scale_x_discrete(breaks=c(1,2,3,4,5))+
+    theme(legend.position = "bottom"))
+#plot_rt <- lemon::reposition_legend(plot_rt, "bott1.1.om right",panel='panel-5-5')
+
+filename <- "CSI_online_typing_effect_by_category.pdf"
+ggsave(plot_rt_category, filename = 
+         here::here("results", "figures", filename),
+       width = 26, height = 20, units = "cm", 
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("results", "figures", filename))
+```
+
+Make plot grid
+
+````{r plot_grid}
+filename <- "CSI_online_typing_effects_by_subject_and_category.pdf"
+cowplot::plot_grid(plot_rt_subject, plot_rt_category,
+          nrow = 2, rel_heights = c(1.1, 0.9), labels = c("A", "B"),
+          label_fontfamily = "Helvetica", label_size=22) %>%
+  ggsave(filename = here::here("results", "figures",filename),
+         width = 26, height = 42, units = "cm", 
+         dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("results", "figures", filename))
 ```

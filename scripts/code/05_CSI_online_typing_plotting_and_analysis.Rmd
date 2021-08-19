@@ -675,3 +675,403 @@ cowplot::plot_grid(plot_rt_subject, plot_rt_category,
          dpi = 300, device = cairo_pdf)
 embedFonts(file = here::here("results", "figures", filename))
 ```
+
+
+# ---------------------------------------------
+# Additional analyses
+Additional models to control for covariates
+
+```{r}
+## with trial as a covariate 
+# center trial
+df_valid$trial_cont <- scale(as.numeric(as.character(df_valid$trial)), 
+                               center = T, scale = T)
+#compute model
+# m1_trial <- glmer(timing.01 ~ PosOr.cont*trial_cont + 
+#                (PosOr.cont|subject) +(PosOr.cont|category),
+#              data = df_valid, 
+#             family =Gamma(link ="identity"), 
+#             control=glmerControl(optimizer = "bobyqa"))
+# m1_trial <- glmer(timing.01 ~ PosOr.cont*trial_cont +
+#                (PosOr.cont|subject) +(PosOr.cont|category),
+#              data = df_valid,
+#             family =Gamma(link ="identity"),
+#             control=glmerControl(optimizer = "bobyqa",optCtrl = list(maxfun = 2e5)))
+m1_trial <- glmer(timing.01 ~ PosOr.cont*trial_cont +
+               (PosOr.cont||subject) +(PosOr.cont||category),
+             data = df_valid,family =Gamma(link ="identity"),
+            control=glmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 2e5)))
+summary(m1_trial)
+sjPlot::tab_model(m1_trial,transform = NULL,pred.labels = 
+            c("Intercept","Ordinal Position", "Trial", 
+              "Ordinal Position x Trial"),
+          show.re.var = F, show.stat = T, string.stat = "t-Value", 
+          show.se = T, show.r2 = F,show.icc = F)
+# compare to the original model
+anova(m1,m1_trial)
+
+## with category as additional random effects level
+m1_supercat <- glmer(timing.01 ~ PosOr.cont +
+                          (PosOr.cont|subject) +(PosOr.cont|category/supercategory) +
+                       (1|supercategory),
+                 data =df_valid, family =Gamma(link ="identity"),
+                 control=glmerControl(optimizer = "bobyqa"))
+summary(m1_supercat)
+sjPlot::tab_model(m1_supercat,transform = NULL,pred.labels = 
+            c("Intercept","Ordinal Position"),
+          show.re.var = F, show.stat = T, string.stat = "t-Value", 
+          show.se = T, show.r2 = F,show.icc = F)
+
+## with lag as a covariate
+# compute lag for ordinal positions 2-5
+df_full <- read.csv(here::here("data", input))
+categories <- unique(df_full$category)
+subjects <- unique(df_full$subject)
+df_full$lag <- NA
+for(i in 1:length(unique(df_full$subject))) {
+  for(j in 1:length(unique(df_full$category))){
+    for(k in 2:length(unique(df_full$PosOr))){
+      lag2 <- df_full$trial[df_full$subject==subjects[i] & 
+                                   df_full$category == categories[j] &
+                                   df_full$PosOr == k]
+      lag1 <- df_full$trial[df_full$subject==subjects[i] & 
+                                   df_full$category == categories[j] &
+                                   df_full$PosOr == k-1]
+      df_full$lag[df_full$subject==subjects[i] & df_full$category == categories[j] &
+                        df_full$PosOr == k] <- lag2 - lag1
+    }
+  }
+}
+for(i in 1:nrow(df_valid)){
+  df_valid$lag[i] <- df_full$lag[df_full$subject == df_valid$subject[i] &
+                                   df_full$trial == df_valid$trial[i]]
+}
+table(df_valid$lag)
+df_lag <- df_valid[df_valid$PosOr != 1,]
+#center lag
+df_lag$lag_cont <- scale(as.numeric(as.character(df_lag$lag)), 
+                               center = T, scale = T)
+#center ordinal position
+df_lag$PosOr.cont <- scale(as.numeric(as.character(df_lag$PosOr)), 
+                               center = T, scale = T)
+# compute a model with lag as additional predictor
+m1_lag <- glmer(timing.01 ~ PosOr.cont*lag_cont + (PosOr.cont|subject) +
+                  (PosOr.cont|category) ,
+            data =df_lag, family =Gamma(link ="identity"),
+            control=glmerControl(optimizer = "bobyqa"))
+summary(m1_lag)
+sjPlot::tab_model(m1_lag,transform = NULL,pred.labels = c("Intercept","Ordinal Position", "Lag", "Ordinal position*Lag"),
+          show.re.var = F, show.stat = T, string.stat = "t-Value", show.se = T, show.r2 = F,show.icc = F)
+# distribution of lag by ordinal position
+table(df_full$lag[df_full$category != "Filler"], 
+      df_full$PosOr[df_full$category != "Filler"])
+table(df_valid$lag[df_valid$category != "Filler"], 
+      df_valid$PosOr[df_valid$category != "Filler"])
+```
+
+# ---------------------------------------------
+# Additional analyses: Errors
+Errors by ordinal position:
+
+```{r}
+df_errors <- df_full %>% filter(category != "Filler")
+df_errors <- df_errors %>% 
+  mutate(error_sum = (correct_auto_jaro-1)*(-1))
+(means_error_subject <- df_errors %>% 
+   summarySEwithin(.,"error_sum",withinvars = c("PosOr"), idvar="subject"))
+summarySE( df_errors, "error_sum")
+```
+
+Mean and SD per subject:
+
+```{r}
+print("Mean:"); mean(df_errors$error_sum)
+print("SD:"); sd(df_errors$error_sum)
+print("By-subject mean:"); mean(means_error_subject$error_sum)
+print("By-subject mean:"); mean(means_error_subject$sd)
+```
+
+Plotting
+
+```{r}
+(plot <- ggplot(data=means_error_subject, aes(x=PosOr, y=error_sum)) +
+  geom_point( size = 2)+
+  geom_errorbar(aes(ymin=error_sum-se, ymax=error_sum+se), width =.1) +
+  stat_summary(fun=mean,  geom="line", size = 0.5, group = 1, linetype = "dashed") +
+  apatheme+
+  scale_y_continuous(breaks = seq(0.06, 0.14, by = 0.02), limits = c(0.055, 0.15))+
+  labs(x="Ordinal Position ",y ="Percentage of errors"))
+
+filename <- "CSI_online_typing_errors.pdf"
+ggsave(plot, filename = 
+         here::here("results", "figures", filename),
+       width = 18, height = 13, units = "cm", 
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("results", "figures", filename))
+ 
+ 
+```
+
+
+Analyse whether amount of errors differs between ordinal positions
+
+```{r}
+# center ordinal position
+df_errors$PosOr.cont <- scale(as.numeric(as.character(df_errors$PosOr)), 
+                     center = T, scale = F)
+
+# m1_error <- glmer(error_sum ~ PosOr.cont + 
+#                     (PosOr.cont|subject) +(PosOr.cont|category) ,
+#                   data =df_errors, family = "binomial",
+#                   control=glmerControl(optimizer = "bobyqa"))
+# model has singular fit --> Increase number of iterations
+m1_error <- glmer(error_sum ~ PosOr.cont +
+                    (PosOr.cont|subject) +(PosOr.cont|category) ,
+                  data =df_errors, family = "binomial",
+                  control=glmerControl(optimizer = "bobyqa",
+                                       optCtrl = list(maxfun = 2e5)))
+# model still has singular fit --> delete correlation parameters
+m1_error <- glmer(error_sum ~ PosOr.cont +
+                    (PosOr.cont||subject) +(PosOr.cont||category) ,
+                  data =df_errors, family = "binomial",
+                  control=glmerControl(optimizer = "bobyqa",
+                                       optCtrl = list(maxfun = 2e5)))
+summary(m1_error)
+
+(tab <- tab_model(m1_error,transform = NULL,
+          show.re.var = F, show.stat = T,show.r2 = F,show.icc = F,
+          title = "GLMM (Binomial distribution) with continuous predictor",
+          pred.labels = c("(Intercept)", "Ordinal position"),
+          dv.labels = "Error rate",
+          #string.pred = "",
+          string.stat = "z-Value"
+          ))
+
+# Additional model with trial
+  # center trial
+df_errors$trial_cont <- scale(as.numeric(as.character(df_errors$trial)), 
+                              center = T, scale = T)
+m1_error_trial <- m1_error <- glmer(error_sum ~ PosOr.cont*trial_cont +
+                    (PosOr.cont||subject) +(PosOr.cont||category) ,
+                  data =df_errors, family = "binomial",
+                  control=glmerControl(optimizer = "bobyqa",
+                                       optCtrl = list(maxfun = 2e5)))
+summary(m1_error_trial)
+```
+
+Amount of errors by subject (across categories): 
+
+```{r plot_by_size}
+modeloutput <- coef(m1_error)$subject
+(means_final_subject <- df_errors %>% 
+   summarySEwithin(.,"error_sum",withinvars = c("subject","PosOr")))
+(means_final<- df_errors%>%  
+   Rmisc::summarySEwithin(.,"error_sum",idvar = "subject",
+                          withinvars = "PosOr", na.rm = T))
+for(i in 1:nrow(means_final_subject)) {
+  means_final_subject$grandmean[i] <- 
+    means_final$error_sum[means_final$PosOr == means_final_subject$PosOr[i]] -
+    means_final$error_sum[means_final$PosOr== "1"]
+  means_final_subject$normalized_errors[i] <-
+    means_final_subject$error_sum[i] - means_final_subject$error_sum[
+      means_final_subject$subject == means_final_subject$subject[i] &
+        means_final_subject$PosOr == "1"]
+  # prepare for ordering
+   means_final_subject$error_effect[i] <-
+     modeloutput$PosOr.cont[means_final_subject$subject[i]] 
+}
+means_final_subject$error_effect <- as.factor(round(means_final_subject$error_effect, 2))
+
+# add participant number
+means_final_subject <- means_final_subject %>% 
+  mutate(subject_en = factor(paste0("Participant ",subject, sep=''))) %>%
+  mutate(subject_en=factor(subject_en,levels=c(
+    "Participant 1","Participant 2","Participant 3", 
+    "Participant 4", "Participant 5",
+    "Participant 6","Participant 7","Participant 8", 
+    "Participant 9", "Participant 10",
+    "Participant 11","Participant 12","Participant 13", 
+    "Participant 14", "Participant 15",
+    "Participant 16","Participant 17",
+    "Participant 18","Participant 19", 
+    "Participant 20", "Participant 21",
+    "Participant 22","Participant 23",
+    "Participant 24","Participant 25", 
+    "Participant 26","Participant 27",
+    "Participant 28","Participant 29", "Participant 30")))
+# Plotting
+(plot_error_subject <- means_final_subject %>% 
+    ggplot(., aes(x=PosOr,y=normalized_errors, na.rm=T)) +
+    geom_point(size =1, color = 'black') +
+    geom_line(aes(x=PosOr,y=normalized_errors, color="a", linetype="c"),
+              group = 1,size = 0.5) +
+    geom_line(aes(x=PosOr,y=grandmean, color="b", linetype="d"), 
+              group = 1,size = 0.8)+
+    geom_errorbar(aes(ymin=normalized_errors-se, ymax=normalized_errors+se), 
+                  width =.1) +
+    scale_color_manual(name="",values=c("a"="black","b"="dark gray"),
+                       labels=c("Participant mean", "Mean across participants"))+
+    scale_linetype_manual(name="",values=c("c"="dashed","d"="dotted"),
+                          labels=c("Participant mean", 
+                                   "Mean across participants"))+
+    apatheme+
+    labs(x="Ordinal Position",y ="Normalized No. of Errors") +
+    facet_wrap(means_final_subject$subject_en, scales='free', ncol=6)+
+    scale_y_continuous(limits = c(-0.35, 0.4), 
+                       breaks = c(-0.30,-0.20, -0.10, 0, 0.10, 0.20, 0.3, 0.4)) + 
+    scale_x_discrete(breaks=c(1,2,3,4,5))+
+    theme(legend.position = "bottom"))
+#plot_rt <- lemon::reposition_legend(plot_rt, "bott1.1.om right",panel='panel-5-5')
+
+filename <- "CSI_online_typing_errors_by_participant.pdf"
+ggsave(plot_error_subject, filename = 
+         here::here("results", "figures",filename),
+       width = 26, height = 22, units = "cm", 
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("results", "figures",filename))
+```
+
+Line graph for each category: 
+
+```{r plot_by_size_subcat}
+modeloutput <- coef(m1_error)$category
+(means_final_subcat <- df_errors %>% 
+   summarySEwithin(.,"error_sum",withinvars = c("category","PosOr")))
+(means_final<- df %>%  
+   Rmisc::summarySEwithin(.,"error_sum",idvar = "category",
+                          withinvars = "PosOr", na.rm = T))
+for(i in 1:nrow(means_final_category)) {
+  means_final_category$grandmean[i] <- means_final$error[
+    means_final$PosOr == means_final_subcat$PosOr[i]] -
+    means_final$error[means_final$PosOr== "1"]
+  means_final_category$normalizederror[i] <- means_final_category$error_sum[i] -
+    means_final_category$error_sum[means_final_category$subcat ==
+                             means_final_category$subcat[i] &
+                             means_final_subcat$Ord.Pos == "1"]
+  # prepare for ordering
+  means_final_category$effect[i] <-
+    modeloutput$PosOr.cont[means_final_category$category[i]] 
+}
+means_final_category <- means_final_category[
+  order(desc(means_final_category$effect)),] 
+means_final_category$effect <- as.factor(
+  round(means_final_category$effect, 2))
+means_final_subcat$effect <- factor(
+  means_final_subcat$effect, levels=rev(levels(means_final_subcat$effect )))
+
+# give categories English names and combine with effect size
+means_final_subcat <- means_final_subcat %>% 
+  mutate(subcat_en = case_when(
+    subcat == "Gebaeude" ~ paste0(
+      "Buildings\n\n(", effect, ")", sep=''),
+    subcat == "Huftiere" ~ paste0(
+      "Hoofed\nanimals\n(", effect, ")", sep=''),
+    subcat == "Jacken" ~ paste0(
+      "Jackets\n\n(", effect, ")", sep=''),
+    subcat == "Aufbewahrung" ~ paste0(
+      "Storage\n\n(", effect, ")", sep=''),
+    subcat == "Instrumente" ~ paste0(
+      "Instruments\n\n(", effect, ")", sep=''),
+    subcat == "Blumen" ~ paste0(
+      "Flowers\n\n(", effect, ")", sep=''),
+    subcat == "Koerperteile" ~ paste0(
+      "Body parts\n\n(", effect, ")", sep=''),
+    subcat == "Obst" ~ paste0(
+      "Fruits\n\n(", effect, ")", sep=''),
+    subcat == "Suessigkeiten" ~ paste0(
+      "Sweets\n\n(", effect, ")", sep=''),
+    subcat == "Kueche" ~ paste0(
+      "Kitchen\nfurniture\n(", effect, ")", sep=''),
+    subcat == "Trinkgefaesse" ~ paste0(
+      "Drinking\nvessels\n(", effect, ")", sep=''),
+    subcat == "Voegel" ~ paste0(
+      "Birds\n\n(", effect, ")", sep=''),
+    subcat == "Bauernhof" ~ paste0(
+      "Farming\ntools\n(", effect, ")", sep=''), 
+    subcat == "Strasse" ~ paste0(
+      "Street\nvehicles\n(", effect, ")", sep=''),
+    subcat == "Gemuese" ~ paste0(
+      "Vegetables\n\n(", effect, ")", sep=''),
+    subcat == "Buero" ~ paste0(
+      "Office\ntools\n(", effect, ")", sep=''),
+    subcat == "Heimwerker" ~ paste0(
+      "Carpenter.s\ntools\n(", effect, ")", sep=''),
+    subcat == "Insekten" ~ paste0(
+      "Insects\n\n(", effect, ")", sep=''),
+    subcat == "Raubtiere" ~ paste0(
+      "Predators\n\n(", effect, ")", sep=''),
+    subcat == "Kochen" ~ paste0(
+      "Cooking\nequipment\n(", effect, ")", sep=''),
+    subcat == "Schmuck" ~ paste0(
+      "Jewelry\n\n(", effect, ")", sep=''),
+    subcat == "Sitzen" ~ paste0(
+      "Seating\nfurniture\n(", effect, ")", sep=''),
+    subcat == "Fische" ~ paste0(
+      "Fish\n\n(", effect, ")", sep=''),
+    subcat == "Wasser" ~ paste0(
+      "Water\nvehicles\n(", effect, ")", sep=''))) %>%
+  mutate(subcat_en = case_when(subcat_en=="Fish\n\n(0.1)" ~
+                                    "Fish\n\n(0.10)",
+                                  subcat_en=="Hoofed\nanimals\n(0.2)" ~
+                                    "Hoofed\nanimals\n(0.20)",
+                                  TRUE~subcat_en)) %>%
+  mutate(subcat_en=factor(subcat_en,levels=c(
+    "Buildings\n\n(0.23)","Hoofed\nanimals\n(0.20)",
+    "Jackets\n\n(0.18)","Storage\n\n(0.17)",
+    "Instruments\n\n(0.16)","Flowers\n\n(0.16)",
+    "Body parts\n\n(0.16)","Fruits\n\n(0.16)",
+    "Sweets\n\n(0.16)","Kitchen\nfurniture\n(0.16)",
+    "Drinking\nvessels\n(0.16)","Birds\n\n(0.15)",
+    "Farming\ntools\n(0.15)","Street\nvehicles\n(0.15)",
+    "Vegetables\n\n(0.14)","Office\ntools\n(0.14)",
+    "Carpenter.s\ntools\n(0.13)","Insects\n\n(0.13)",
+    "Predators\n\n(0.13)","Cooking\nequipment\n(0.12)",
+    "Jewelry\n\n(0.11)","Seating\nfurniture\n(0.11)",
+    "Fish\n\n(0.10)","Water\nvehicles\n(0.07)")))
+
+# Plotting
+(plot_error_subcat <- means_final_subcat %>% 
+    ggplot(., aes(x=Ord.Pos,y=normalizederror, na.rm=T)) +
+    geom_point(size =1, color = 'black') +
+    geom_line(aes(x=Ord.Pos,y=normalizederror, color="a", linetype="c"),
+              group = 1,size = 0.5) +
+    geom_line(aes(x=Ord.Pos,y=grandmean, color="b", linetype="d"), 
+              group = 1,size = 0.8)+
+    geom_errorbar(aes(ymin=normalizederror-se, ymax=normalizederror+se), width =.1) +
+    scale_color_manual(name="",values=c("a"="black","b"="dark gray"),
+                       labels=c("Category mean", "Mean across categories"))+
+    scale_linetype_manual(name="",values=c("c"="dashed","d"="dotted"),
+                          labels=c("Category mean", "Mean across categories"))+
+    apatheme+
+    labs(x="Ordinal Position",y ="Normalized RTs (ms)") +
+    facet_wrap(means_final_subcat$subcat_en, scales='free', ncol=6)+
+    scale_y_continuous(limits = c(-0.35, 0.40), 
+                       breaks = c-0.3,-0.20, -0.10, 0, 0.10, 0.20, 0.3, 0.4)) + 
+    scale_x_discrete(breaks=c(1,2,3,4,5))+
+    theme(legend.position = "bottom"))
+#plot_rt <- lemon::reposition_legend(plot_rt, "bott1.1.om right",panel='panel-5-5')
+
+filename <- "CSI_online_spoken_errors_by_subcat.pdf"
+ggsave(plot_error_subcat, filename = 
+         here::here("data", "verbal_CSI", "Plots", filename),
+       width = 26, height = 23, units = "cm", 
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("data", "verbal_CSI", "Plots", filename))
+```
+
+Make plot grid
+
+````{r plot_grid warnings=FALSE, message=FALSE, echo=FALSE}
+filename <- "CSI_online_spoken_errors_by_subject_and_subcat.pdf"
+cowplot::plot_grid(plot_error_subject, plot_error_subcat,
+          nrow = 2, rel_heights = c(1, 1), labels = c("A", "B"),
+          label_fontfamily = "Helvetica", label_size=22) %>%
+  ggsave(filename = here::here("data", "verbal_CSI", "Plots",filename),
+         width = 26, height = 42, units = "cm", 
+         dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("data", "verbal_CSI", "Plots", filename))
+```
+
+
+
+

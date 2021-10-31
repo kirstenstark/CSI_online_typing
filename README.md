@@ -6,3 +6,8 @@ The study was coded in SoSciSurvey (Leiner, 2019) and run in participants’ web
 
 [R scripts](https://github.com/kirstenstark/CSI_online_typing/tree/main/scripts/code) and [outputs](https://github.com/kirstenstark/CSI_online_typing/tree/main/scripts/github), as well as [anonymized data](https://github.com/kirstenstark/CSI_online_typing/tree/main/data) are provided.  
 Package versions are saved using the renv-package (Ushey, 2020). 
+
+
+
+### License
+This work was created by Kirsten Stark at the Humboldt-Universität zu Berlin and is subject to the [MIT License](https://github.com/kirstenstark/CSI_online_typing/blob/main/LICENSE).

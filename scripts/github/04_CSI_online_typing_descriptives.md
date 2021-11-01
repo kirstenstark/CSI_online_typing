@@ -1,7 +1,7 @@
 04 CSI online typing: Descriptives
 ================
 Kirsten Stark
-22 Mai, 2021
+01 November, 2021
 
 ## Load packages
 
@@ -734,6 +734,102 @@ exclusion:
 #table(df$comments)/160
 ```
 
+## As an additional info, calculate total typing duration (without Enter or Space)
+
+``` r
+df<- df %>% select_if(~sum(!is.na(.)) > 0)
+
+df <- df %>%
+  mutate_at(c(vars(contains("timing."))), as.numeric) %>%
+  mutate(typed_length=as.numeric(nchar(word.cc))) %>%
+  #filter(typed_length < 10) %>%
+  rowwise() %>%
+  mutate(duration = case_when(typed_length < 10 ~ paste0(0, typed_length),
+                              typed_length >= 10 ~ as.character(typed_length),
+                              is.na(typed_length) ~ "")) %>%
+  mutate(duration = get(paste("timing.",duration, sep="")) - timing.01)
+```
+
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+    
+    ## Warning in mask$eval_all_mutate(quo): NAs durch Umwandlung erzeugt
+
 ## Fully anonymize data and reduce data frame
 
 ``` r
@@ -756,12 +852,13 @@ intervals could be shared as well, but might only lead to confusion
 because the data frame will still be very wide.
 
 ``` r
-df_a <- df_a %>% dplyr::select(c("subject", "trial", "item", "category", "supercategory", "PosOr", 
+df_a <- df_a %>% dplyr::select(c("subject", "trial", "item", "category",
+                                 "supercategory", "PosOr", 
                         "answercode", "correct", "correct_manual",
                         "answer_auto_jaro", "correct_auto_jaro", 
                         "word", "word.c", "letters.01", "timing.01"))
 ```
 
 ``` r
-write.csv(df_a, here::here("data","data_long_anonymous.csv"))
+write.csv(df_a, here::here("data","data_long.csv"))
 ```

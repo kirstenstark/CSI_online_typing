@@ -2,9 +2,7 @@
 title: '04 CSI online typing: Descriptives'
 author: "Kirsten Stark"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output:
-  github_document: default
-  pdf_document: default
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -774,6 +772,21 @@ Comments don't indicate any problems that should lead to participant exclusion:
 #table(df$comments)/160
 ```
 
+## As an additional info, calculate total typing duration (without Enter or Space)
+
+```{r}
+df<- df %>% select_if(~sum(!is.na(.)) > 0)
+
+df <- df %>%
+  mutate_at(c(vars(contains("timing."))), as.numeric) %>%
+  mutate(typed_length=as.numeric(nchar(word.cc))) %>%
+  #filter(typed_length < 10) %>%
+  rowwise() %>%
+  mutate(duration = case_when(typed_length < 10 ~ paste0(0, typed_length),
+                              typed_length >= 10 ~ as.character(typed_length),
+                              is.na(typed_length) ~ "")) %>%
+  mutate(duration = get(paste("timing.",duration, sep="")) - timing.01)
+```
 
 
 ## Fully anonymize data and reduce data frame
@@ -795,14 +808,15 @@ df_a <- df %>% dplyr::select(!"gender" & !"age" & !starts_with("language") &
 Reduce data frame to columns needed for data analyses or useful to understand the data (this df will be shared online). Interkeystroke intervals could be shared as well, but might only lead to confusion because the data frame will still be very wide.
 
 ```{r reduce_df}
-df_a <- df_a %>% dplyr::select(c("subject", "trial", "item", "category", "supercategory", "PosOr", 
+df_a <- df_a %>% dplyr::select(c("subject", "trial", "item", "category",
+                                 "supercategory", "PosOr", 
                         "answercode", "correct", "correct_manual",
                         "answer_auto_jaro", "correct_auto_jaro", 
                         "word", "word.c", "letters.01", "timing.01"))
 ```
 
 ```{r write_anonymized_df}
-write.csv(df_a, here::here("data","data_long_anonymous.csv"))
+write.csv(df_a, here::here("data","data_long.csv"))
 ```
 
 

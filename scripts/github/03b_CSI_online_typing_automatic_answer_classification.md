@@ -1,7 +1,7 @@
 03b CSI online typing: Automatic answer classification
 ================
 Kirsten Stark
-3/30/2021
+01 November, 2021
 
 ## Load packages
 
@@ -356,6 +356,10 @@ df$word.c <- replace_special_chars(input = df$word.c, oldnames = oldnames, newna
     ## [1] "The pattern Backspace has been replaced by the pattern 6."
     ## [1] "The pattern Control has been replaced by the pattern 7."
 
+``` r
+df$word.cc <- df$word.c
+```
+
 ### 3\) Compute finally submitted words by applying all backspaces
 
 Function takes as input the word entries and, optionally, the backspace
@@ -382,7 +386,7 @@ output <- calculate_stringdist(word = df$word.c, stims = df$item,
 tictoc::toc()
 ```
 
-    ## 1.487 sec elapsed
+    ## 2.118 sec elapsed
 
 ``` r
 df$jaro <- output[,1]

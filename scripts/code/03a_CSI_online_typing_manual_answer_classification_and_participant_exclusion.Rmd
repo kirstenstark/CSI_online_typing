@@ -2,7 +2,7 @@
 title: "03 CSI online typing: Manual answer classification and participant exclusion"
 author: "Kirsten Stark"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: github_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}

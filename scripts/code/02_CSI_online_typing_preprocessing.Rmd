@@ -2,7 +2,7 @@
 title: "02 CSI online typing: Preprocessing"
 author: "Kirsten Stark"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: github_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}

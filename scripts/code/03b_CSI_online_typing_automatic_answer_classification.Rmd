@@ -1,8 +1,8 @@
 ---
 title: '03b CSI online typing: Automatic answer classification'
 author: "Kirsten Stark"
-date: "3/30/2021"
-output: pdf_document
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -304,6 +304,7 @@ Special characters such as Enter and Backspace are written as entire words. We w
 oldnames <- c("Enter", "CapsLock", "Shift", "ArrowLeft", "ArrowRight", "Backspace", "Control")
 newnames <- c("1", "2", "3", "4", "5", "6", "7")
 df$word.c <- replace_special_chars(input = df$word.c, oldnames = oldnames, newnames = newnames)
+df$word.cc <- df$word.c
 ```
 
 ### 3) Compute finally submitted words by applying all backspaces

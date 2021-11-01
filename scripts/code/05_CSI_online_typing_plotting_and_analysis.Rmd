@@ -2,7 +2,7 @@
 title: '05 CSI online typing: Plotting and analysis'
 author: "Kirsten Stark"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: pdf_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -159,28 +159,28 @@ huxtable::quick_docx(huxt_word,
 Line graph (only correct trials, without fillers)
 
 ```{r plot_rt}
-# (plot_rt <- means_final %>%
-#     ggplot(., aes(x=PosOr, y=timing.01)) +
-#     geom_point(size = 2)+
-#     stat_summary(fun=mean,  geom="line", size = 0.5, group = 1,
-#                  linetype = "dashed") +
-#     geom_errorbar(aes(ymin=timing.01-se, ymax=timing.01+se), width =.1) +
-#     apatheme+
-#     scale_y_continuous(limits = c(1120, 1340), breaks =seq(1120,1340, by = 20)) +
-#                        #breaks = c(1100, 1150, 1200, 1250, 1300, 1350)) +
-#     labs(x="Ordinal Position ",y ="RT (ms)") + #+
-#   # annotate(geom="text", x=1.5, y=1330, label="n = 30",
-#   #         color="black", size = 8))
-#     theme(
-#     axis.title.y = element_text(margin = margin(0,10,0,0)),
-#     axis.title.x = element_text(margin = margin(10,0,0,0))))
-# 
-# filename <- "CSI_online_typing_plot_rt.pdf"
-# ggsave(plot_rt, filename =
-#          here::here("results", "figures", filename),
-#        width = 18, height = 13, units = "cm",
-#        dpi = 300, device = cairo_pdf)
-# embedFonts(file = here::here("results", "figures", filename))
+(plot_rt <- means_final %>%
+    ggplot(., aes(x=PosOr, y=timing.01)) +
+    geom_point(size = 2)+
+    stat_summary(fun=mean,  geom="line", size = 0.5, group = 1,
+                 linetype = "dashed") +
+    geom_errorbar(aes(ymin=timing.01-se, ymax=timing.01+se), width =.1) +
+    apatheme+
+    scale_y_continuous(limits = c(1120, 1340), breaks =seq(1120,1340, by = 20)) +
+                       #breaks = c(1100, 1150, 1200, 1250, 1300, 1350)) +
+    labs(x="Ordinal Position ",y ="RT (ms)") + #+
+  # annotate(geom="text", x=1.5, y=1330, label="n = 30",
+  #         color="black", size = 8))
+    theme(
+    axis.title.y = element_text(margin = margin(0,10,0,0)),
+    axis.title.x = element_text(margin = margin(10,0,0,0))))
+
+filename <- "CSI_online_typing_plot_rt.pdf"
+ggsave(plot_rt, filename =
+         here::here("results", "figures", filename),
+       width = 18, height = 13, units = "cm",
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("results", "figures", filename))
 
 ```
 
@@ -188,45 +188,45 @@ Line graph (only correct trials, without fillers)
 Normalized boxplot 
 
 ```{r boxplot_rt}
-# means_subject <- df %>% 
-#    filter(category != "Filler") %>% 
-#    summarySEwithin(.,"timing.01",withinvars = c("subject","PosOr"))
-# (means_subject <- means_subject %>%
-#   group_by(subject) %>%
-#   dplyr::mutate(timing.01_norm = timing.01 - first(timing.01)))
-# 
-# (boxplot <- 
-#   ggplot() + 
-#   
-#   ## boxplot
-#   geom_boxplot(data=means_subject, aes(x = PosOr,y =timing.01_norm),
-#                colour = "grey", width = 0.3,fatten = 1)+
-#   ### individual means
-#   geom_jitter(data=means_subject, aes(x = PosOr,y =timing.01_norm),
-#               position = position_dodge(0.6),
-#               shape=19,color = "dark grey", size=2)+
-#   ### group means
-#   stat_summary(data=means_subject, aes(x = PosOr,y =timing.01_norm),
-#                fun=mean, geom="point",colour = "black", shape=18, size=5)+
-#   ### line
-#   stat_summary(data=means_subject, aes(x = PosOr,y =timing.01_norm),
-#                fun=mean, geom="line",colour = "black", linetype = "longdash", group = 1)+
-#   
-#   ## other stuff
-#   #scale_y_continuous(breaks = seq(600, 1300, by = 50))+
-#   labs(x="Ordinal Position",y ="Normalized RTs (ms)")+
-#   apatheme +
-#   theme(
-#     axis.title.y = element_text(margin = margin(0,10,0,0)),
-#     axis.title.x = element_text(margin = margin(10,0,0,0))) +
-#   coord_equal(ratio = 1/100))
-# 
-# filename <- "CSI_online_typing_boxplot.pdf"
-# ggsave(boxplot, filename = 
-#          here::here("results", "figures", filename),
-#        width = 13, height = 18, units = "cm", 
-#        dpi = 300, device = cairo_pdf)
-# embedFonts(file = here::here("results", "figures", filename))
+means_subject <- df %>%
+   filter(category != "Filler") %>%
+   summarySEwithin(.,"timing.01",withinvars = c("subject","PosOr"))
+(means_subject <- means_subject %>%
+  group_by(subject) %>%
+  dplyr::mutate(timing.01_norm = timing.01 - first(timing.01)))
+
+(boxplot <-
+  ggplot() +
+
+  ## boxplot
+  geom_boxplot(data=means_subject, aes(x = PosOr,y =timing.01_norm),
+               colour = "grey", width = 0.3,fatten = 1)+
+  ### individual means
+  geom_jitter(data=means_subject, aes(x = PosOr,y =timing.01_norm),
+              position = position_dodge(0.6),
+              shape=19,color = "dark grey", size=2)+
+  ### group means
+  stat_summary(data=means_subject, aes(x = PosOr,y =timing.01_norm),
+               fun=mean, geom="point",colour = "black", shape=18, size=5)+
+  ### line
+  stat_summary(data=means_subject, aes(x = PosOr,y =timing.01_norm),
+               fun=mean, geom="line",colour = "black", linetype = "longdash", group = 1)+
+
+  ## other stuff
+  #scale_y_continuous(breaks = seq(600, 1300, by = 50))+
+  labs(x="Ordinal Position",y ="Normalized RTs (ms)")+
+  apatheme +
+  theme(
+    axis.title.y = element_text(margin = margin(0,10,0,0)),
+    axis.title.x = element_text(margin = margin(10,0,0,0))) +
+  coord_equal(ratio = 1/100))
+
+filename <- "CSI_online_typing_boxplot.pdf"
+ggsave(boxplot, filename =
+         here::here("results", "figures", filename),
+       width = 13, height = 18, units = "cm",
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("results", "figures", filename))
 
 ```
 
@@ -237,7 +237,7 @@ Normalized boxplot
 #           nrow = 1, labels = c("A", "B")) %>%
 #   ggsave(filename = here::here("results", "figures",
 #                                "CSI_online_typing_RTs_and_normalized_RTs"),
-#          width = 18, height = 13, units = "cm", dpi = 300, 
+#          width = 18, height = 13, units = "cm", dpi = 300,
 #          device = cairo_pdf)
 # #embedFonts(file = here::here("results", "figures", "CSI_online_typing_RTs_and_normalized_RTs"))
 
@@ -247,23 +247,23 @@ Normalized boxplot
 
 ```{r plot_rt_fillers}
 
-# (plot_rt_fillers <- df %>% 
-#     mutate(kind = case_when(category == "Filler" ~"Filler",
-#                           category != "Filler" ~"Experimental")) %>%
-#     ggplot(., aes(x=PosOr, y=timing.01, group=kind, color=kind)) +
-#     stat_summary(fun=mean,  geom="point", size = 2)+
-#     stat_summary(fun=mean,  geom="line", size = 1) +
-#     apatheme+
-#     labs(x="Ordinal Position ",y ="RT (ms)", color = "Trial type")+
-#   annotate(geom="text", x=1.5, y=1350, label="n = 30", 
-#            color="black", size = 8))
-# 
-# filename <- "CSI_online_typing_plot_rt_with_fillers.pdf"
-# ggsave(plot_rt_fillers, filename = 
-#          here::here("results", "figures", filename),
-#        width = 18, height = 13, units = "cm", 
-#        dpi = 300, device = cairo_pdf)
-# embedFonts(file = here::here("results", "figures", filename))
+(plot_rt_fillers <- df %>%
+    mutate(kind = case_when(category == "Filler" ~"Filler",
+                          category != "Filler" ~"Experimental")) %>%
+    ggplot(., aes(x=PosOr, y=timing.01, group=kind, color=kind)) +
+    stat_summary(fun=mean,  geom="point", size = 2)+
+    stat_summary(fun=mean,  geom="line", size = 1) +
+    apatheme+
+    labs(x="Ordinal Position ",y ="RT (ms)", color = "Trial type")+
+  annotate(geom="text", x=1.5, y=1350, label="n = 30",
+           color="black", size = 8))
+
+filename <- "CSI_online_typing_plot_rt_with_fillers.pdf"
+ggsave(plot_rt_fillers, filename =
+         here::here("results", "figures", filename),
+       width = 18, height = 13, units = "cm",
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("results", "figures", filename))
 ```
   
 ### Plot by subcategory
@@ -314,41 +314,41 @@ See nicer plot below
 All trials correct trials
 
 ```{r plot_RTs_all}
-# (plot_RTs_all <- ggplot(data=df, aes(x=trial, y=timing.01)) +
-#   stat_summary(fun=mean,  geom="point", size = 2)+
-#   stat_summary(fun=mean,  geom="line", size = 1) +
-#   apatheme+
-#   labs(x="Trial ",y ="RT (ms)")+
-#   annotate(geom="text", x=20, y=1570, label="n = 30", 
-#            color="black", size = 8))
-# 
-# filename <- "CSI_online_typing_plot_rts_across_experiment.pdf"
-# ggsave(plot_RTs_all, filename = 
-#          here::here("results", "figures", filename),
-#        width = 18, height = 13, units = "cm", 
-#        dpi = 300, device = cairo_pdf)
-# embedFonts(file = here::here("results", "figures", filename))
+(plot_RTs_all <- ggplot(data=df, aes(x=trial, y=timing.01)) +
+  stat_summary(fun=mean,  geom="point", size = 2)+
+  stat_summary(fun=mean,  geom="line", size = 1) +
+  apatheme+
+  labs(x="Trial ",y ="RT (ms)")+
+  annotate(geom="text", x=20, y=1570, label="n = 30",
+           color="black", size = 8))
+
+filename <- "CSI_online_typing_plot_rts_across_experiment.pdf"
+ggsave(plot_RTs_all, filename =
+         here::here("results", "figures", filename),
+       width = 18, height = 13, units = "cm",
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("results", "figures", filename))
 ```
 
 Correct non-filler trials only:
 
 ```{r plot_RTs_correct}
-# (plot_RTs_correct <- df %>% 
-#    filter(category != "Filler") %>% 
-#     ggplot(., aes(x=trial, y=timing.01)) +
-#     stat_summary(fun=mean,  geom="point", size = 2)+
-#     stat_summary(fun=mean,  geom="line", size = 1) +
-#     apatheme+
-#     labs(x="Trial ",y ="RT ms")+
-#     annotate(geom="text", x=20, y=1570, label="n = 30", 
-#              color="black", size = 8))
-# 
-# filename <- "CSI_online_typing_plot_rts_across_experiment_correct_experimental_trials.pdf"
-# ggsave(plot_RTs_correct, filename = 
-#          here::here("results", "figures", filename),
-#        width = 18, height = 13, units = "cm", 
-#        dpi = 300, device = cairo_pdf)
-# embedFonts(file = here::here("results", "figures", filename))
+(plot_RTs_correct <- df %>%
+   filter(category != "Filler") %>%
+    ggplot(., aes(x=trial, y=timing.01)) +
+    stat_summary(fun=mean,  geom="point", size = 2)+
+    stat_summary(fun=mean,  geom="line", size = 1) +
+    apatheme+
+    labs(x="Trial ",y ="RT ms")+
+    annotate(geom="text", x=20, y=1570, label="n = 30",
+             color="black", size = 8))
+
+filename <- "CSI_online_typing_plot_rts_across_experiment_correct_experimental_trials.pdf"
+ggsave(plot_RTs_correct, filename =
+         here::here("results", "figures", filename),
+       width = 18, height = 13, units = "cm",
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("results", "figures", filename))
 ```
 
 # Check distribution of data
@@ -508,20 +508,20 @@ correctness_by_ppt_and_ord_pos <-
 Plotting
 
 ```{r plotting_errors}
-# (plot <- ggplot(data=means_error_subject, aes(x=PosOr, y=error_sum)) +
-#   geom_point( size = 2)+
-#   geom_errorbar(aes(ymin=error_sum-se, ymax=error_sum+se), width =.1) +
-#   stat_summary(fun=mean,  geom="line", size = 0.5, group = 1, linetype = "dashed") +
-#   apatheme+
-#   scale_y_continuous(breaks = seq(0.06, 0.14, by = 0.02), limits = c(0.055, 0.15))+
-#   labs(x="Ordinal Position ",y ="Percentage of errors"))
-# 
-# filename <- "CSI_online_typing_errors.pdf"
-# ggsave(plot, filename = 
-#          here::here("results", "figures", filename),
-#        width = 18, height = 13, units = "cm", 
-#        dpi = 300, device = cairo_pdf)
-# embedFonts(file = here::here("results", "figures", filename))
+(plot <- ggplot(data=means_error_subject, aes(x=PosOr, y=error_sum)) +
+  geom_point( size = 2)+
+  geom_errorbar(aes(ymin=error_sum-se, ymax=error_sum+se), width =.1) +
+  stat_summary(fun=mean,  geom="line", size = 0.5, group = 1, linetype = "dashed") +
+  apatheme+
+  scale_y_continuous(breaks = seq(0.06, 0.14, by = 0.02), limits = c(0.055, 0.15))+
+  labs(x="Ordinal Position ",y ="Percentage of errors"))
+
+filename <- "CSI_online_typing_errors.pdf"
+ggsave(plot, filename =
+         here::here("results", "figures", filename),
+       width = 18, height = 13, units = "cm",
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("results", "figures", filename))
 ```
 
 
@@ -577,11 +577,11 @@ summary(m1_error)
 
 ```{r plot_RT_ppt_by_size}
 modeloutput <- coef(m1)$subject
-(means_final_subject <- df_valid %>% 
-   summarySEwithin(.,"timing.01",withinvars = c("subject","PosOr")))
-# (means_final<- df_valid %>%  
-#    Rmisc::summarySEwithin(.,"timing.01",idvar = "subject",
-#                           withinvars = "PosOr", na.rm = T))
+means_final_subject <- df_valid %>%
+   summarySEwithin(.,"timing.01",withinvars = c("subject","PosOr"))
+(means_final<- df_valid %>%
+   Rmisc::summarySEwithin(.,"timing.01",idvar = "subject",
+                          withinvars = "PosOr", na.rm = T))
 for(i in 1:nrow(means_final_subject)) {
   means_final_subject$grandmean[i] <- means_final$timing.01[means_final$PosOr == means_final_subject$PosOr[i]] - means_final$timing.01[means_final$PosOr== 1]
   means_final_subject$normalizedRT[i] <- means_final_subject$timing.01[i] -
@@ -623,34 +623,34 @@ means_final_subject <- means_final_subject %>%
     "Participant 26\n(24.38)","Participant 2\n(14.57)")))
 
 # Plotting
-# (plot_rt_subject <- means_final_subject %>% 
-#     ggplot(., aes(x=PosOr,y=normalizedRT, na.rm=T)) +
-#     geom_point(size =1, color = 'black') +
-#     geom_line(aes(x=PosOr,y=normalizedRT, color="a", linetype="c"),
-#               group = 1,size = 0.5) +
-#     geom_line(aes(x=PosOr,y=grandmean, color="b", linetype="d"), 
-#               group = 1,size = 0.8)+
-#     geom_errorbar(aes(ymin=normalizedRT-se, ymax=normalizedRT+se), width =.1) +
-#     scale_color_manual(name="",values=c("a"="black","b"="dark gray"),
-#                        labels=c("Participant mean", "Mean across participants"))+
-#     scale_linetype_manual(name="",values=c("c"="dashed","d"="dotted"),
-#                           labels=c("Participant mean", 
-#                                    "Mean across participants"))+
-#     apatheme+
-#     labs(x="Ordinal Position",y ="Normalized RTs (ms)") +
-#     facet_wrap(means_final_subject$subject_en, scales='free', ncol=6)+
-#     scale_y_continuous(limits = c(-400, 700), 
-#                        breaks = c(-400,-200,0,200,400,600)) + 
-#     scale_x_discrete(breaks=c(1,2,3,4,5))+
-#     theme(legend.position = "bottom"))
-# #plot_rt <- lemon::reposition_legend(plot_rt, "bott1.1.om right",panel='panel-5-5')
-# 
-# filename <- "CSI_online_typing_effect_by_participant.pdf"
-# ggsave(plot_rt_subject, filename = 
-#          here::here("results", "figures", filename),
-#        width = 26, height = 21.5, units = "cm", 
-#        dpi = 300, device = cairo_pdf)
-# embedFonts(file = here::here("results", "figures", filename))
+(plot_rt_subject <- means_final_subject %>%
+    ggplot(., aes(x=PosOr,y=normalizedRT, na.rm=T)) +
+    geom_point(size =1, color = 'black') +
+    geom_line(aes(x=PosOr,y=normalizedRT, color="a", linetype="c"),
+              group = 1,size = 0.5) +
+    geom_line(aes(x=PosOr,y=grandmean, color="b", linetype="d"),
+              group = 1,size = 0.8)+
+    geom_errorbar(aes(ymin=normalizedRT-se, ymax=normalizedRT+se), width =.1) +
+    scale_color_manual(name="",values=c("a"="black","b"="dark gray"),
+                       labels=c("Participant mean", "Mean across participants"))+
+    scale_linetype_manual(name="",values=c("c"="dashed","d"="dotted"),
+                          labels=c("Participant mean",
+                                   "Mean across participants"))+
+    apatheme+
+    labs(x="Ordinal Position",y ="Normalized RTs (ms)") +
+    facet_wrap(means_final_subject$subject_en, scales='free', ncol=6)+
+    scale_y_continuous(limits = c(-400, 700),
+                       breaks = c(-400,-200,0,200,400,600)) +
+    scale_x_discrete(breaks=c(1,2,3,4,5))+
+    theme(legend.position = "bottom"))
+#plot_rt <- lemon::reposition_legend(plot_rt, "bott1.1.om right",panel='panel-5-5')
+
+filename <- "CSI_online_typing_effect_by_participant.pdf"
+ggsave(plot_rt_subject, filename =
+         here::here("results", "figures", filename),
+       width = 26, height = 21.5, units = "cm",
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("results", "figures", filename))
 
 ```
 
@@ -658,11 +658,11 @@ means_final_subject <- means_final_subject %>%
 
 ```{r plot_RT_by_size_category}
 modeloutput <- coef(m1)$category
-(means_final_category <- df_valid %>% 
-   summarySEwithin(.,"timing.01",withinvars = c("category","PosOr")))
-# (means_final<- df_valid %>%  
-#    Rmisc::summarySEwithin(.,"timing.01",idvar = "category",
-#                           withinvars = "PosOr", na.rm = T))
+means_final_category <- df_valid %>% 
+   summarySEwithin(.,"timing.01",withinvars = c("category","PosOr"))
+(means_final<- df_valid %>%
+   Rmisc::summarySEwithin(.,"timing.01",idvar = "category",
+                          withinvars = "PosOr", na.rm = T))
 for(i in 1:nrow(means_final_category)) {
   means_final_category$grandmean[i] <- means_final$timing.01[means_final$PosOr == means_final_category$PosOr[i]] - means_final$timing.01[means_final$PosOr== 1]
   means_final_category$normalizedRT[i] <- means_final_category$timing.01[i] -
@@ -756,33 +756,33 @@ means_final_category <- means_final_category %>%
     "Birds\n\n(24.35)","Instruments\n\n(18.30)","Sweets\n\n(17.98)")))
 
 # Plotting
-# (plot_rt_category <- means_final_category %>% 
-#     ggplot(., aes(x=PosOr,y=normalizedRT, na.rm=T)) +
-#     geom_point(size =1, color = 'black') +
-#     geom_line(aes(x=PosOr,y=normalizedRT, color="a", linetype="c"),
-#               group = 1,size = 0.5) +
-#     geom_line(aes(x=PosOr,y=grandmean, color="b", linetype="d"), 
-#               group = 1,size = 0.8)+
-#     geom_errorbar(aes(ymin=normalizedRT-se, ymax=normalizedRT+se), width =.1) +
-#     scale_color_manual(name="",values=c("a"="black","b"="dark gray"),
-#                        labels=c("Category mean", "Mean across categories"))+
-#     scale_linetype_manual(name="",values=c("c"="dashed","d"="dotted"),
-#                           labels=c("Category mean", "Mean across categories"))+
-#     apatheme+
-#     labs(x="Ordinal Position",y ="Normalized RTs (ms)") +
-#     facet_wrap(means_final_category$category_en, scales='free', ncol=6)+
-#     scale_y_continuous(limits = c(-400, 700), 
-#                        breaks = c(-400, -200, 0,200,400,600)) + 
-#     scale_x_discrete(breaks=c(1,2,3,4,5))+
-#     theme(legend.position = "bottom"))
-# #plot_rt <- lemon::reposition_legend(plot_rt, "bott1.1.om right",panel='panel-5-5')
-# 
-# filename <- "CSI_online_typing_effect_by_category.pdf"
-# ggsave(plot_rt_category, filename = 
-#          here::here("results", "figures", filename),
-#        width = 26, height = 20, units = "cm", 
-#        dpi = 300, device = cairo_pdf)
-# embedFonts(file = here::here("results", "figures", filename))
+(plot_rt_category <- means_final_category %>%
+    ggplot(., aes(x=PosOr,y=normalizedRT, na.rm=T)) +
+    geom_point(size =1, color = 'black') +
+    geom_line(aes(x=PosOr,y=normalizedRT, color="a", linetype="c"),
+              group = 1,size = 0.5) +
+    geom_line(aes(x=PosOr,y=grandmean, color="b", linetype="d"),
+              group = 1,size = 0.8)+
+    geom_errorbar(aes(ymin=normalizedRT-se, ymax=normalizedRT+se), width =.1) +
+    scale_color_manual(name="",values=c("a"="black","b"="dark gray"),
+                       labels=c("Category mean", "Mean across categories"))+
+    scale_linetype_manual(name="",values=c("c"="dashed","d"="dotted"),
+                          labels=c("Category mean", "Mean across categories"))+
+    apatheme+
+    labs(x="Ordinal Position",y ="Normalized RTs (ms)") +
+    facet_wrap(means_final_category$category_en, scales='free', ncol=6)+
+    scale_y_continuous(limits = c(-400, 700),
+                       breaks = c(-400, -200, 0,200,400,600)) +
+    scale_x_discrete(breaks=c(1,2,3,4,5))+
+    theme(legend.position = "bottom"))
+#plot_rt <- lemon::reposition_legend(plot_rt, "bott1.1.om right",panel='panel-5-5')
+
+filename <- "CSI_online_typing_effect_by_category.pdf"
+ggsave(plot_rt_category, filename =
+         here::here("results", "figures", filename),
+       width = 26, height = 20, units = "cm",
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("results", "figures", filename))
 ```
 
 Make plot grid
@@ -803,11 +803,11 @@ Make plot grid
 
 ```{r plot_errors_by_size}
 modeloutput <- coef(m1_error)$subject
-(means_final_subject <- df_errors %>% 
-   summarySEwithin(.,"error_sum",withinvars = c("subject","PosOr")))
-# (means_final<- df_errors%>%  
-#    Rmisc::summarySEwithin(.,"error_sum",idvar = "subject",
-#                           withinvars = "PosOr", na.rm = T))
+means_final_subject <- df_errors %>%
+   summarySEwithin(.,"error_sum",withinvars = c("subject","PosOr"))
+(means_final<- df_errors%>%
+   Rmisc::summarySEwithin(.,"error_sum",idvar = "subject",
+                          withinvars = "PosOr", na.rm = T))
 for(i in 1:nrow(means_final_subject)) {
   means_final_subject$grandmean[i] <- 
     means_final$error_sum[means_final$PosOr == means_final_subject$PosOr[i]] -
@@ -840,35 +840,35 @@ means_final_subject <- means_final_subject %>%
     "Participant 26","Participant 27",
     "Participant 28","Participant 29", "Participant 30")))
 # Plotting
-# (plot_error_subject <- means_final_subject %>% 
-#     ggplot(., aes(x=PosOr,y=normalized_errors, na.rm=T)) +
-#     geom_point(size =1, color = 'black') +
-#     geom_line(aes(x=PosOr,y=normalized_errors, color="a", linetype="c"),
-#               group = 1,size = 0.5) +
-#     geom_line(aes(x=PosOr,y=grandmean, color="b", linetype="d"), 
-#               group = 1,size = 0.8)+
-#     geom_errorbar(aes(ymin=normalized_errors-se, ymax=normalized_errors+se), 
-#                   width =.1) +
-#     scale_color_manual(name="",values=c("a"="black","b"="dark gray"),
-#                        labels=c("Participant mean", "Mean across participants"))+
-#     scale_linetype_manual(name="",values=c("c"="dashed","d"="dotted"),
-#                           labels=c("Participant mean", 
-#                                    "Mean across participants"))+
-#     apatheme+
-#     labs(x="Ordinal Position",y ="Normalized No. of Errors") +
-#     facet_wrap(means_final_subject$subject_en, scales='free', ncol=6)+
-#     scale_y_continuous(limits = c(-0.35, 0.4), 
-#                        breaks = c(-0.30,-0.20, -0.10, 0, 0.10, 0.20, 0.3, 0.4)) + 
-#     scale_x_discrete(breaks=c(1,2,3,4,5))+
-#     theme(legend.position = "bottom"))
-# #plot_rt <- lemon::reposition_legend(plot_rt, "bott1.1.om right",panel='panel-5-5')
-# 
-# filename <- "CSI_online_typing_errors_by_participant.pdf"
-# ggsave(plot_error_subject, filename = 
-#          here::here("results", "figures",filename),
-#        width = 26, height = 22, units = "cm", 
-#        dpi = 300, device = cairo_pdf)
-# embedFonts(file = here::here("results", "figures",filename))
+(plot_error_subject <- means_final_subject %>%
+    ggplot(., aes(x=PosOr,y=normalized_errors, na.rm=T)) +
+    geom_point(size =1, color = 'black') +
+    geom_line(aes(x=PosOr,y=normalized_errors, color="a", linetype="c"),
+              group = 1,size = 0.5) +
+    geom_line(aes(x=PosOr,y=grandmean, color="b", linetype="d"),
+              group = 1,size = 0.8)+
+    geom_errorbar(aes(ymin=normalized_errors-se, ymax=normalized_errors+se),
+                  width =.1) +
+    scale_color_manual(name="",values=c("a"="black","b"="dark gray"),
+                       labels=c("Participant mean", "Mean across participants"))+
+    scale_linetype_manual(name="",values=c("c"="dashed","d"="dotted"),
+                          labels=c("Participant mean",
+                                   "Mean across participants"))+
+    apatheme+
+    labs(x="Ordinal Position",y ="Normalized No. of Errors") +
+    facet_wrap(means_final_subject$subject_en, scales='free', ncol=6)+
+    scale_y_continuous(limits = c(-0.35, 0.4),
+                       breaks = c(-0.30,-0.20, -0.10, 0, 0.10, 0.20, 0.3, 0.4)) +
+    scale_x_discrete(breaks=c(1,2,3,4,5))+
+    theme(legend.position = "bottom"))
+#plot_rt <- lemon::reposition_legend(plot_rt, "bott1.1.om right",panel='panel-5-5')
+
+filename <- "CSI_online_typing_errors_by_participant.pdf"
+ggsave(plot_error_subject, filename =
+         here::here("results", "figures",filename),
+       width = 26, height = 22, units = "cm",
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("results", "figures",filename))
 ```
 
 
@@ -876,8 +876,8 @@ means_final_subject <- means_final_subject %>%
 
 ```{r plot_errors_by_size_subcat}
 modeloutput <- coef(m1_error)$category
-(means_final_category <- df_errors %>% 
-   summarySEwithin(.,"error_sum",withinvars = c("category","PosOr")))
+means_final_category <- df_errors %>%
+   summarySEwithin(.,"error_sum",withinvars = c("category","PosOr"))
 (means_final<- df %>%  
    Rmisc::summarySEwithin(.,"error_sum",idvar = "category",
                           withinvars = "PosOr", na.rm = T))
@@ -963,48 +963,48 @@ means_final_category <- means_final_category %>%
     
 
 # Plotting
-# (plot_error_category <- means_final_category %>% 
-#     ggplot(., aes(x=PosOr,y=normalizederror, na.rm=T)) +
-#     geom_point(size =1, color = 'black') +
-#     geom_line(aes(x=PosOr,y=normalizederror, color="a", linetype="c"),
-#               group = 1,size = 0.5) +
-#     geom_line(aes(x=PosOr,y=grandmean, color="b", linetype="d"), 
-#               group = 1,size = 0.8)+
-#     geom_errorbar(aes(ymin=normalizederror-se, ymax=normalizederror+se), width =.1) +
-#     scale_color_manual(name="",values=c("a"="black","b"="dark gray"),
-#                        labels=c("Category mean", "Mean across categories"))+
-#     scale_linetype_manual(name="",values=c("c"="dashed","d"="dotted"),
-#                           labels=c("Category mean", "Mean across categories"))+
-#     apatheme+
-#     labs(x="Ordinal Position",y ="Normalized RTs (ms)") +
-#     facet_wrap(means_final_category$category_en, scales='free', ncol=6)+
-#     scale_y_continuous(limits = c(-0.35, 0.40), 
-#                        breaks = c(-0.3,-0.20, -0.10, 0, 0.10, 0.20, 0.3, 0.4)) + 
-#     scale_x_discrete(breaks=c(1,2,3,4,5))+
-#     theme(legend.position = "bottom"))
-# #plot_rt <- lemon::reposition_legend(plot_rt, "bott1.1.om right",panel='panel-5-5')
-# 
-# filename <- "CSI_online_typing_errors_by_subcat.pdf"
-# ggsave(plot_error_category, filename = 
-#          here::here("results", "figures",filename),
-#        width = 26, height = 23, units = "cm", 
-#        dpi = 300, device = cairo_pdf)
-# embedFonts(file = here::here("results", "figures",filename))
+(plot_error_category <- means_final_category %>%
+    ggplot(., aes(x=PosOr,y=normalizederror, na.rm=T)) +
+    geom_point(size =1, color = 'black') +
+    geom_line(aes(x=PosOr,y=normalizederror, color="a", linetype="c"),
+              group = 1,size = 0.5) +
+    geom_line(aes(x=PosOr,y=grandmean, color="b", linetype="d"),
+              group = 1,size = 0.8)+
+    geom_errorbar(aes(ymin=normalizederror-se, ymax=normalizederror+se), width =.1) +
+    scale_color_manual(name="",values=c("a"="black","b"="dark gray"),
+                       labels=c("Category mean", "Mean across categories"))+
+    scale_linetype_manual(name="",values=c("c"="dashed","d"="dotted"),
+                          labels=c("Category mean", "Mean across categories"))+
+    apatheme+
+    labs(x="Ordinal Position",y ="Normalized RTs (ms)") +
+    facet_wrap(means_final_category$category_en, scales='free', ncol=6)+
+    scale_y_continuous(limits = c(-0.35, 0.40),
+                       breaks = c(-0.3,-0.20, -0.10, 0, 0.10, 0.20, 0.3, 0.4)) +
+    scale_x_discrete(breaks=c(1,2,3,4,5))+
+    theme(legend.position = "bottom"))
+#plot_rt <- lemon::reposition_legend(plot_rt, "bott1.1.om right",panel='panel-5-5')
+
+filename <- "CSI_online_typing_errors_by_subcat.pdf"
+ggsave(plot_error_category, filename =
+         here::here("results", "figures",filename),
+       width = 26, height = 23, units = "cm",
+       dpi = 300, device = cairo_pdf)
+embedFonts(file = here::here("results", "figures",filename))
 ```
 
 
 
 Make plot grid
 
- ````{r plot_grid3, warnings=FALSE, message=FALSE, echo=FALSE}
-# # filename <- "CSI_online_typing_errors_by_subject_and_subcat.pdf"
-# # cowplot::plot_grid(plot_error_subject, plot_error_category,
-# #           nrow = 2, rel_heights = c(1, 1), labels = c("A", "B"),
-# #           label_fontfamily = "Helvetica", label_size=22) %>%
-# #   ggsave(filename = here::here("results", "figures",filename),
-# #          width = 26, height = 42, units = "cm", 
-# #          dpi = 300, device = cairo_pdf)
-# # embedFonts(file = here::here("results", "figures",filename))
+```{r plot_grid3, warnings=FALSE, message=FALSE, echo=FALSE}
+# filename <- "CSI_online_typing_errors_by_subject_and_subcat.pdf"
+# cowplot::plot_grid(plot_error_subject, plot_error_category,
+#           nrow = 2, rel_heights = c(1, 1), labels = c("A", "B"),
+#           label_fontfamily = "Helvetica", label_size=22) %>%
+#   ggsave(filename = here::here("results", "figures",filename),
+#          width = 26, height = 42, units = "cm",
+#          dpi = 300, device = cairo_pdf)
+# embedFonts(file = here::here("results", "figures",filename))
 ```
 
 

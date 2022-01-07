@@ -976,7 +976,7 @@ means_final_category <- means_final_category %>%
     scale_linetype_manual(name="",values=c("c"="dashed","d"="dotted"),
                           labels=c("Category mean", "Mean across categories"))+
     apatheme+
-    labs(x="Ordinal Position",y ="Normalized RTs (ms)") +
+    labs(x="Ordinal Position",y ="Normalized No. of Errors") +
     facet_wrap(means_final_category$category_en, scales='free', ncol=6)+
     scale_y_continuous(limits = c(-0.35, 0.40),
                        breaks = c(-0.3,-0.20, -0.10, 0, 0.10, 0.20, 0.3, 0.4)) +

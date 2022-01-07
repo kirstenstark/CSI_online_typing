@@ -4,6 +4,7 @@ data/pretest
 data/raw
 data/verbal_CSI
 data/data_for_a_priori_power_analysis/
+data/post_hoc-power/
 data/CSI_online_combined.csv
 results/
 scripts/old
